@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Svetlana & Diab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="background_glow" aria-hidden="true"></div>
+  <div class="floating_graphics" aria-hidden="true">
+    <span class="floating_ring ring_one"></span>
+    <span class="floating_ring ring_two"></span>
+    <span class="floating_ring ring_three"></span>
+    <span class="floating_heart heart_one"></span>
+    <span class="floating_heart heart_two"></span>
+    <span class="floating_spark spark_one"></span>
+    <span class="floating_spark spark_two"></span>
+    <span class="floating_spark spark_three"></span>
+  </div>
+  <div id="reaction_layer" class="reaction_layer" aria-hidden="true"></div>
+  <button id="language_toggle_button" class="ghost_button language_toggle_button" type="button" aria-label="Switch language" title="Switch language">
+    <span id="language_flag_icon" class="flag_icon" aria-hidden="true">US</span>
+  </button>
+
+  <main id="app_root">
+    <section id="login_screen" class="login_screen" aria-labelledby="login_heading">
+      <div class="login_panel">
+        <p class="eyebrow_text">our private place</p>
+        <h1 id="login_heading">Svetlana & Diab</h1>
+        <p class="login_copy">A little door made only for two hearts.</p>
+
+        <form id="login_form" class="login_form" autocomplete="on">
+          <label for="username_input">Name</label>
+          <input id="username_input" name="username_input" type="text" placeholder="Svetlana" required>
+
+          <label for="password_input">Secret word</label>
+          <input id="password_input" name="password_input" type="password" placeholder="Our secret" required>
+
+          <button id="login_button" type="submit">Enter our world</button>
+          <p id="login_error_message" class="login_error_message" role="alert"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="welcome_overlay" class="welcome_overlay hidden" aria-live="polite" aria-label="welcome message">
+      <div class="welcome_ceremony">
+        <div class="welcome_orbit" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <p id="welcome_kicker" class="eyebrow_text">hello, beautiful soul</p>
+        <h2 id="welcome_primary_message"></h2>
+        <p id="welcome_secondary_message" class="welcome_secondary_message"></p>
+        <p id="daily_joy_message" class="daily_joy_message"></p>
+        <button id="enter_home_button" class="ghost_button enter_home_button" type="button">Enter and keep smiling</button>
+      </div>
+    </section>
+
+    <section id="home_screen" class="home_screen hidden">
+      <header class="home_header">
+        <div>
+          <p class="eyebrow_text">only ours</p>
+          <h1 id="home_greeting">Svetlana & Diab</h1>
+        </div>
+        <div class="header_actions">
+          <button id="theme_toggle_button" class="ghost_button" type="button" aria-pressed="false">Dark theme</button>
+          <button id="logout_button" class="ghost_button" type="button">Leave softly</button>
+        </div>
+      </header>
+
+      <section class="hero_section" aria-labelledby="hero_heading">
+        <div class="hero_content">
+          <p class="eyebrow_text">a place for us</p>
+          <h2 id="hero_heading">Every day with you becomes part of the story.</h2>
+          <p id="hero_personal_message" class="hero_personal_message"></p>
+        </div>
+        <div class="hero_symbol" aria-hidden="true">
+          <div class="interlocking_hearts">
+            <span class="heart_shape first_heart"></span>
+            <span class="heart_shape second_heart"></span>
+          </div>
+          <p class="hero_monogram">S &amp; D</p>
+        </div>
+      </section>
+
+      <section class="today_prank_card" aria-labelledby="today_prank_heading">
+        <div>
+          <p class="eyebrow_text">today's prank</p>
+          <h2 id="today_prank_heading">One little laugh for today</h2>
+        </div>
+        <p id="today_prank_message"></p>
+      </section>
+
+      <section class="section_header" aria-labelledby="time_heading">
+        <div>
+          <p class="eyebrow_text">our time</p>
+          <h2 id="time_heading">How Long the Heart Remembers</h2>
+        </div>
+      </section>
+
+      <section class="time_grid" aria-label="our time together">
+        <article class="metric_card featured_metric">
+          <p class="metric_label">Days since we found each other</p>
+          <strong id="days_together_counter" class="metric_value">0</strong>
+          <span class="metric_note">since January 18, 2025</span>
+        </article>
+
+        <article class="metric_card">
+          <p class="metric_label">The shape of our time</p>
+          <strong id="years_together_counter" class="metric_value">0 days</strong>
+          <span class="metric_note">counted with care</span>
+        </article>
+
+        <article class="metric_card">
+          <p class="metric_label">Diab's age</p>
+          <strong id="diab_age_counter" class="metric_value">0</strong>
+          <span class="metric_note">born March 23, 2000</span>
+        </article>
+
+        <article class="metric_card">
+          <p class="metric_label">Svetlana's age</p>
+          <strong id="svetlana_age_counter" class="metric_value">0</strong>
+          <span class="metric_note">born August 29, 1991</span>
+        </article>
+
+        <article class="metric_card message_metric">
+          <p class="metric_label">Diab's next birthday</p>
+          <strong id="diab_next_birthday_message" class="birthday_message">0 days until the next happy birthday I'll have while you're in my life.</strong>
+        </article>
+
+        <article class="metric_card message_metric">
+          <p class="metric_label">Svetlana's next birthday</p>
+          <strong id="svetlana_next_birthday_message" class="birthday_message">0 days until Svetlana's next beautiful birthday.</strong>
+        </article>
+      </section>
+
+      <section class="content_band" aria-labelledby="memory_gallery_heading">
+        <div class="section_header">
+          <div>
+            <p class="eyebrow_text">photos and smiles</p>
+            <h2 id="memory_gallery_heading">Memory Gallery</h2>
+          </div>
+          <button id="add_memory_button" class="ghost_button" type="button">Add a memory</button>
+        </div>
+        <div id="memory_gallery" class="memory_gallery"></div>
+      </section>
+
+      <section class="content_band" aria-labelledby="event_timeline_heading">
+        <div class="section_header">
+          <div>
+            <p class="eyebrow_text">our little forever</p>
+            <h2 id="event_timeline_heading">Beautiful Days</h2>
+          </div>
+          <button id="add_event_button" class="ghost_button" type="button">Add a day</button>
+        </div>
+        <div id="event_timeline" class="event_timeline"></div>
+      </section>
+
+      <footer class="love_footer">
+        <p>Made with Love By Diab</p>
+        <div class="daily_love_note" aria-labelledby="daily_love_heading">
+          <p class="eyebrow_text" id="daily_love_heading">today's love note</p>
+          <p id="daily_love_message"></p>
+        </div>
+      </footer>
+    </section>
+  </main>
+
+  <dialog id="memory_dialog" class="editor_dialog">
+    <form id="memory_form" class="editor_form" method="dialog">
+      <div class="dialog_header">
+        <h2 id="memory_dialog_title">Add a memory</h2>
+        <button id="close_memory_dialog_button" class="icon_button" type="button" aria-label="Close">x</button>
+      </div>
+      <label for="memory_title_input">Title</label>
+      <input id="memory_title_input" name="memory_title_input" type="text" placeholder="A smile I want to keep" required>
+
+      <label for="memory_date_input">Date</label>
+      <input id="memory_date_input" name="memory_date_input" type="date">
+
+      <label for="memory_note_input">Little note</label>
+      <textarea id="memory_note_input" name="memory_note_input" rows="4" placeholder="Write the feeling here"></textarea>
+
+      <label for="memory_image_input">Picture</label>
+      <input id="memory_image_input" name="memory_image_input" type="file" accept="image/*">
+
+      <p id="memory_image_hint" class="form_hint"></p>
+      <button id="save_memory_button" class="ghost_button" type="submit">Save memory</button>
+    </form>
+  </dialog>
+
+  <dialog id="event_dialog" class="editor_dialog">
+    <form id="event_form" class="editor_form" method="dialog">
+      <div class="dialog_header">
+        <h2 id="event_dialog_title">Add a beautiful day</h2>
+        <button id="close_event_dialog_button" class="icon_button" type="button" aria-label="Close">x</button>
+      </div>
+      <label for="event_title_input">Title</label>
+      <input id="event_title_input" name="event_title_input" type="text" placeholder="The day we laughed for no reason" required>
+
+      <label for="event_date_input">Date</label>
+      <input id="event_date_input" name="event_date_input" type="date">
+
+      <label for="event_description_input">What happened</label>
+      <textarea id="event_description_input" name="event_description_input" rows="4" placeholder="Keep the memory alive"></textarea>
+
+      <button id="save_event_button" class="ghost_button" type="submit">Save day</button>
+    </form>
+  </dialog>
+
+  <script src="script.js"></script>
+</body>
+</html>

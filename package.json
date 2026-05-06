@@ -1,0 +1,20 @@
+{
+  "name": "svetlana_and_diab_happiness_space",
+  "version": "1.0.0",
+  "description": "A private joyful memory space for Svetlana and Diab.",
+  "main": "server.js",
+  "scripts": {
+    "generate:messages": "node scripts/generate_daily_messages.js",
+    "start": "node server.js",
+    "check": "node --check script.js && node --check server.js"
+  },
+  "keywords": [
+    "private",
+    "memories",
+    "love",
+    "static",
+    "node"
+  ],
+  "author": "Diab",
+  "license": "UNLICENSED"
+}
