@@ -4,6 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Svetlana & Diab</title>
+  <script>
+    (function () {
+      try {
+        var saved_theme = localStorage.getItem("svetlana_diab_theme");
+        if (saved_theme) {
+          document.documentElement.dataset.theme = saved_theme;
+        }
+      } catch (error) {
+        // Theme still falls back gracefully.
+      }
+    }());
+  </script>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -75,6 +87,10 @@
           <p class="eyebrow_text">a place for us</p>
           <h2 id="hero_heading">Every day with you becomes part of the story.</h2>
           <p id="hero_personal_message" class="hero_personal_message"></p>
+          <div class="daily_love_note hero_love_note" aria-labelledby="daily_love_heading">
+            <p class="eyebrow_text" id="daily_love_heading">today's love note</p>
+            <p id="daily_love_message"></p>
+          </div>
         </div>
         <div class="hero_symbol" aria-hidden="true">
           <div class="interlocking_hearts">
@@ -86,11 +102,16 @@
       </section>
 
       <section class="today_prank_card" aria-labelledby="today_prank_heading">
-        <div>
-          <p class="eyebrow_text">today's prank</p>
-          <h2 id="today_prank_heading">One little laugh for today</h2>
-        </div>
+        <h2 id="today_prank_heading">One little laugh for today</h2>
         <p id="today_prank_message"></p>
+      </section>
+
+      <section id="night_tale_card" class="night_tale_card hidden" aria-labelledby="night_tale_heading">
+        <div>
+          <p class="eyebrow_text" id="night_tale_eyebrow">for the quiet hours</p>
+          <h2 id="night_tale_heading">A night tale for you</h2>
+        </div>
+        <p id="night_tale_message"></p>
       </section>
 
       <section class="section_header" aria-labelledby="time_heading">
@@ -160,10 +181,6 @@
 
       <footer class="love_footer">
         <p>Made with Love By Diab</p>
-        <div class="daily_love_note" aria-labelledby="daily_love_heading">
-          <p class="eyebrow_text" id="daily_love_heading">today's love note</p>
-          <p id="daily_love_message"></p>
-        </div>
       </footer>
     </section>
   </main>

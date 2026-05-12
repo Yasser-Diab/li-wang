@@ -2,429 +2,15 @@ const fs = require("fs");
 const path = require("path");
 
 const data_directory = path.join(__dirname, "..", "data");
-const prank_path = path.join(data_directory, "daily_joy_messages.json");
+const joy_path = path.join(data_directory, "daily_joy_messages.json");
 const love_path = path.join(data_directory, "daily_love_messages.json");
-const prank_de_path = path.join(data_directory, "daily_joy_messages_de.json");
+const joy_de_path = path.join(data_directory, "daily_joy_messages_de.json");
 const love_de_path = path.join(data_directory, "daily_love_messages_de.json");
-
-const seed_pranks = [
-  "Today's prank: look very serious and say, 'Svetlana, we need to talk.' Then pause like a movie villain and confess: 'Your smile is illegally powerful and I demand compensation in laughter.'",
-  "Send her: 'I have evidence.' When she asks what evidence, say: 'Screenshots from my heart proving you are adorable.'",
-  "Today's comedy report: Diab tried to act normal, remembered Svetlana exists, and immediately lost the case.",
-  "Ask her if she knows German law. When she says no, tell her: 'Too late, you have been sentenced to one imaginary hug.'",
-  "Breaking news: local heart refuses to behave after receiving one message from Svetlana.",
-  "Send 'I need help' and then explain the problem is that she is too cute and customer service is not answering.",
-  "Say 'I found your secret talent.' The secret talent is making Diab smile like he forgot all adult responsibilities.",
-  "Tiny story: the coffee asked why Diab was smiling. The coffee was informed it would not understand because it is only coffee.",
-  "Today's silly warning: if Svetlana smiles too much, Diab may start writing poetry without supervision.",
-  "Say 'I am filing a complaint.' Complaint: she keeps being wonderful with no permit.",
-  "Send: 'Your account has been charged one smile.' If she asks why, say: 'Subscription renewed automatically in my heart.'",
-  "Today's prank: ask her to stop being beautiful for five minutes because the productivity department is suffering.",
-  "Send: 'I contacted NASA.' Then say: 'They confirmed your smile can be seen from my entire mood.'",
-  "Act suspicious and say: 'I know what you did.' Then reveal: 'You became adorable again. Very suspicious behavior.'",
-  "Tell her: 'I tried to be dramatic today, but you exist, so now I am just romantic and mildly useless.'",
-  "Send: 'Emergency meeting.' Agenda item one: Svetlana is wonderful. Agenda item two: Diab is not recovering.",
-  "Today's tiny prank: ask if she has insurance for all the smiles she causes.",
-  "Send: 'I have a technical issue.' Then say: 'My brain keeps opening a tab called Svetlana and refusing to close it.'",
-  "Tell her: 'Your cuteness has been reported to the authorities.' The authorities are your heart, and they are biased.",
-  "Prank idea: say 'I made a serious decision.' Then tell her the decision is to adore her more professionally.",
-  "Send: 'I need your opinion.' Then ask: 'How do you manage to be this sweet without warning labels?'",
-  "Today's story: Diab tried to focus. Then a thought of Svetlana walked in wearing a crown and took over the meeting.",
-  "Send: 'There is a problem with your name.' Then say: 'Every time I see it, I smile. Very distracting.'",
-  "Tell her: 'The moon called.' It complained that Svetlana is stealing too much of Diab's attention.",
-  "Ask: 'Can you please be less adorable?' Then immediately apologize because that is an impossible request.",
-  "Send: 'I have one question for you.' The question: 'How dare you be this precious from so far away?'",
-  "Today's prank: act like you are angry and say, 'I cannot believe you did this.' Then reveal: 'You made my day better again.'",
-  "Send: 'New rule.' The rule is that Svetlana must accept at least one compliment today, no negotiations.",
-  "Tiny comedy: Diab's heart applied for vacation, but then Svetlana smiled and it cancelled the request.",
-  "Send: 'I solved the mystery.' The mystery: why Diab smiles randomly. The answer has eight letters: Svetlana.",
-  "Tell her: 'I am not saying you are magic, but my mood improved suspiciously after your message.'",
-  "Prank plan: send a very official-looking 'NOTICE' and then write: 'You are loved. This notice cannot be appealed.'",
-  "Ask her if she is secretly a sunrise, because she keeps making things warmer.",
-  "Send: 'I need to confess.' Confession: you are completely guilty of being my favorite thought.",
-  "Today's dramatic update: Diab attempted to resist missing Svetlana. The attempt lasted approximately zero seconds.",
-  "Tell her: 'Your smile has caused a system update.' New version: Diab 2.0, now with extra happiness.",
-  "Send: 'I checked the forecast.' It says: high chance of thinking about Svetlana, low chance of pretending otherwise.",
-  "Prank idea: tell her you joined a club. Club name: People Who Smile When Svetlana Texts.",
-  "Say: 'I have a medical concern.' Concern: every message from you causes uncontrolled happiness.",
-  "Send: 'I found a bug.' Bug report: distance exists. Suggested fix: more memories, more calls, more us.",
-  "Today's tiny scene: Diab tried to act cool. His heart said, 'Svetlana,' and ruined the whole performance.",
-  "Tell her: 'I asked my calendar about you.' It said January 18, 2025 was the day everything became suspiciously beautiful.",
-  "Send: 'Your smile has been audited.' Results: too powerful, too sweet, approved for daily use.",
-  "Prank plan: ask her to send proof she is real, because nobody should be this lovely without documentation.",
-  "Tell her: 'I am starting a petition.' Petition title: Svetlana deserves more smiles today.",
-  "Send: 'I have a password problem.' Password hint: the answer is always Svetlana.",
-  "Today's ridiculous truth: if missing you was a sport, Diab would need a trophy shelf.",
-  "Ask: 'Are you aware you keep improving my day without permission?' Then thank her for the crime.",
-  "Send: 'Important delivery.' Contents: one compliment, two smiles, and a tiny invisible hug.",
-  "Tell her: 'I tried to write a normal message, but my heart added sparkle and refused to apologize.'",
-  "Prank idea: send 'Do not panic.' Then say: 'I just remembered how cute you are. Panic is understandable.'",
-  "Today's headline: Svetlana continues to be the main reason Diab's serious face cannot be trusted.",
-  "Send: 'I have a court case.' Charge: stealing Diab's attention. Sentence: one loving message.",
-  "Ask her to rate your seriousness from 1 to 10, then say you lost all seriousness after thinking of her.",
-  "Tell her: 'My heart has a complaint department.' It only accepts compliments about Svetlana.",
-  "Send: 'I found your superpower.' It is turning ordinary seconds into little golden ones.",
-  "Today's prank: say 'I need space.' Then send a second message: 'Space next to you. Obviously.'",
-  "Tell her: 'I tried to be productive, but then my brain played a highlight reel of you.'",
-  "Send: 'You have one unread fine.' Fine amount: one smile, payable immediately.",
-  "Today's tiny joke: Diab's heart has one tab open, one notification, and one favorite name.",
-  "Tell her: 'If being wonderful was a job, you would be promoted every morning.'"
-];
-
-const seed_love = [
-  "If only I could kidnap you into our little universe, even Google would not be able to find you.",
-  "If I could steal you away to a secret universe, I would make the stars sign a privacy agreement before they looked at you.",
-  "Svetlana, I love you in the quiet places where words arrive late and the heart has already spoken.",
-  "Every ordinary day becomes warmer when your name passes through my mind.",
-  "If I could fold the distance between us, I would keep you close enough for the universe to get jealous.",
-  "I love you more gently than morning light and more stubbornly than time.",
-  "You are not just someone I miss; you are the place my heart keeps trying to return to.",
-  "I love the way your existence turns the world softer, even from far away.",
-  "If my heart had a map, every road would eventually spell Svetlana.",
-  "You are my favorite thought, my softest dream, and the reason ordinary minutes feel golden.",
-  "I would hide you in our own private sky, where only tenderness knows the address.",
-  "Even if every search engine in the world looked for you, I would keep you safe in the place only love can enter.",
-  "I love you like a secret universe with one sun, one moon, and one name: Svetlana.",
-  "Some people are met by chance; you feel like you were recognized by my soul.",
-  "Every time I think of you, my day becomes a room with the lights turned on.",
-  "I love you in all the languages I know, and in the silence between them too.",
-  "You are the soft interruption my heart never wants to mute.",
-  "If distance is a wall, my love for you keeps drawing windows in it.",
-  "My heart does not just say your name; it makes a home around it.",
-  "You are the part of the day I keep looking for, even when nothing is missing."
-];
-
-const prank_openings = [
-  "Today's prank",
-  "Tiny prank",
-  "Very serious prank",
-  "Soft chaos plan",
-  "Today's harmless trouble",
-  "Official mischief plan",
-  "Comedy mission",
-  "Little drama plan",
-  "Suspiciously romantic prank",
-  "Today's playful trap",
-  "Sweet nonsense mission",
-  "Tiny operation"
-];
-
-const prank_setups = [
-  "send 'we need to discuss something important'",
-  "send 'I found a problem'",
-  "send 'this is an official notice'",
-  "send 'I need your signature'",
-  "tell her the authorities called",
-  "tell her NASA requested a report",
-  "tell her Google Maps failed",
-  "tell her your serious face resigned",
-  "tell her your calendar started blushing",
-  "send 'there has been an incident'",
-  "send 'your daily audit is complete'",
-  "tell her customer support opened a case",
-  "tell her the moon filed a complaint",
-  "tell her your coffee needs answers",
-  "send 'I have classified information'",
-  "tell her your heart held a meeting",
-  "send 'I am investigating you'",
-  "tell her the productivity department is upset",
-  "send 'your account has unusual activity'",
-  "tell her the weather app is confused",
-  "send 'I have a delivery for you'",
-  "tell her your brain opened too many tabs",
-  "send 'we have a tiny emergency'",
-  "tell her your smile detector exploded"
-];
-
-const prank_reveals = [
-  "the emergency is that she is too adorable and Diab is not trained for this",
-  "the problem is that her smile keeps improving the entire atmosphere",
-  "the notice says she is loved beyond all reasonable limits",
-  "the signature is needed to confirm she is dangerously sweet",
-  "the report says Diab smiled again for no professional reason",
-  "the map failed because every road led back to Svetlana",
-  "the complaint is that one woman should not have this much charm",
-  "the meeting concluded that missing her is a full-time occupation",
-  "the audit found too much beauty and not enough warning labels",
-  "the incident is one thought of her causing a heart-wide celebration",
-  "the case is about unauthorized cuteness and repeat happiness",
-  "the moon is jealous because Diab keeps looking for her light instead",
-  "the coffee wants to know why it is no longer the reason he wakes up smiling",
-  "the classified information is that he loves her more than yesterday",
-  "the investigation discovered she has been stealing attention with tenderness",
-  "productivity is upset because Svetlana keeps appearing in every thought",
-  "the unusual activity is Diab smiling at his screen like a romantic suspect",
-  "the weather app is confused because her name keeps making the day warmer",
-  "the delivery contains one invisible hug and a very obvious compliment",
-  "the tabs are all named Svetlana and none of them want to close",
-  "the detector exploded because her smile exceeded the safe sparkle limit",
-  "the final verdict is that she must accept one sweet message immediately"
-];
-
-const prank_endings = [
-  "No appeal is available.",
-  "The sentence is one laugh.",
-  "The evidence is overwhelming.",
-  "Diab accepts full responsibility.",
-  "This message self-destructs into a smile.",
-  "The heart court has spoken.",
-  "Please respond with one tiny smile.",
-  "The romance department is monitoring the situation.",
-  "The case remains beautifully open.",
-  "All witnesses are biased in her favor.",
-  "Further sweetness is expected.",
-  "This is not a drill."
-];
-
-const love_openings = [
-  "Svetlana",
-  "My angel Svetlana",
-  "My beautiful Svetlana",
-  "My heart",
-  "My soft universe",
-  "My favorite miracle",
-  "My golden thought",
-  "My love",
-  "My sweetest distance",
-  "My always"
-];
-
-const love_images = [
-  "a private universe where every star knows your name",
-  "a quiet morning that begins inside my heart",
-  "a warm light that keeps finding me",
-  "the softest place my thoughts can rest",
-  "a secret sky I would build only for us",
-  "the reason distance feels temporary",
-  "the name my heart says before it sleeps",
-  "the smile my day keeps waiting for",
-  "the golden line running through my ordinary hours",
-  "the home my heart recognizes",
-  "a moonlit path back to tenderness",
-  "the beautiful answer to a question I never knew I was asking",
-  "the calm inside every noisy day",
-  "the sweet proof that souls can recognize each other",
-  "the hidden melody behind my happiest thoughts",
-  "the page of my life I never want to stop reading",
-  "the little sun I carry through the day",
-  "the reason my future feels less far away",
-  "the universe I would choose every time",
-  "the gentle magic I believe in most"
-];
-
-const love_actions = [
-  "I would hide you from the whole world just to keep you safe in joy",
-  "I would follow your smile through any distance",
-  "I would save every small memory with you like gold",
-  "I would choose your voice over a thousand perfect songs",
-  "I would make a shelter out of my arms and call it ours",
-  "I would keep writing your name into every tomorrow",
-  "I would ask time to slow down whenever you are near",
-  "I would turn every ordinary minute into a place for us",
-  "I would build a door in the sky if it led me to you",
-  "I would make the stars jealous by loving you quietly and completely",
-  "I would carry your laugh like a secret treasure",
-  "I would keep every version of you loved",
-  "I would fold the map until your heart was beside mine",
-  "I would save the softest part of every day for you",
-  "I would protect your smile like it is my favorite sunrise",
-  "I would choose our tiny universe over every crowded world",
-  "I would let the whole internet lose you if it meant I found you in my arms",
-  "I would turn missing you into a promise to love you harder",
-  "I would keep your name warm in every language I learn",
-  "I would make every day a small proof that you are loved"
-];
-
-const love_closings = [
-  "I love you more than yesterday, and yesterday was already serious.",
-  "You are my favorite place to arrive.",
-  "Even far away, you are close to the best part of me.",
-  "My heart keeps choosing you without asking permission.",
-  "You make the world feel less random and more kind.",
-  "I am so grateful that your name exists in my life.",
-  "You are loved in the loud ways and the quiet ones.",
-  "The universe feels warmer because you are in it.",
-  "I love you with patience, hunger, tenderness, and hope.",
-  "No distance can make my heart forget where it belongs.",
-  "You are my softest certainty.",
-  "I miss you with a smile hidden inside it.",
-  "My love for you keeps finding new rooms inside me.",
-  "You are the thought I never want to finish.",
-  "I love you beyond maps, clocks, and reasonable explanations.",
-  "You are worth every wait and every wish.",
-  "You make my future feel like a hand reaching back for mine.",
-  "If love had coordinates, mine would point to you.",
-  "You are the little forever I keep carrying.",
-  "I love you like our own universe already exists and is waiting."
-];
-
-const seed_pranks_de = [
-  "Heutiger Streich: Schreib ganz ernst, 'Svetlana, wir müssen reden.' Dann gestehe: 'Dein Lächeln ist viel zu stark und ich fordere Schadenersatz in Form von Lachen.'",
-  "Schreib ihr: 'Ich habe Beweise.' Wenn sie fragt welche, sag: 'Screenshots aus meinem Herzen, die beweisen, dass du bezaubernd bist.'",
-  "Heutiger Comedy-Bericht: Diab wollte normal sein, erinnerte sich an Svetlana und verlor sofort den Fall.",
-  "Frag sie, ob sie deutsches Recht kennt. Wenn sie nein sagt, antworte: 'Zu spät, du wurdest zu einer imaginären Umarmung verurteilt.'",
-  "Eilmeldung: Ein lokales Herz weigert sich, sich nach einer Nachricht von Svetlana normal zu benehmen.",
-  "Schreib 'Ich brauche Hilfe' und erkläre dann, dass sie zu süß ist und der Kundendienst nicht antwortet.",
-  "Sag: 'Ich habe dein geheimes Talent gefunden.' Das Talent ist, Diab so lächeln zu lassen, als hätte er alle Erwachsenenpflichten vergessen.",
-  "Kleine Geschichte: Der Kaffee fragte, warum Diab lächelt. Dem Kaffee wurde gesagt, er würde es nicht verstehen, weil er nur Kaffee ist.",
-  "Heutige Warnung: Wenn Svetlana zu sehr lächelt, könnte Diab ohne Aufsicht Gedichte schreiben.",
-  "Sag: 'Ich reiche eine Beschwerde ein.' Beschwerde: Sie ist weiterhin wunderbar ohne Genehmigung."
-];
-
-const seed_love_de = [
-  "Wenn ich dich nur in unser kleines Universum entführen könnte, würde dich nicht einmal Google finden.",
-  "Wenn ich dich in ein geheimes Universum stehlen könnte, müssten die Sterne erst eine Schweigepflicht unterschreiben.",
-  "Svetlana, ich liebe dich an den stillen Orten, wo Worte zu spät kommen und das Herz schon gesprochen hat.",
-  "Jeder gewöhnliche Tag wird wärmer, sobald dein Name durch meine Gedanken geht.",
-  "Wenn ich die Entfernung zwischen uns falten könnte, würde ich dich so nah halten, dass das Universum neidisch wird.",
-  "Ich liebe dich sanfter als Morgenlicht und sturer als die Zeit.",
-  "Du bist nicht nur jemand, den ich vermisse; du bist der Ort, zu dem mein Herz immer zurück will.",
-  "Ich liebe, wie deine Existenz die Welt weicher macht, sogar aus der Ferne.",
-  "Wenn mein Herz eine Karte hätte, würde jeder Weg am Ende Svetlana buchstabieren.",
-  "Du bist mein liebster Gedanke, mein weichster Traum und der Grund, warum gewöhnliche Minuten golden wirken."
-];
-
-const prank_openings_de = [
-  "Heutiger Streich",
-  "Kleiner Streich",
-  "Sehr ernster Streich",
-  "Sanfter Chaosplan",
-  "Heutiger harmloser Unsinn",
-  "Offizieller Schabernack",
-  "Comedy-Mission",
-  "Kleines Drama",
-  "Verdächtig romantischer Streich",
-  "Heutige spielerische Falle"
-];
-
-const prank_setups_de = [
-  "schreib 'wir müssen etwas Wichtiges besprechen'",
-  "schreib 'ich habe ein Problem gefunden'",
-  "schreib 'dies ist eine offizielle Mitteilung'",
-  "schreib 'ich brauche deine Unterschrift'",
-  "sag ihr, die Behörden hätten angerufen",
-  "sag ihr, die NASA wolle einen Bericht",
-  "sag ihr, Google Maps habe versagt",
-  "sag ihr, dein ernstes Gesicht habe gekündigt",
-  "sag ihr, dein Kalender sei rot geworden",
-  "schreib 'es gab einen Vorfall'",
-  "schreib 'deine tägliche Prüfung ist abgeschlossen'",
-  "sag ihr, der Kundendienst habe einen Fall eröffnet",
-  "sag ihr, der Mond habe eine Beschwerde eingereicht",
-  "sag ihr, dein Kaffee brauche Antworten",
-  "schreib 'ich habe geheime Informationen'",
-  "sag ihr, dein Herz habe eine Sitzung abgehalten",
-  "schreib 'ich ermittle gegen dich'",
-  "sag ihr, die Produktivitätsabteilung sei verärgert",
-  "schreib 'dein Konto zeigt ungewöhnliche Aktivität'",
-  "sag ihr, die Wetter-App sei verwirrt"
-];
-
-const prank_reveals_de = [
-  "der Notfall ist, dass sie zu bezaubernd ist und Diab dafür nicht ausgebildet wurde",
-  "das Problem ist, dass ihr Lächeln die ganze Atmosphäre verbessert",
-  "die Mitteilung sagt, dass sie über alle vernünftigen Grenzen hinaus geliebt wird",
-  "die Unterschrift bestätigt, dass sie gefährlich süß ist",
-  "der Bericht sagt, dass Diab wieder ohne beruflichen Grund gelächelt hat",
-  "die Karte versagte, weil jeder Weg zurück zu Svetlana führte",
-  "die Beschwerde lautet, dass eine Frau nicht so viel Charme haben sollte",
-  "die Sitzung ergab, dass Vermissen ein Vollzeitjob ist",
-  "die Prüfung fand zu viel Schönheit und zu wenige Warnhinweise",
-  "der Vorfall war ein Gedanke an sie, der eine Herzfeier ausgelöst hat",
-  "der Fall handelt von unerlaubter Süßheit und wiederholtem Glück",
-  "der Mond ist eifersüchtig, weil Diab ständig nach ihrem Licht sucht",
-  "der Kaffee wissen will, warum er nicht mehr der Grund ist, warum Diab lächelt",
-  "die geheime Information lautet, dass er sie mehr liebt als gestern",
-  "die Ermittlungen ergaben, dass sie Aufmerksamkeit mit Zärtlichkeit stiehlt",
-  "die Produktivität leidet, weil Svetlana in jedem Gedanken auftaucht",
-  "die ungewöhnliche Aktivität ist Diab, der wie ein romantischer Verdächtiger auf den Bildschirm lächelt",
-  "die Wetter-App verwirrt ist, weil ihr Name den Tag wärmer macht",
-  "die Lieferung eine unsichtbare Umarmung und ein sehr offensichtliches Kompliment enthält",
-  "alle Tabs Svetlana heißen und keiner geschlossen werden will"
-];
-
-const prank_endings_de = [
-  "Berufung ist ausgeschlossen.",
-  "Das Urteil lautet: ein Lachen.",
-  "Die Beweise sind überwältigend.",
-  "Diab übernimmt die volle Verantwortung.",
-  "Diese Nachricht verwandelt sich gleich in ein Lächeln.",
-  "Das Herzgericht hat gesprochen.",
-  "Bitte mit einem kleinen Lächeln antworten.",
-  "Die Romantikabteilung beobachtet die Lage.",
-  "Der Fall bleibt wunderschön offen.",
-  "Alle Zeugen sind zu ihren Gunsten voreingenommen."
-];
-
-const love_openings_de = [
-  "Svetlana",
-  "Mein Engel Svetlana",
-  "Meine schöne Svetlana",
-  "Mein Herz",
-  "Mein weiches Universum",
-  "Mein liebstes Wunder",
-  "Mein goldener Gedanke",
-  "Meine Liebe",
-  "Meine süßeste Entfernung",
-  "Mein Immer"
-];
-
-const love_images_de = [
-  "ein privates Universum, in dem jeder Stern deinen Namen kennt",
-  "ein stiller Morgen, der in meinem Herzen beginnt",
-  "ein warmes Licht, das mich immer findet",
-  "der weichste Ort, an dem meine Gedanken ruhen können",
-  "ein geheimer Himmel, den ich nur für uns bauen würde",
-  "der Grund, warum Entfernung vorübergehend wirkt",
-  "der Name, den mein Herz vor dem Schlafen sagt",
-  "das Lächeln, auf das mein Tag wartet",
-  "die goldene Linie durch meine gewöhnlichen Stunden",
-  "das Zuhause, das mein Herz erkennt",
-  "ein Mondweg zurück zur Zärtlichkeit",
-  "die schöne Antwort auf eine Frage, die ich nie kannte",
-  "die Ruhe in jedem lauten Tag",
-  "der süße Beweis, dass Seelen einander erkennen können",
-  "die verborgene Melodie hinter meinen glücklichsten Gedanken"
-];
-
-const love_actions_de = [
-  "ich würde dich vor der ganzen Welt verstecken, nur um dich in Freude sicher zu halten",
-  "ich würde deinem Lächeln durch jede Entfernung folgen",
-  "ich würde jede kleine Erinnerung mit dir wie Gold bewahren",
-  "ich würde deine Stimme tausend perfekten Liedern vorziehen",
-  "ich würde aus meinen Armen einen Schutz bauen und ihn unser Zuhause nennen",
-  "ich würde deinen Namen in jedes Morgen schreiben",
-  "ich würde die Zeit bitten, langsamer zu werden, wenn du nah bist",
-  "ich würde jede gewöhnliche Minute in einen Ort für uns verwandeln",
-  "ich würde eine Tür in den Himmel bauen, wenn sie zu dir führt",
-  "ich würde die Sterne neidisch machen, weil ich dich still und vollständig liebe",
-  "ich würde dein Lachen wie einen geheimen Schatz tragen",
-  "ich würde jede Version von dir lieben",
-  "ich würde die Karte falten, bis dein Herz neben meinem liegt",
-  "ich würde den weichsten Teil jedes Tages für dich aufheben",
-  "ich würde dein Lächeln beschützen, als wäre es mein liebster Sonnenaufgang"
-];
-
-const love_closings_de = [
-  "Ich liebe dich mehr als gestern, und gestern war es schon ernst.",
-  "Du bist mein liebster Ort zum Ankommen.",
-  "Auch aus der Ferne bist du dem besten Teil von mir nah.",
-  "Mein Herz wählt dich, ohne um Erlaubnis zu fragen.",
-  "Du lässt die Welt weniger zufällig und freundlicher wirken.",
-  "Ich bin so dankbar, dass dein Name in meinem Leben existiert.",
-  "Du wirst in den lauten und in den stillen Arten geliebt.",
-  "Das Universum fühlt sich wärmer an, weil du darin bist.",
-  "Ich liebe dich mit Geduld, Sehnsucht, Zärtlichkeit und Hoffnung.",
-  "Keine Entfernung kann mein Herz vergessen lassen, wohin es gehört.",
-  "Du bist meine weichste Gewissheit.",
-  "Ich vermisse dich mit einem Lächeln darin.",
-  "Meine Liebe zu dir findet immer neue Räume in mir.",
-  "Du bist der Gedanke, den ich nie beenden möchte.",
-  "Ich liebe dich jenseits von Karten, Uhren und vernünftigen Erklärungen."
-];
+const night_tales_path = path.join(data_directory, "night_tales.json");
+const night_tales_de_path = path.join(data_directory, "night_tales_de.json");
 
 function unique_messages(messages) {
-  return Array.from(new Set(messages.map((message) => message.trim()).filter(Boolean)));
+  return Array.from(new Set(messages.map((message) => String(message).trim()).filter(Boolean)));
 }
 
 function shuffle_messages(messages, seed_text) {
@@ -440,86 +26,566 @@ function shuffle_messages(messages, seed_text) {
   return shuffled;
 }
 
-function build_pranks(target_count) {
-  const messages = [...seed_pranks];
+function slice_shuffled(messages, target_count, seed_text) {
+  return shuffle_messages(unique_messages(messages), seed_text).slice(0, target_count);
+}
 
-  for (const opening of prank_openings) {
-    for (const setup of prank_setups) {
-      for (const reveal of prank_reveals) {
-        const ending = prank_endings[(messages.length + setup.length + reveal.length) % prank_endings.length];
-        messages.push(`${opening}: ${setup}. Then reveal that ${reveal}. ${ending}`);
+const seed_joy = [
+  "Harmless chaos for today: send 'I have a serious update' and then reveal that the coffee has been demoted because a smile already did all the work.",
+  "Tiny comedy report: the moon filed a complaint because people keep getting poetic without permission.",
+  "Soft prank idea: announce that everyone must be serious for sixty seconds and then fail together almost immediately.",
+  "Public notice: adulthood nearly started this morning, but breakfast delayed the launch.",
+  "Little joke for today: if the Wi-Fi asks why the room feels warmer, blame the good mood and protect the rest of the evidence.",
+  "Friendly nonsense bulletin: the fridge light is convinced it deserves applause every time it successfully finds cake.",
+  "Plot twist of the day: the alarm clock acted offended when nobody thanked it for its dramatic performance.",
+  "Mild mischief suggestion: send 'urgent meeting in the kitchen' and let the agenda turn out to be cookies.",
+  "Today the weather attempted to be mysterious, but the sunlight gave the whole surprise away before lunch.",
+  "The socks would like it known that disappearing in the laundry is not a bug, it is performance art."
+];
+
+const joy_openings = [
+  "Tiny harmless chaos",
+  "Little plot twist",
+  "Soft comedy alert",
+  "Friendly nonsense report",
+  "Today's playful idea",
+  "Mild mischief notice",
+  "Unofficial happiness memo",
+  "Small dramatic bulletin",
+  "A very unserious update",
+  "The daily laugh dispatch",
+  "A miniature act of nonsense",
+  "A harmless trouble report"
+];
+
+const joy_setups = [
+  "Text 'I discovered something suspicious'",
+  "Say 'we need a professional opinion'",
+  "Send 'the kitchen has issued a statement'",
+  "Announce that the playlist has become emotional again",
+  "Claim that the coffee requested legal representation",
+  "Say that the pillow has started spreading rumors",
+  "Text 'I have breaking domestic news'",
+  "Declare that the moon has become judgmental",
+  "Inform everyone that the weather app is confused again",
+  "Say 'I have reviewed the evidence'",
+  "Text 'this is an official notification from the laughter department'",
+  "Announce that the toaster wants to be appreciated",
+  "Claim that the alarm clock is demanding respect",
+  "Text 'I have a serious finding from today's investigation'",
+  "Declare that the group chat is dangerously close to becoming theater",
+  "Say that the fridge light deserves an award",
+  "Text 'the stars held a meeting last night'",
+  "Announce that the socks are plotting another disappearance",
+  "Say 'the kettle has reached an emotional conclusion'",
+  "Text 'the day has submitted a formal complaint'"
+];
+
+const joy_reveals = [
+  "the suspicious thing is how quickly a good mood can take over an ordinary room",
+  "the professional opinion is that a laugh would improve the entire situation",
+  "the statement says dessert is innocent and should be supported immediately",
+  "the playlist became emotional because one song still remembers summer too clearly",
+  "the coffee needs help competing with people who wake up charming",
+  "the pillow says nobody should be expected to leave a warm bed without applause",
+  "the breaking news is that the day improved after one good conversation",
+  "the moon is being judgmental because nobody invited it to breakfast",
+  "the weather app cannot explain why everything feels softer than forecast",
+  "the evidence points to a dangerous amount of hidden sweetness",
+  "the laughter department has approved one dramatic smile and zero stress",
+  "the toaster feels underappreciated for its daily commitment to crunch",
+  "the alarm clock is upset that everyone blames it for the existence of mornings",
+  "the investigation found traces of joy where seriousness was expected",
+  "the group chat has become theater because everyone is one emoji away from a monologue",
+  "the award goes to the fridge light for dedication under difficult dessert conditions",
+  "the stars agreed that some people make night feel less lonely",
+  "the socks are disappearing only to keep life mysterious",
+  "the kettle concluded that tea is basically a small act of forgiveness",
+  "the complaint says the day became far too pleasant to be ordinary",
+  "the whole emergency is that someone remembered how funny life can be",
+  "the final report confirms that gentle chaos is good for morale"
+];
+
+const joy_endings = [
+  "Please respond with a smile at your earliest convenience.",
+  "No further seriousness is required.",
+  "All witnesses support the joke.",
+  "The case may now dissolve into laughter.",
+  "The evidence has been filed under 'worth it.'",
+  "The mood is expected to improve shortly.",
+  "No apology will be accepted for enjoying this.",
+  "The romance department remains calmly amused.",
+  "Nothing was harmed except unnecessary tension.",
+  "A tiny laugh is the recommended next step.",
+  "This message is legally allowed to become a grin.",
+  "The whole situation is now beautifully unserious."
+];
+
+const seed_love = [
+  "If only I could kidnap you into our little universe, even Google would not be able to find you.",
+  "I love you in the quiet places where words arrive late and the heart has already spoken.",
+  "Svetlana, every ordinary day becomes warmer when your name passes through my mind.",
+  "If I could fold the distance between us, I would keep you close enough for the universe to get jealous.",
+  "I love you more gently than morning light and more stubbornly than time.",
+  "You are the soft interruption my heart never wants to mute.",
+  "My love for you keeps finding new rooms inside me.",
+  "You are my favorite thought, my softest dream, and the reason ordinary minutes feel golden."
+];
+
+const love_openings = [
+  "Svetlana",
+  "My angel Svetlana",
+  "My love",
+  "My heart",
+  "My soft universe",
+  "My favorite miracle",
+  "My sweetest distance",
+  "My always",
+  "Beautiful soul",
+  "Golden one"
+];
+
+const love_images = [
+  "you are the quiet light that keeps returning to me",
+  "you are the home my heart recognizes in any weather",
+  "you are the warm line running through an ordinary day",
+  "you are the reason distance never gets the last word",
+  "you are the soft place my thoughts go when they are tired",
+  "you are the hidden melody beneath my happiest moments",
+  "you are the kind answer to a question my soul had been carrying",
+  "you are the page of life I never want to finish reading",
+  "you are the calm in the middle of every loud hour",
+  "you are the little universe I would choose every time"
+];
+
+const love_actions = [
+  "I would keep choosing you even on the quiet days that ask for patience",
+  "I would save every small memory with you like it was made of gold",
+  "I would fold the distance smaller every chance I got",
+  "I would protect your smile like it was my favorite sunrise",
+  "I would make room for you in every version of my future",
+  "I would let the whole internet lose you if it meant I found you in my arms",
+  "I would carry your laugh with me like a private treasure",
+  "I would turn missing you into another reason to love you harder",
+  "I would build tenderness into the walls of every tomorrow",
+  "I would keep your name warm in every language I learn"
+];
+
+const love_closings = [
+  "I love you more than yesterday, and yesterday was already serious.",
+  "You are my favorite place to arrive.",
+  "Even far away, you are close to the best part of me.",
+  "My heart keeps choosing you without asking permission.",
+  "You make the world feel less random and more kind.",
+  "No distance can make my heart forget where it belongs.",
+  "You are my softest certainty.",
+  "You are worth every wait and every wish.",
+  "I miss you with a smile hidden inside it.",
+  "You make my future feel like a hand reaching back for mine."
+];
+
+const seed_night_tales = [
+  "Tonight the city went quiet early, but the moon stayed awake a little longer, as if it knew one heart still wanted a story before sleep. So it laid a silver path across the rooftops and whispered that the softest distances are often the ones already learning how to disappear.",
+  "In a small invisible garden above the night, the stars kept passing a secret from one to another: somewhere below, two souls had already found each other, and that was enough to make the darkness gentle.",
+  "The night folded itself around the windows like velvet, and somewhere between the hush of the room and the hush of the sky, love sat down without making a sound and stayed.",
+  "A slow wind crossed the sleeping buildings and carried one quiet truth with it: there are hearts that know each other long before the world learns their names.",
+  "The lamp, the moon, and the last awake star kept each other company until the room felt less like a room and more like a safe harbor made of light."
+];
+
+const night_openings = [
+  "Tonight",
+  "After 21:00",
+  "In the quiet hour",
+  "When the windows turned dark and kind",
+  "At the edge of sleep",
+  "Under the patient moon",
+  "When the city finally lowered its voice",
+  "Deep inside the blue hour",
+  "While the rooftops rested",
+  "In the hush before dreams"
+];
+
+const night_scenes = [
+  "the moon lingered above the rooftops as if it had one more secret to tell",
+  "the stars arranged themselves like a note nobody wanted to fold away",
+  "the wind moved slowly, careful not to disturb the last good thought of the day",
+  "the room held its breath the way a story does before its gentlest sentence",
+  "the curtains floated softly as if they had learned the language of lullabies",
+  "the streetlights kept watch like quiet guardians of tender things",
+  "the dark felt less empty and more like velvet around a jewel",
+  "the sky looked close enough to touch with one brave little wish",
+  "the silence became warm instead of lonely",
+  "the last light in the room felt almost human with patience"
+];
+
+const night_turns = [
+  "and somewhere inside that stillness, love became easier to hear",
+  "and the heart remembered that waiting can still be full of light",
+  "and every distance looked less like a wall and more like a road on its way home",
+  "and even the shadows seemed willing to soften at the edges",
+  "and the quiet turned into a place where hope could sit down and stay",
+  "and the whole night seemed to lean closer, just to listen",
+  "and the world felt briefly arranged in the right order",
+  "and a small peace arrived without asking for attention",
+  "and the darkness lost its sharp corners",
+  "and the sky behaved like it already knew the ending would be gentle"
+];
+
+const night_closings = [
+  "So the night carried its story carefully, like a candle shielded from the wind.",
+  "And that was enough to make sleep feel like a blessing instead of an ending.",
+  "The tale ended softly, the way good nights always should.",
+  "Nothing dramatic happened after that, only peace.",
+  "The stars kept the rest of the story until tomorrow.",
+  "By then the heart had already understood everything it needed.",
+  "The room stayed quiet, but it was no longer empty.",
+  "Even silence seemed grateful to be there."
+];
+
+const seed_joy_de = [
+  "Harmloser Schabernack fuer heute: Schreib 'Ich habe Neuigkeiten' und verrate dann, dass der Kaffee seinen Job verloren hat, weil ein Laecheln schon alles erledigt.",
+  "Kleiner Comedy-Bericht: Der Mond hat eine Beschwerde eingereicht, weil schon wieder jemand poetisch geworden ist.",
+  "Sanfter Scherz fuer heute: Sag 'wir muessen eine Minute ernst sein' und verbringt dann die ganze Minute damit, nicht zu lachen.",
+  "Eilmeldung: Das Erwachsensein wollte heute Morgen fast beginnen, aber dann kam das Fruehstueck dazwischen.",
+  "Kleines Lachen fuer heute: Falls das WLAN fragt, warum alles waermer wirkt, bitte die gute Stimmung nicht verraten."
+];
+
+const joy_openings_de = [
+  "Kleiner harmloser Unsinn",
+  "Kleine Wendung des Tages",
+  "Sanfter Comedy-Alarm",
+  "Freundlicher Nonsens-Bericht",
+  "Heutige Spielidee",
+  "Milde Schabernack-Meldung",
+  "Inoffizielles Gluecks-Memo",
+  "Kleines Drama-Bulletin",
+  "Sehr unserioeses Update",
+  "Taegliche Lach-Notiz",
+  "Mini-Unsinn des Tages",
+  "Harmloser Trouble-Bericht"
+];
+
+const joy_setups_de = [
+  "Schreib 'ich habe etwas Verdaechtiges entdeckt'",
+  "Sag 'wir brauchen eine professionelle Meinung'",
+  "Schreib 'die Kueche hat eine Erklaerung abgegeben'",
+  "Verkuende, dass die Playlist wieder emotional geworden ist",
+  "Behaupte, der Kaffee habe einen Anwalt verlangt",
+  "Sag, das Kissen verbreite Geruechte",
+  "Schreib 'ich habe haeusliche Eilmeldungen'",
+  "Erklaere, dass der Mond ploetzlich wertend geworden ist",
+  "Informiere alle, dass die Wetter-App wieder verwirrt ist",
+  "Sag 'ich habe die Beweise geprueft'",
+  "Schreib 'dies ist eine offizielle Mitteilung der Lach-Abteilung'",
+  "Verkuende, dass der Toaster mehr Anerkennung moechte",
+  "Behaupte, der Wecker verlange Respekt",
+  "Schreib 'ich habe ein ernstes Ergebnis aus der Untersuchung'",
+  "Erklaere, dass der Gruppenchat kurz vor Theater steht",
+  "Sag, das Kuehlschranklicht verdiene einen Preis",
+  "Schreib 'die Sterne haben gestern Nacht getagt'",
+  "Verkuende, dass die Socken wieder verschwinden wollen",
+  "Sag 'der Wasserkessel ist zu einem emotionalen Schluss gekommen'",
+  "Schreib 'der Tag hat eine offizielle Beschwerde eingereicht'"
+];
+
+const joy_reveals_de = [
+  "das Verdaechtige ist, wie schnell gute Laune einen gewoehnlichen Raum uebernehmen kann",
+  "die professionelle Meinung lautet, dass ein Lachen alles verbessern wuerde",
+  "die Erklaerung sagt, dass Dessert unschuldig ist und sofort unterstuetzt werden sollte",
+  "die Playlist wurde emotional, weil ein Lied den Sommer nicht vergessen hat",
+  "der Kaffee Hilfe braucht, um gegen charmante Menschen anzukommen",
+  "das Kissen meint, niemand sollte ohne Applaus aus einem warmen Bett aufstehen muessen",
+  "die Eilmeldung lautet, dass der Tag nach einem guten Gespraech besser geworden ist",
+  "der Mond wertend ist, weil ihn niemand zum Fruehstueck eingeladen hat",
+  "die Wetter-App nicht erklaeren kann, warum alles weicher wirkt als vorhergesagt",
+  "die Beweise auf eine gefaehrliche Menge versteckter Suessigkeit hindeuten",
+  "die Lach-Abteilung ein dramatisches Laecheln und null Stress genehmigt hat",
+  "der Toaster fuer taegliche Knusper-Treue gewuerdigt werden moechte",
+  "der Wecker beleidigt ist, weil alle ihm die Existenz des Morgens vorwerfen",
+  "die Untersuchung Spuren von Freude gefunden hat, wo Ernst erwartet wurde",
+  "der Gruppenchat zu Theater geworden ist, weil nur noch ein Emoji bis zum Monolog fehlt",
+  "der Preis an das Kuehlschranklicht fuer Einsatz unter schwierigen Dessert-Bedingungen geht",
+  "die Sterne beschlossen haben, dass manche Menschen die Nacht weniger einsam machen",
+  "die Socken nur verschwinden, um das Leben geheimnisvoll zu halten",
+  "der Wasserkessel beschlossen hat, dass Tee im Grunde eine kleine Form von Vergebung ist",
+  "die Beschwerde sagt, dass der Tag zu angenehm geworden ist, um noch gewoehnlich zu sein",
+  "der ganze Notfall darin besteht, dass jemand wieder gemerkt hat, wie lustig das Leben sein kann",
+  "der Abschlussbericht bestaetigt, dass sanftes Chaos gut fuer die Stimmung ist"
+];
+
+const joy_endings_de = [
+  "Bitte antworte bei Gelegenheit mit einem Laecheln.",
+  "Weitere Ernsthaftigkeit ist nicht noetig.",
+  "Alle Zeugen stehen hinter dem Witz.",
+  "Der Fall darf sich nun in Lachen aufloesen.",
+  "Die Beweise wurden unter 'lohnt sich' abgelegt.",
+  "Mit besserer Stimmung ist in Kuerze zu rechnen.",
+  "Keine Entschuldigung fuer Genuss wird angenommen.",
+  "Die Romantik-Abteilung bleibt ruhig amuesiert.",
+  "Niemand kam zu Schaden, ausser unnoetiger Spannung.",
+  "Ein kleines Lachen ist der empfohlene naechste Schritt.",
+  "Diese Nachricht darf sich legal in ein Grinsen verwandeln.",
+  "Die ganze Lage ist jetzt wunderschoen unserioes."
+];
+
+const seed_love_de = [
+  "Wenn ich dich nur in unser kleines Universum entfuehren koennte, wuerde dich nicht einmal Google finden.",
+  "Svetlana, ich liebe dich an den stillen Orten, wo Worte zu spaet kommen und das Herz schon gesprochen hat.",
+  "Jeder gewoehnliche Tag wird waermer, sobald dein Name durch meine Gedanken geht.",
+  "Wenn ich die Entfernung zwischen uns falten koennte, wuerde ich dich so nah halten, dass das Universum neidisch wird.",
+  "Ich liebe dich sanfter als Morgenlicht und sturer als die Zeit.",
+  "Du bist die weiche Unterbrechung, die mein Herz nie stumm schalten will."
+];
+
+const love_openings_de = [
+  "Svetlana",
+  "Mein Engel Svetlana",
+  "Meine Liebe",
+  "Mein Herz",
+  "Mein weiches Universum",
+  "Mein liebstes Wunder",
+  "Meine suesseste Ferne",
+  "Mein Immer",
+  "Schoene Seele",
+  "Goldener Gedanke"
+];
+
+const love_images_de = [
+  "du bist das stille Licht, das immer wieder zu mir zurueckfindet",
+  "du bist das Zuhause, das mein Herz bei jedem Wetter erkennt",
+  "du bist die warme Linie durch einen gewoehnlichen Tag",
+  "du bist der Grund, warum Entfernung nie das letzte Wort bekommt",
+  "du bist der weiche Ort, an den meine Gedanken gehen, wenn sie muede sind",
+  "du bist die verborgene Melodie unter meinen gluecklichsten Momenten",
+  "du bist die freundliche Antwort auf eine Frage, die meine Seele lange getragen hat",
+  "du bist die Seite meines Lebens, die ich nie zu Ende lesen will",
+  "du bist die Ruhe mitten in jeder lauten Stunde",
+  "du bist das kleine Universum, das ich jedes Mal waehlen wuerde"
+];
+
+const love_actions_de = [
+  "ich wuerde dich selbst an stillen Tagen immer wieder waehlen",
+  "ich wuerde jede kleine Erinnerung mit dir wie Gold bewahren",
+  "ich wuerde die Entfernung bei jeder Gelegenheit kleiner falten",
+  "ich wuerde dein Laecheln schuetzen wie meinen liebsten Sonnenaufgang",
+  "ich wuerde dir in jeder Version meiner Zukunft Raum geben",
+  "ich wuerde das ganze Internet dich verlieren lassen, wenn ich dich dafuer in meinen Armen finde",
+  "ich wuerde dein Lachen wie einen privaten Schatz mit mir tragen",
+  "ich wuerde Vermissen in einen weiteren Grund verwandeln, dich mehr zu lieben",
+  "ich wuerde Zaertlichkeit in die Waende jedes Morgens bauen",
+  "ich wuerde deinen Namen in jeder Sprache warm halten, die ich lerne"
+];
+
+const love_closings_de = [
+  "Ich liebe dich mehr als gestern, und gestern war es schon ernst.",
+  "Du bist mein liebster Ort zum Ankommen.",
+  "Auch aus der Ferne bist du dem besten Teil von mir nah.",
+  "Mein Herz waehlt dich, ohne um Erlaubnis zu fragen.",
+  "Du laesst die Welt weniger zufaellig und freundlicher wirken.",
+  "Keine Entfernung kann mein Herz vergessen lassen, wohin es gehoert.",
+  "Du bist meine weichste Gewissheit.",
+  "Du bist jedes Warten und jeden Wunsch wert.",
+  "Ich vermisse dich mit einem versteckten Laecheln darin.",
+  "Du laesst meine Zukunft wie eine Hand wirken, die nach meiner zurueckgreift."
+];
+
+const seed_night_tales_de = [
+  "Heute Nacht wurde die Stadt frueh still, aber der Mond blieb noch ein wenig wach, als wuesste er, dass ein Herz noch eine Geschichte vor dem Schlafen wollte. Also legte er einen silbernen Weg ueber die Daecher und fluesterte, dass die sanftesten Entfernungen oft schon dabei sind zu verschwinden.",
+  "In einem kleinen unsichtbaren Garten ueber der Nacht gaben die Sterne ein Geheimnis weiter: irgendwo darunter hatten zwei Seelen einander bereits gefunden, und das reichte aus, um die Dunkelheit weich zu machen.",
+  "Die Nacht legte sich wie Samt um die Fenster, und irgendwo zwischen der Stille des Zimmers und der Stille des Himmels setzte sich die Liebe hin, ohne ein Geraeusch zu machen, und blieb."
+];
+
+const night_openings_de = [
+  "Heute Nacht",
+  "Nach 21 Uhr",
+  "In der stillen Stunde",
+  "Als die Fenster dunkel und freundlich wurden",
+  "Am Rand des Schlafs",
+  "Unter dem geduldigen Mond",
+  "Als die Stadt endlich leiser wurde",
+  "Tief in der blauen Stunde",
+  "Waehrend die Daecher ruhten",
+  "In der Ruhe vor den Traeumen"
+];
+
+const night_scenes_de = [
+  "blieb der Mond ueber den Daechern stehen, als haette er noch ein Geheimnis zu erzaehlen",
+  "ordneten sich die Sterne wie eine Notiz, die niemand mehr wegfalten wollte",
+  "bewegte sich der Wind langsam, um den letzten guten Gedanken des Tages nicht zu stoeren",
+  "hielt der Raum den Atem an wie eine Geschichte vor ihrem sanftesten Satz",
+  "schwebten die Vorhaenge weich, als haetten sie die Sprache von Wiegenliedern gelernt",
+  "wachten die Strassenlichter wie ruhige Hueter zarter Dinge",
+  "fuehlte sich die Dunkelheit weniger leer und mehr wie Samt um ein Juwel an",
+  "wirkte der Himmel nah genug fuer einen mutigen kleinen Wunsch",
+  "wurde die Stille warm statt einsam",
+  "bekam das letzte Licht im Zimmer fast etwas Menschliches"
+];
+
+const night_turns_de = [
+  "und irgendwo in dieser Stille wurde Liebe leichter hoerbar",
+  "und das Herz erinnerte sich daran, dass Warten trotzdem Licht enthalten kann",
+  "und jede Entfernung sah weniger wie eine Mauer und mehr wie ein Heimweg aus",
+  "und selbst die Schatten waren bereit, weicher zu werden",
+  "und die Ruhe verwandelte sich in einen Ort, an dem Hoffnung sitzen bleiben konnte",
+  "und die ganze Nacht schien sich nur zum Zuhoeren naeher zu lehnen",
+  "und die Welt fuehlte sich fuer einen Moment richtig sortiert an",
+  "und ein kleiner Frieden kam, ohne Aufmerksamkeit zu verlangen",
+  "und die Dunkelheit verlor ihre scharfen Ecken",
+  "und der Himmel benahm sich, als kenne er bereits das sanfte Ende"
+];
+
+const night_closings_de = [
+  "So trug die Nacht ihre Geschichte vorsichtig wie eine vor dem Wind geschuetzte Kerze.",
+  "Und das reichte aus, damit Schlaf sich wie ein Segen anfuehlte.",
+  "Die Geschichte endete sanft, so wie gute Naechte enden sollten.",
+  "Danach geschah nichts Grosses mehr, nur Frieden.",
+  "Die Sterne behielten den Rest der Geschichte bis morgen.",
+  "Bis dahin hatte das Herz schon alles verstanden, was es wissen musste.",
+  "Der Raum blieb still, aber nicht mehr leer.",
+  "Sogar die Stille wirkte dankbar, dort sein zu duerfen."
+];
+
+function build_daily_joy(target_count, {
+  seed_messages,
+  openings,
+  setups,
+  reveals,
+  endings,
+  connector,
+  seed_text
+}) {
+  const messages = [...seed_messages];
+
+  for (const opening of openings) {
+    for (const setup of setups) {
+      for (const reveal of reveals) {
+        const ending = endings[(messages.length + setup.length + reveal.length) % endings.length];
+        messages.push(`${opening}: ${setup}. ${connector(reveal)} ${ending}`);
 
         if (unique_messages(messages).length >= target_count) {
-          return shuffle_messages(unique_messages(messages), "svetlana_pranks").slice(0, target_count);
+          return slice_shuffled(messages, target_count, seed_text);
         }
       }
     }
   }
 
-  return shuffle_messages(unique_messages(messages), "svetlana_pranks");
+  return slice_shuffled(messages, target_count, seed_text);
 }
 
-function build_love_notes(target_count) {
-  const messages = [...seed_love];
+function build_love_notes(target_count, {
+  seed_messages,
+  openings,
+  images,
+  actions,
+  closings,
+  seed_text
+}) {
+  const messages = [...seed_messages];
 
-  for (const opening of love_openings) {
-    for (const image of love_images) {
-      for (const action of love_actions) {
-        const closing = love_closings[(messages.length + image.length + action.length) % love_closings.length];
-        messages.push(`${opening}, you are ${image}. ${action}. ${closing}`);
+  for (const opening of openings) {
+    for (const image of images) {
+      for (const action of actions) {
+        const closing = closings[(messages.length + image.length + action.length) % closings.length];
+        messages.push(`${opening}, ${image}. ${action}. ${closing}`);
 
         if (unique_messages(messages).length >= target_count) {
-          return shuffle_messages(unique_messages(messages), "svetlana_love").slice(0, target_count);
+          return slice_shuffled(messages, target_count, seed_text);
         }
       }
     }
   }
 
-  return shuffle_messages(unique_messages(messages), "svetlana_love");
+  return slice_shuffled(messages, target_count, seed_text);
 }
 
-function build_pranks_de(target_count) {
-  const messages = [...seed_pranks_de];
+function build_night_tales(target_count, {
+  seed_messages,
+  openings,
+  scenes,
+  turns,
+  closings,
+  seed_text
+}) {
+  const messages = [...seed_messages];
 
-  for (const opening of prank_openings_de) {
-    for (const setup of prank_setups_de) {
-      for (const reveal of prank_reveals_de) {
-        const ending = prank_endings_de[(messages.length + setup.length + reveal.length) % prank_endings_de.length];
-        messages.push(`${opening}: ${setup}. Dann enthülle, dass ${reveal}. ${ending}`);
+  for (const opening of openings) {
+    for (const scene of scenes) {
+      for (const turn of turns) {
+        const closing = closings[(messages.length + scene.length + turn.length) % closings.length];
+        messages.push(`${opening}, ${scene}, ${turn}. ${closing}`);
 
         if (unique_messages(messages).length >= target_count) {
-          return shuffle_messages(unique_messages(messages), "svetlana_pranks_de").slice(0, target_count);
+          return slice_shuffled(messages, target_count, seed_text);
         }
       }
     }
   }
 
-  return shuffle_messages(unique_messages(messages), "svetlana_pranks_de");
+  return slice_shuffled(messages, target_count, seed_text);
 }
 
-function build_love_notes_de(target_count) {
-  const messages = [...seed_love_de];
+const english_joy = build_daily_joy(730, {
+  seed_messages: seed_joy,
+  openings: joy_openings,
+  setups: joy_setups,
+  reveals: joy_reveals,
+  endings: joy_endings,
+  connector: (reveal) => `Then confess that ${reveal}.`,
+  seed_text: "english_joy"
+});
 
-  for (const opening of love_openings_de) {
-    for (const image of love_images_de) {
-      for (const action of love_actions_de) {
-        const closing = love_closings_de[(messages.length + image.length + action.length) % love_closings_de.length];
-        messages.push(`${opening}, du bist ${image}. ${action}. ${closing}`);
+const german_joy = build_daily_joy(730, {
+  seed_messages: seed_joy_de,
+  openings: joy_openings_de,
+  setups: joy_setups_de,
+  reveals: joy_reveals_de,
+  endings: joy_endings_de,
+  connector: (reveal) => `Dann beichte, dass ${reveal}.`,
+  seed_text: "german_joy"
+});
 
-        if (unique_messages(messages).length >= target_count) {
-          return shuffle_messages(unique_messages(messages), "svetlana_love_de").slice(0, target_count);
-        }
-      }
-    }
-  }
+const english_love = build_love_notes(540, {
+  seed_messages: seed_love,
+  openings: love_openings,
+  images: love_images,
+  actions: love_actions,
+  closings: love_closings,
+  seed_text: "english_love"
+});
 
-  return shuffle_messages(unique_messages(messages), "svetlana_love_de");
-}
+const german_love = build_love_notes(540, {
+  seed_messages: seed_love_de,
+  openings: love_openings_de,
+  images: love_images_de,
+  actions: love_actions_de,
+  closings: love_closings_de,
+  seed_text: "german_love"
+});
+
+const english_night_tales = build_night_tales(420, {
+  seed_messages: seed_night_tales,
+  openings: night_openings,
+  scenes: night_scenes,
+  turns: night_turns,
+  closings: night_closings,
+  seed_text: "english_night_tales"
+});
+
+const german_night_tales = build_night_tales(420, {
+  seed_messages: seed_night_tales_de,
+  openings: night_openings_de,
+  scenes: night_scenes_de,
+  turns: night_turns_de,
+  closings: night_closings_de,
+  seed_text: "german_night_tales"
+});
 
 fs.mkdirSync(data_directory, { recursive: true });
-fs.writeFileSync(prank_path, `${JSON.stringify(build_pranks(420), null, 2)}\n`);
-fs.writeFileSync(love_path, `${JSON.stringify(build_love_notes(420), null, 2)}\n`);
-fs.writeFileSync(prank_de_path, `${JSON.stringify(build_pranks_de(420), null, 2)}\n`);
-fs.writeFileSync(love_de_path, `${JSON.stringify(build_love_notes_de(420), null, 2)}\n`);
+fs.writeFileSync(joy_path, `${JSON.stringify(english_joy, null, 2)}\n`);
+fs.writeFileSync(joy_de_path, `${JSON.stringify(german_joy, null, 2)}\n`);
+fs.writeFileSync(love_path, `${JSON.stringify(english_love, null, 2)}\n`);
+fs.writeFileSync(love_de_path, `${JSON.stringify(german_love, null, 2)}\n`);
+fs.writeFileSync(night_tales_path, `${JSON.stringify(english_night_tales, null, 2)}\n`);
+fs.writeFileSync(night_tales_de_path, `${JSON.stringify(german_night_tales, null, 2)}\n`);
 
-console.log("Generated 420 daily pranks and 420 daily love notes in English and German.");
+console.log("Generated 730 joy messages, 540 love notes, and 420 night tales in English and German.");

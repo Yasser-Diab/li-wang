@@ -17,8 +17,14 @@
   --dialog_backdrop: rgba(39, 32, 42, 0.42);
   --sans_font: "Inter", "Segoe UI", Arial, sans-serif;
   --serif_font: Georgia, "Times New Roman", serif;
+  color-scheme: light;
 }
 
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"],
 body[data_theme="dark"],
 body[data-theme="dark"] {
   --rose_mist: #18131d;
@@ -56,11 +62,11 @@ body {
     radial-gradient(circle at 15% 20%, rgba(255, 255, 255, 0.78), transparent 23rem),
     linear-gradient(135deg, var(--rose_mist), var(--peach_light) 33%, var(--sky_glass) 68%, var(--lilac_air));
   overflow-x: hidden;
-  transition: background 280ms ease, color 280ms ease;
-  background-size: 140% 140%;
-  animation: living_background 18s ease-in-out infinite alternate;
+  transition: color 220ms ease;
+  background-size: 100% 100%;
 }
 
+html[data-theme="dark"] body,
 body[data-theme="dark"] {
   background:
     radial-gradient(circle at 15% 20%, rgba(236, 203, 122, 0.12), transparent 23rem),
@@ -95,14 +101,17 @@ img {
     radial-gradient(circle at 82% 74%, rgba(255, 255, 255, 0.44), transparent 18rem),
     radial-gradient(circle at 8% 82%, rgba(199, 204, 214, 0.32), transparent 15rem);
   z-index: 0;
-  animation: glow_breathe 9s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+  animation: glow_breathe 16s ease-in-out infinite alternate;
 }
 
+html[data-theme="dark"] .background_glow,
 body[data-theme="dark"] .background_glow {
   background:
     radial-gradient(circle at 72% 12%, rgba(244, 215, 142, 0.18), transparent 16rem),
     radial-gradient(circle at 82% 74%, rgba(115, 91, 140, 0.18), transparent 18rem),
     radial-gradient(circle at 8% 82%, rgba(69, 126, 144, 0.2), transparent 15rem);
+  animation-duration: 22s;
 }
 
 .floating_graphics {
@@ -535,6 +544,7 @@ textarea:focus {
   animation: overlay_arrive 320ms ease both;
 }
 
+html[data-theme="dark"] .welcome_overlay,
 body[data-theme="dark"] .welcome_overlay {
   background:
     radial-gradient(circle at center, rgba(42, 35, 51, 0.86), rgba(24, 19, 29, 0.92) 45%, rgba(17, 37, 48, 0.94)),
@@ -673,6 +683,11 @@ body[data-theme="dark"] .welcome_overlay {
   line-height: 1.8;
 }
 
+.hero_love_note {
+  width: min(620px, 100%);
+  margin-top: 24px;
+}
+
 .hero_symbol {
   min-height: 290px;
   display: grid;
@@ -741,11 +756,10 @@ body[data-theme="dark"] .welcome_overlay {
   box-shadow: 0 14px 28px rgba(91, 71, 90, 0.1);
 }
 
-.today_prank_card {
+.today_prank_card,
+.night_tale_card {
   display: grid;
-  grid-template-columns: minmax(220px, 0.45fr) minmax(0, 1fr);
-  gap: 18px;
-  align-items: center;
+  gap: 14px;
   margin-top: 18px;
   padding: 20px 22px;
   border: 1px solid var(--line_gold);
@@ -757,6 +771,7 @@ body[data-theme="dark"] .welcome_overlay {
 }
 
 .today_prank_card:hover,
+.night_tale_card:hover,
 .daily_love_note:hover,
 .hero_symbol:hover,
 .metric_card:hover,
@@ -768,19 +783,37 @@ body[data-theme="dark"] .welcome_overlay {
 }
 
 .today_prank_card h2,
-.today_prank_card p {
+.today_prank_card p,
+.night_tale_card h2,
+.night_tale_card p {
   margin: 0;
 }
 
-.today_prank_card h2 {
+.today_prank_card h2,
+.night_tale_card h2 {
   font-family: var(--serif_font);
   font-size: clamp(1.45rem, 3vw, 2.3rem);
   font-weight: 500;
 }
 
-#today_prank_message {
+#today_prank_message,
+#night_tale_message {
   color: var(--ink_soft);
   line-height: 1.65;
+}
+
+.night_tale_card {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(227, 247, 255, 0.56)),
+    radial-gradient(circle at right top, rgba(199, 204, 214, 0.2), transparent 16rem);
+}
+
+html[data-theme="dark"] .night_tale_card,
+body[data-theme="dark"] .night_tale_card {
+  background:
+    linear-gradient(135deg, rgba(31, 27, 39, 0.92), rgba(25, 25, 44, 0.82)),
+    radial-gradient(circle at right top, rgba(244, 215, 142, 0.12), transparent 16rem);
+  border-color: rgba(236, 203, 122, 0.28);
 }
 
 .section_header {
@@ -942,6 +975,7 @@ body[data-theme="dark"] .welcome_overlay {
   grid-area: 1 / 1;
 }
 
+html[data-theme="dark"] .memory_text,
 body[data-theme="dark"] .memory_text {
   background: linear-gradient(180deg, transparent, rgba(24, 19, 29, 0.76) 34%, rgba(24, 19, 29, 0.94));
 }
@@ -1074,7 +1108,7 @@ body[data-theme="dark"] .memory_text {
 
 .daily_love_note {
   width: min(760px, 100%);
-  margin: 16px auto 0;
+  margin: 0;
   padding: 18px 20px;
   border-top: 1px solid var(--line_gold);
   border-bottom: 1px solid var(--line_silver);
@@ -1339,8 +1373,8 @@ body[data-theme="dark"] .memory_text {
     font-size: 1.1rem;
   }
 
-  .today_prank_card {
-    grid-template-columns: 1fr;
+  .today_prank_card,
+  .night_tale_card {
     padding: 18px 16px;
   }
 

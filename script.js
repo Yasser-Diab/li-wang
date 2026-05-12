@@ -20,16 +20,11 @@ const theme_storage_key = "svetlana_diab_theme";
 const language_storage_key = "svetlana_diab_language";
 
 const fallback_daily_joy_messages = [
-  "Today's prank: look very serious and say, 'Svetlana, we need to talk.' Then pause like a movie villain and confess: 'Your smile is illegally powerful and I demand compensation in laughter.'",
-  "Tiny mission: send 'I have evidence' and when she asks what evidence, say: 'Screenshots from my heart proving you are adorable.'",
-  "Today's comedy report: Diab tried to act normal, then remembered Svetlana exists and immediately lost the case.",
-  "Prank plan: ask her if she knows German law. When she says no, tell her: 'Too late, you have been sentenced to one hug in my imagination.'",
-  "Breaking news: local heart refuses to behave after receiving one message from Svetlana.",
-  "Today's emergency: send 'I need help' then explain the problem is that she is too cute and customer service is not answering.",
-  "Romantic prank: say 'I found your secret talent.' The secret talent is making Diab smile like he forgot all adult responsibilities.",
-  "Tiny story: the coffee asked why Diab was smiling. The coffee was informed it would not understand because it is only coffee.",
-  "Today's silly warning: if Svetlana smiles too much, Diab may start writing poetry without supervision.",
-  "Prank idea: say 'I am filing a complaint.' Complaint: she keeps being wonderful with no permit."
+  "Harmless mischief for today: send 'I have news' and then reveal that the coffee lost its job because your smile keeps doing all the waking up.",
+  "Tiny comedy bulletin: the moon submitted a complaint because too many people are acting poetic again.",
+  "A soft prank for today: say 'we need to be serious for one minute' and then spend the whole minute trying not to laugh.",
+  "Breaking update: adulthood almost started this morning, but then breakfast happened and ruined the plan.",
+  "Today's little laugh: if the Wi-Fi ever asks why the house feels warmer, do not mention the dangerous amount of good mood in the room."
 ];
 
 const fallback_daily_love_messages = [
@@ -38,6 +33,12 @@ const fallback_daily_love_messages = [
   "Svetlana, every ordinary day becomes warmer when your name passes through my mind.",
   "If I could fold the distance between us, I would keep you close enough for the universe to get jealous.",
   "I love you more gently than morning light and more stubbornly than time."
+];
+
+const fallback_night_tales = [
+  "Tonight the city went quiet early, but the moon stayed awake a little longer, as if it knew one heart still wanted a story before sleep. So it laid a silver path across the rooftops and whispered that the softest distances are often the ones already learning how to disappear.",
+  "In a small invisible garden above the night, the stars kept passing a secret from one to another: somewhere below, two souls had already found each other, and that was enough to make the darkness gentle.",
+  "The night folded itself around the windows like velvet, and somewhere between the hush of the room and the hush of the sky, love sat down without making a sound and stayed."
 ];
 
 const fallback_daily_joy_messages_de = [
@@ -54,6 +55,12 @@ const fallback_daily_love_messages_de = [
   "Jeder gewöhnliche Tag wird wärmer, sobald dein Name durch meine Gedanken geht.",
   "Wenn ich die Entfernung zwischen uns falten könnte, würde ich dich so nah halten, dass das Universum neidisch wird.",
   "Ich liebe dich sanfter als Morgenlicht und sturer als die Zeit."
+];
+
+const fallback_night_tales_de = [
+  "Heute Nacht wurde die Stadt frueh still, aber der Mond blieb noch ein wenig wach, als wuesste er, dass ein Herz noch eine Geschichte vor dem Schlafen wollte. Also legte er einen silbernen Weg ueber die Daecher und fluesterte, dass die sanftesten Entfernungen oft schon dabei sind zu verschwinden.",
+  "In einem kleinen unsichtbaren Garten ueber der Nacht gaben die Sterne ein Geheimnis weiter: irgendwo darunter hatten zwei Seelen einander bereits gefunden, und das reichte aus, um die Dunkelheit weich zu machen.",
+  "Die Nacht legte sich wie Samt um die Fenster, und irgendwo zwischen der Stille des Zimmers und der Stille des Himmels setzte sich die Liebe hin, ohne ein Geraeusch zu machen, und blieb."
 ];
 
 const translations = {
@@ -79,7 +86,9 @@ const translations = {
     hero_message_svetlana: "This place is here to greet you gently, make you smile, and keep every precious day close.",
     hero_message_diab: "A home for the joy Svetlana brings, and for every memory worth keeping.",
     today_prank_eyebrow: "today's prank",
-    today_prank_heading: "One little laugh for today",
+    today_prank_heading: "A little laugh for today",
+    night_tale_eyebrow: "for the quiet hours",
+    night_tale_heading: "A night tale for you",
     time_eyebrow: "our time",
     time_heading: "How Long the Heart Remembers",
     days_label: "Days since we found each other",
@@ -175,6 +184,8 @@ const translations = {
     hero_message_svetlana: "Dieser Ort ist hier, um dich sanft zu begrüßen, dich lächeln zu lassen und jeden kostbaren Tag nah zu halten.",
     hero_message_diab: "Ein Zuhause für die Freude, die Svetlana bringt, und für jede Erinnerung, die bewahrt werden soll.",
     today_prank_eyebrow: "heutiger Streich",
+    night_tale_eyebrow: "fuer die stillen Stunden",
+    night_tale_heading: "Eine Nachtgeschichte fuer dich",
     today_prank_heading: "Ein kleines Lachen für heute",
     time_eyebrow: "unsere Zeit",
     time_heading: "Wie lange das Herz sich erinnert",
@@ -348,12 +359,17 @@ let daily_love_messages_by_language = {
   en: fallback_daily_love_messages,
   de: fallback_daily_love_messages_de
 };
+let night_tales_by_language = {
+  en: fallback_night_tales,
+  de: fallback_night_tales_de
+};
 let current_memory_items = [];
 let current_event_items = [];
 let editing_memory_id = null;
 let editing_event_id = null;
 let editing_memory_image_data = "";
 let welcome_audio_context = null;
+let time_sensitive_interval_id = null;
 
 document.addEventListener("DOMContentLoaded", initialize_application);
 
@@ -364,9 +380,10 @@ async function initialize_application() {
   apply_saved_theme();
   daily_joy_messages_by_language = await load_daily_joy_messages_by_language();
   daily_love_messages_by_language = await load_daily_love_messages_by_language();
+  night_tales_by_language = await load_night_tales_by_language();
   apply_language();
-  update_today_prank_message();
-  update_daily_love_message();
+  update_contextual_messages();
+  start_time_sensitive_updates();
   await load_saved_content();
   update_home_counters();
 }
@@ -390,6 +407,8 @@ function collect_dom_references() {
   dom_references.hero_personal_message = document.getElementById("hero_personal_message");
   dom_references.today_prank_message = document.getElementById("today_prank_message");
   dom_references.today_prank_card = document.querySelector(".today_prank_card");
+  dom_references.night_tale_card = document.getElementById("night_tale_card");
+  dom_references.night_tale_message = document.getElementById("night_tale_message");
   dom_references.daily_love_message = document.getElementById("daily_love_message");
   dom_references.daily_love_note = document.querySelector(".daily_love_note");
   dom_references.hero_symbol = document.querySelector(".hero_symbol");
@@ -452,6 +471,7 @@ function bind_event_handlers() {
   dom_references.memory_gallery.addEventListener("click", handle_memory_action);
   dom_references.event_timeline.addEventListener("click", handle_event_action);
   dom_references.today_prank_card.addEventListener("click", (event) => burst_reaction(event.currentTarget, "spark"));
+  dom_references.night_tale_card.addEventListener("click", (event) => burst_reaction(event.currentTarget, "spark", 12));
   dom_references.daily_love_note.addEventListener("click", (event) => burst_reaction(event.currentTarget, "heart"));
   dom_references.hero_symbol.addEventListener("click", (event) => burst_reaction(event.currentTarget, "heart"));
 }
@@ -506,11 +526,12 @@ function apply_language() {
   dom_references.enter_home_button.textContent = translate("enter_home_button");
   set_text(".home_header .eyebrow_text", translate("header_eyebrow"));
   dom_references.logout_button.textContent = translate("logout_button");
-  update_theme_button(document.body.dataset.theme || "light");
+  update_theme_button(document.documentElement.dataset.theme || document.body.dataset.theme || "light");
   set_text(".hero_content .eyebrow_text", translate("hero_eyebrow"));
   set_text("#hero_heading", translate("hero_heading"));
-  set_text(".today_prank_card .eyebrow_text", translate("today_prank_eyebrow"));
   set_text("#today_prank_heading", translate("today_prank_heading"));
+  set_text("#night_tale_eyebrow", translate("night_tale_eyebrow"));
+  set_text("#night_tale_heading", translate("night_tale_heading"));
   set_text("[aria-labelledby='time_heading'] .eyebrow_text", translate("time_eyebrow"));
   set_text("#time_heading", translate("time_heading"));
   set_text(".featured_metric .metric_label", translate("days_label"));
@@ -573,8 +594,7 @@ function apply_language() {
     }
   }
 
-  update_today_prank_message();
-  update_daily_love_message();
+  update_contextual_messages();
   update_home_counters();
   translate_default_items();
 
@@ -677,7 +697,7 @@ function show_welcome_overlay(user_profile) {
   dom_references.welcome_primary_message.textContent = greeting.primary;
   dom_references.welcome_secondary_message.textContent = greeting.secondary;
   dom_references.daily_joy_message.textContent = todays_message;
-  dom_references.today_prank_message.textContent = todays_message;
+  update_contextual_messages();
   dom_references.login_screen.classList.add("hidden");
   dom_references.home_screen.classList.add("hidden");
   dom_references.welcome_overlay.classList.remove("hidden");
@@ -689,6 +709,7 @@ function show_welcome_overlay(user_profile) {
 function enter_home_from_welcome() {
   dom_references.welcome_overlay.classList.add("hidden");
   dom_references.home_screen.classList.remove("hidden");
+  update_contextual_messages();
   update_home_counters();
   burst_reaction(dom_references.hero_symbol, "heart", 16);
 }
@@ -699,11 +720,13 @@ function get_time_based_greeting(user_profile) {
   const person_key = is_svetlana ? "svetlana" : "diab";
   let day_part = "night";
 
-  if (current_hour < 12) {
+  if (current_hour >= 21 || current_hour < 6) {
+    day_part = "night";
+  } else if (current_hour < 12) {
     day_part = "morning";
   } else if (current_hour < 18) {
     day_part = "afternoon";
-  } else if (current_hour < 22) {
+  } else {
     day_part = "evening";
   }
 
@@ -722,6 +745,13 @@ async function load_daily_love_messages_by_language() {
   return {
     en: await load_message_list("daily_love_messages", fallback_daily_love_messages),
     de: await load_message_list("daily_love_messages_de", fallback_daily_love_messages_de)
+  };
+}
+
+async function load_night_tales_by_language() {
+  return {
+    en: await load_message_list("night_tales", fallback_night_tales),
+    de: await load_message_list("night_tales_de", fallback_night_tales_de)
   };
 }
 
@@ -756,20 +786,29 @@ async function load_message_list(message_name, fallback_messages) {
 }
 
 function get_daily_joy_message() {
-  return get_daily_message_from_list(daily_joy_messages_by_language[current_language]);
+  return get_daily_message_from_list(daily_joy_messages_by_language[current_language], `joy_${current_language}`);
 }
 
 function get_daily_love_message() {
-  return get_daily_message_from_list(daily_love_messages_by_language[current_language]);
+  return get_daily_message_from_list(daily_love_messages_by_language[current_language], `love_${current_language}`);
 }
 
-function get_daily_message_from_list(message_list) {
+function get_night_tale() {
+  return get_daily_message_from_list(night_tales_by_language[current_language], `night_${current_language}`);
+}
+
+function get_daily_message_from_list(message_list, seed_key = "daily") {
   const safe_message_list = Array.isArray(message_list) && message_list.length > 0 ? message_list : fallback_daily_joy_messages;
   const today = new Date();
-  const date_key = `${today.getFullYear()}_${today.getMonth() + 1}_${today.getDate()}`;
+  const date_key = `${seed_key}_${today.getFullYear()}_${today.getMonth() + 1}_${today.getDate()}`;
   const hash_value = Array.from(date_key).reduce((total, character) => total + character.charCodeAt(0), 0);
   const message_index = hash_value % safe_message_list.length;
   return safe_message_list[message_index];
+}
+
+function is_night_time() {
+  const current_hour = new Date().getHours();
+  return current_hour >= 21 || current_hour < 6;
 }
 
 function update_today_prank_message() {
@@ -778,6 +817,43 @@ function update_today_prank_message() {
 
 function update_daily_love_message() {
   dom_references.daily_love_message.textContent = get_daily_love_message();
+}
+
+function update_night_tale_section() {
+  const should_show_night_tale = is_night_time();
+  dom_references.night_tale_card.classList.toggle("hidden", !should_show_night_tale);
+
+  if (should_show_night_tale) {
+    dom_references.night_tale_message.textContent = get_night_tale();
+  }
+}
+
+function update_contextual_messages() {
+  update_today_prank_message();
+  update_daily_love_message();
+  update_night_tale_section();
+}
+
+function refresh_time_sensitive_content() {
+  if (current_user_profile) {
+    update_home_for_user(current_user_profile);
+  }
+
+  if (current_user_profile && !dom_references.welcome_overlay.classList.contains("hidden")) {
+    const greeting = get_time_based_greeting(current_user_profile);
+    dom_references.welcome_primary_message.textContent = greeting.primary;
+    dom_references.welcome_secondary_message.textContent = greeting.secondary;
+  }
+
+  update_contextual_messages();
+}
+
+function start_time_sensitive_updates() {
+  if (time_sensitive_interval_id) {
+    return;
+  }
+
+  time_sensitive_interval_id = window.setInterval(refresh_time_sensitive_content, 60 * 1000);
 }
 
 function update_home_for_user(user_profile) {
@@ -1346,15 +1422,20 @@ function create_item_id() {
   return `item_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
+function set_theme(theme_name) {
+  document.documentElement.dataset.theme = theme_name;
+  document.body.dataset.theme = theme_name;
+}
+
 function apply_saved_theme() {
-  const saved_theme = localStorage.getItem(theme_storage_key) || "light";
-  document.body.dataset.theme = saved_theme;
+  const saved_theme = document.documentElement.dataset.theme || localStorage.getItem(theme_storage_key) || "light";
+  set_theme(saved_theme);
   update_theme_button(saved_theme);
 }
 
 function toggle_theme() {
-  const next_theme = document.body.dataset.theme === "dark" ? "light" : "dark";
-  document.body.dataset.theme = next_theme;
+  const next_theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  set_theme(next_theme);
   localStorage.setItem(theme_storage_key, next_theme);
   update_theme_button(next_theme);
   burst_reaction(dom_references.theme_toggle_button, "spark", 10);

@@ -10,6 +10,8 @@ const daily_joy_path = path.join(data_directory, "daily_joy_messages.json");
 const daily_love_path = path.join(data_directory, "daily_love_messages.json");
 const daily_joy_de_path = path.join(data_directory, "daily_joy_messages_de.json");
 const daily_love_de_path = path.join(data_directory, "daily_love_messages_de.json");
+const night_tales_path = path.join(data_directory, "night_tales.json");
+const night_tales_de_path = path.join(data_directory, "night_tales_de.json");
 
 const credentials = {
   svetlana: "Wolf&Luna",
@@ -117,6 +119,18 @@ async function handle_api_request(request, response) {
 
   if (request.method === "GET" && request.url === "/api/daily_love_messages_de") {
     const messages = JSON.parse(await fs.readFile(daily_love_de_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/night_tales") {
+    const messages = JSON.parse(await fs.readFile(night_tales_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/night_tales_de") {
+    const messages = JSON.parse(await fs.readFile(night_tales_de_path, "utf8"));
     send_json(response, 200, messages);
     return true;
   }
