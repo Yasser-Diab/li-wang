@@ -352,9 +352,19 @@ async function handle_api_request(request, response) {
       return true;
     }
 
+    const next_attachments = Array.isArray(body.attachments)
+      ? body.attachments.map((attachment) => ({
+          name: String(attachment.name || "file"),
+          type: String(attachment.type || "application/octet-stream"),
+          size: Number(attachment.size || 0),
+          data_url: String(attachment.data_url || "")
+        }))
+      : existing_message.attachments;
+
     const updated_message = {
       ...existing_message,
       text: next_text,
+      attachments: next_attachments,
       edited_at: new Date().toISOString()
     };
 
