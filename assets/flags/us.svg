@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 57 30" role="img" aria-label="United States flag">
+  <rect width="57" height="30" fill="#b22234"/>
+  <path d="M0 3h57M0 7h57M0 11h57M0 15h57M0 19h57M0 23h57M0 27h57" stroke="#fff" stroke-width="2"/>
+  <rect width="23" height="16" fill="#3c3b6e"/>
+  <g fill="#fff">
+    <circle cx="3" cy="3" r="1"/>
+    <circle cx="8" cy="3" r="1"/>
+    <circle cx="13" cy="3" r="1"/>
+    <circle cx="18" cy="3" r="1"/>
+    <circle cx="5.5" cy="6" r="1"/>
+    <circle cx="10.5" cy="6" r="1"/>
+    <circle cx="15.5" cy="6" r="1"/>
+    <circle cx="3" cy="9" r="1"/>
+    <circle cx="8" cy="9" r="1"/>
+    <circle cx="13" cy="9" r="1"/>
+    <circle cx="18" cy="9" r="1"/>
+    <circle cx="5.5" cy="12" r="1"/>
+    <circle cx="10.5" cy="12" r="1"/>
+    <circle cx="15.5" cy="12" r="1"/>
+  </g>
+</svg>

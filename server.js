@@ -10,8 +10,18 @@ const daily_joy_path = path.join(data_directory, "daily_joy_messages.json");
 const daily_love_path = path.join(data_directory, "daily_love_messages.json");
 const daily_joy_de_path = path.join(data_directory, "daily_joy_messages_de.json");
 const daily_love_de_path = path.join(data_directory, "daily_love_messages_de.json");
+const daily_joy_ar_path = path.join(data_directory, "daily_joy_messages_ar.json");
+const daily_love_ar_path = path.join(data_directory, "daily_love_messages_ar.json");
+const morning_messages_path = path.join(data_directory, "morning_messages.json");
+const morning_messages_de_path = path.join(data_directory, "morning_messages_de.json");
+const morning_messages_ar_path = path.join(data_directory, "morning_messages_ar.json");
+const night_messages_path = path.join(data_directory, "night_messages.json");
+const night_messages_de_path = path.join(data_directory, "night_messages_de.json");
+const night_messages_ar_path = path.join(data_directory, "night_messages_ar.json");
 const night_tales_path = path.join(data_directory, "night_tales.json");
 const night_tales_de_path = path.join(data_directory, "night_tales_de.json");
+const night_tales_ar_path = path.join(data_directory, "night_tales_ar.json");
+const live_message_clients = new Set();
 
 const credentials = {
   svetlana: "Wolf&Luna",
@@ -36,19 +46,27 @@ async function ensure_data_file() {
   try {
     await fs.access(app_data_path);
   } catch (error) {
-    await fs.writeFile(app_data_path, JSON.stringify({ memories: [], events: [] }, null, 2));
+    await fs.writeFile(app_data_path, JSON.stringify({ memories: [], events: [], live_messages: [] }, null, 2));
   }
+}
+
+function normalize_app_data(app_data) {
+  return {
+    memories: Array.isArray(app_data.memories) ? app_data.memories : [],
+    events: Array.isArray(app_data.events) ? app_data.events : [],
+    live_messages: Array.isArray(app_data.live_messages) ? app_data.live_messages : []
+  };
 }
 
 async function read_app_data() {
   await ensure_data_file();
   const file_contents = await fs.readFile(app_data_path, "utf8");
-  return JSON.parse(file_contents);
+  return normalize_app_data(JSON.parse(file_contents));
 }
 
 async function write_app_data(next_data) {
   await ensure_data_file();
-  await fs.writeFile(app_data_path, JSON.stringify(next_data, null, 2));
+  await fs.writeFile(app_data_path, JSON.stringify(normalize_app_data(next_data), null, 2));
 }
 
 async function read_request_body(request) {
@@ -77,7 +95,44 @@ function send_json(response, status_code, payload) {
   response.end(JSON.stringify(payload));
 }
 
+function send_sse_event(response, event_name, payload) {
+  response.write(`event: ${event_name}\n`);
+  response.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+function broadcast_live_message(message_item) {
+  for (const client of live_message_clients) {
+    try {
+      send_sse_event(client, "live_message", message_item);
+    } catch (error) {
+      live_message_clients.delete(client);
+    }
+  }
+}
+
+function broadcast_live_message_updated(message_item) {
+  for (const client of live_message_clients) {
+    try {
+      send_sse_event(client, "live_message_updated", message_item);
+    } catch (error) {
+      live_message_clients.delete(client);
+    }
+  }
+}
+
+function broadcast_live_message_deleted(message_id) {
+  for (const client of live_message_clients) {
+    try {
+      send_sse_event(client, "live_message_deleted", { id: message_id });
+    } catch (error) {
+      live_message_clients.delete(client);
+    }
+  }
+}
+
 async function handle_api_request(request, response) {
+  const live_message_item_match = request.url.match(/^\/api\/live_messages\/([^/?#]+)$/);
+
   if (request.method === "POST" && request.url === "/api/login") {
     const body_text = await read_request_body(request);
     const body = JSON.parse(body_text || "{}");
@@ -123,6 +178,54 @@ async function handle_api_request(request, response) {
     return true;
   }
 
+  if (request.method === "GET" && request.url === "/api/daily_joy_messages_ar") {
+    const messages = JSON.parse(await fs.readFile(daily_joy_ar_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/daily_love_messages_ar") {
+    const messages = JSON.parse(await fs.readFile(daily_love_ar_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/morning_messages") {
+    const messages = JSON.parse(await fs.readFile(morning_messages_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/morning_messages_de") {
+    const messages = JSON.parse(await fs.readFile(morning_messages_de_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/morning_messages_ar") {
+    const messages = JSON.parse(await fs.readFile(morning_messages_ar_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/night_messages") {
+    const messages = JSON.parse(await fs.readFile(night_messages_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/night_messages_de") {
+    const messages = JSON.parse(await fs.readFile(night_messages_de_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/night_messages_ar") {
+    const messages = JSON.parse(await fs.readFile(night_messages_ar_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
   if (request.method === "GET" && request.url === "/api/night_tales") {
     const messages = JSON.parse(await fs.readFile(night_tales_path, "utf8"));
     send_json(response, 200, messages);
@@ -131,6 +234,12 @@ async function handle_api_request(request, response) {
 
   if (request.method === "GET" && request.url === "/api/night_tales_de") {
     const messages = JSON.parse(await fs.readFile(night_tales_de_path, "utf8"));
+    send_json(response, 200, messages);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/night_tales_ar") {
+    const messages = JSON.parse(await fs.readFile(night_tales_ar_path, "utf8"));
     send_json(response, 200, messages);
     return true;
   }
@@ -144,6 +253,28 @@ async function handle_api_request(request, response) {
   if (request.method === "GET" && request.url === "/api/events") {
     const app_data = await read_app_data();
     send_json(response, 200, app_data.events || []);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/live_messages") {
+    const app_data = await read_app_data();
+    send_json(response, 200, app_data.live_messages || []);
+    return true;
+  }
+
+  if (request.method === "GET" && request.url === "/api/live_messages_stream") {
+    response.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-store",
+      Connection: "keep-alive"
+    });
+    response.write("\n");
+    live_message_clients.add(response);
+    send_sse_event(response, "connected", { ok: true });
+    request.on("close", () => {
+      live_message_clients.delete(response);
+      response.end();
+    });
     return true;
   }
 
@@ -166,6 +297,96 @@ async function handle_api_request(request, response) {
     send_json(response, 200, {
       ok: true
     });
+    return true;
+  }
+
+  if (request.method === "POST" && request.url === "/api/live_messages") {
+    const body_text = await read_request_body(request);
+    const message_item = JSON.parse(body_text || "{}");
+
+    if (!message_item || typeof message_item !== "object" || !message_item.id || !message_item.sender_key) {
+      send_json(response, 400, { ok: false });
+      return true;
+    }
+
+    const safe_message = {
+      id: String(message_item.id),
+      sender_key: String(message_item.sender_key),
+      sender_name: String(message_item.sender_name || ""),
+      text: String(message_item.text || ""),
+      created_at: String(message_item.created_at || new Date().toISOString()),
+      edited_at: String(message_item.edited_at || ""),
+      attachments: Array.isArray(message_item.attachments)
+        ? message_item.attachments.map((attachment) => ({
+            name: String(attachment.name || "file"),
+            type: String(attachment.type || "application/octet-stream"),
+            size: Number(attachment.size || 0),
+            data_url: String(attachment.data_url || "")
+          }))
+        : []
+    };
+
+    const app_data = await read_app_data();
+    app_data.live_messages = [...app_data.live_messages, safe_message].slice(-500);
+    await write_app_data(app_data);
+    broadcast_live_message(safe_message);
+
+    send_json(response, 200, {
+      ok: true,
+      message: safe_message
+    });
+    return true;
+  }
+
+  if (live_message_item_match && request.method === "PATCH") {
+    const message_id = decodeURIComponent(live_message_item_match[1]);
+    const body_text = await read_request_body(request);
+    const body = JSON.parse(body_text || "{}");
+    const sender_key = String(body.sender_key || "");
+    const next_text = String(body.text || "");
+    const app_data = await read_app_data();
+    const existing_message = app_data.live_messages.find((message_item) => message_item.id === message_id);
+
+    if (!existing_message || existing_message.sender_key !== sender_key) {
+      send_json(response, 404, { ok: false });
+      return true;
+    }
+
+    const updated_message = {
+      ...existing_message,
+      text: next_text,
+      edited_at: new Date().toISOString()
+    };
+
+    app_data.live_messages = app_data.live_messages.map((message_item) =>
+      message_item.id === message_id ? updated_message : message_item
+    );
+    await write_app_data(app_data);
+    broadcast_live_message_updated(updated_message);
+    send_json(response, 200, {
+      ok: true,
+      message: updated_message
+    });
+    return true;
+  }
+
+  if (live_message_item_match && request.method === "DELETE") {
+    const message_id = decodeURIComponent(live_message_item_match[1]);
+    const body_text = await read_request_body(request);
+    const body = JSON.parse(body_text || "{}");
+    const sender_key = String(body.sender_key || "");
+    const app_data = await read_app_data();
+    const existing_message = app_data.live_messages.find((message_item) => message_item.id === message_id);
+
+    if (!existing_message || existing_message.sender_key !== sender_key) {
+      send_json(response, 404, { ok: false });
+      return true;
+    }
+
+    app_data.live_messages = app_data.live_messages.filter((message_item) => message_item.id !== message_id);
+    await write_app_data(app_data);
+    broadcast_live_message_deleted(message_id);
+    send_json(response, 200, { ok: true });
     return true;
   }
 

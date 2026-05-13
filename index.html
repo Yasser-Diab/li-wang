@@ -8,11 +8,16 @@
     (function () {
       try {
         var saved_theme = localStorage.getItem("svetlana_diab_theme");
+        var saved_language = localStorage.getItem("svetlana_diab_language");
         if (saved_theme) {
           document.documentElement.dataset.theme = saved_theme;
         }
+        if (saved_language) {
+          document.documentElement.lang = saved_language === "de" ? "de" : saved_language === "ar" ? "ar" : "en";
+          document.documentElement.dir = saved_language === "ar" ? "rtl" : "ltr";
+        }
       } catch (error) {
-        // Theme still falls back gracefully.
+        // Early page state still falls back gracefully.
       }
     }());
   </script>
@@ -32,7 +37,8 @@
   </div>
   <div id="reaction_layer" class="reaction_layer" aria-hidden="true"></div>
   <button id="language_toggle_button" class="ghost_button language_toggle_button" type="button" aria-label="Switch language" title="Switch language">
-    <span id="language_flag_icon" class="flag_icon" aria-hidden="true">US</span>
+    <img id="language_flag_icon" class="flag_icon" src="assets/flags/us.svg" alt="English">
+    <span id="language_toggle_label" class="language_toggle_label">EN</span>
   </button>
 
   <main id="app_root">
@@ -88,7 +94,7 @@
           <h2 id="hero_heading">Every day with you becomes part of the story.</h2>
           <p id="hero_personal_message" class="hero_personal_message"></p>
           <div class="daily_love_note hero_love_note" aria-labelledby="daily_love_heading">
-            <p class="eyebrow_text" id="daily_love_heading">today's love note</p>
+            <p class="eyebrow_text" id="daily_love_heading"></p>
             <p id="daily_love_message"></p>
           </div>
         </div>
@@ -98,6 +104,7 @@
             <span class="heart_shape second_heart"></span>
           </div>
           <p class="hero_monogram">S &amp; D</p>
+          <div id="hero_symbol_message" class="hero_symbol_message" aria-hidden="true"></div>
         </div>
       </section>
 
@@ -177,6 +184,44 @@
           <button id="add_event_button" class="ghost_button" type="button">Add a day</button>
         </div>
         <div id="event_timeline" class="event_timeline"></div>
+      </section>
+
+      <section class="content_band" aria-labelledby="live_messages_heading">
+        <div class="section_header">
+          <div>
+            <p class="eyebrow_text" id="live_messages_eyebrow">just us, in real time</p>
+            <h2 id="live_messages_heading">Live Messages</h2>
+          </div>
+        </div>
+        <div class="live_messages_shell">
+          <div id="live_messages_empty_state" class="live_messages_empty_state">
+            Your little private chat will appear here.
+          </div>
+          <div id="live_messages_list" class="live_messages_list" aria-live="polite"></div>
+          <form id="live_message_form" class="live_message_form">
+            <div class="live_message_composer">
+              <textarea id="live_message_input" name="live_message_input" rows="1" placeholder="Send message...."></textarea>
+              <div class="live_message_actions">
+                <button id="emoji_toggle_button" class="composer_icon_button" type="button" aria-label="Open emoji picker" title="Emoji">
+                  &#128522;
+                </button>
+                <label for="live_message_files_input" id="live_message_files_label" class="composer_icon_button file_attach_button" aria-label="Add files" title="Add files">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m21.44 11.05-8.49 8.49a5.5 5.5 0 1 1-7.78-7.78l8.48-8.49a3.5 3.5 0 1 1 4.95 4.95l-8.49 8.48a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49"></path>
+                  </svg>
+                </label>
+                <input id="live_message_files_input" name="live_message_files_input" type="file" multiple>
+                <button id="send_live_message_button" class="composer_icon_button send_message_button" type="submit" aria-label="Send now" title="Send now">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21.5 3.6 3.7 10.4c-.9.3-.9 1.6 0 1.9l7.1 2.3 2.3 7.1c.3.9 1.6.9 1.9 0l6.8-17.8c.3-.8-.5-1.6-1.3-1.3Z"></path>
+                  </svg>
+                </button>
+              </div>
+              <div id="emoji_picker_panel" class="emoji_picker_panel hidden" aria-label="Emoji picker"></div>
+            </div>
+            <div id="live_message_files_preview" class="live_message_files_preview" aria-live="polite"></div>
+          </form>
+        </div>
       </section>
 
       <footer class="love_footer">
