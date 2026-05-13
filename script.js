@@ -757,18 +757,33 @@ function initialize_supabase_client() {
   const create_client = window.supabase && typeof window.supabase.createClient === "function"
     ? window.supabase.createClient
     : null;
+  const normalized_url = normalize_supabase_project_url(supabase_config.url);
 
-  if (!create_client || !supabase_config.url || !supabase_config.anon_key) {
+  if (!create_client || !normalized_url || !supabase_config.anon_key) {
     return;
   }
 
   current_room_slug = supabase_config.room_slug || supabase_room_slug_default;
-  supabase_client = create_client(supabase_config.url, supabase_config.anon_key, {
+  supabase_client = create_client(normalized_url, supabase_config.anon_key, {
     auth: {
       persistSession: true,
       autoRefreshToken: true
     }
   });
+}
+
+function normalize_supabase_project_url(raw_url) {
+  const safe_url = String(raw_url || "").trim();
+
+  if (!safe_url) {
+    return "";
+  }
+
+  return safe_url
+    .replace(/\/+$/, "")
+    .replace(/\/auth\/v1$/i, "")
+    .replace(/\/rest\/v1$/i, "")
+    .replace(/\/storage\/v1$/i, "");
 }
 
 function is_supabase_enabled() {
@@ -947,6 +962,10 @@ function set_placeholder(element, value) {
   if (element) {
     element.placeholder = value;
   }
+}
+
+function log_app_error(context_label, error) {
+  window.console.error(`[sveta_app] ${context_label}`, error);
 }
 
 function parse_emoji_categories(source_text) {
@@ -1280,6 +1299,7 @@ async function authenticate_user(username, password) {
       });
 
       if (error || !data.user) {
+        log_app_error("supabase_auth_sign_in_failed", error || "missing_user");
         return null;
       }
 
@@ -1288,6 +1308,7 @@ async function authenticate_user(username, password) {
       await ensure_supabase_profile_row(user_profile);
       return user_profile;
     } catch (error) {
+      log_app_error("supabase_auth_sign_in_threw", error);
       return null;
     }
   }
@@ -1824,6 +1845,7 @@ async function api_get_items(item_type, storage_key, fallback_items) {
       localStorage.setItem(storage_key, JSON.stringify(supabase_items));
       return supabase_items.length > 0 ? supabase_items : fallback_items;
     } catch (error) {
+      log_app_error(`supabase_get_items_${item_type}_failed`, error);
       // Local storage fallback below keeps the app usable.
     }
   }
@@ -1855,6 +1877,7 @@ async function api_save_items(item_type, storage_key, items) {
       await supabase_replace_items(item_type, items);
       return;
     } catch (error) {
+      log_app_error(`supabase_save_items_${item_type}_failed`, error);
       // Local fallback below remains available.
     }
   }
@@ -2564,6 +2587,7 @@ async function load_live_messages() {
         .order("created_at", { ascending: true });
 
       if (error) {
+        log_app_error("supabase_live_messages_load_failed", error);
         throw error;
       }
 
@@ -2571,6 +2595,7 @@ async function load_live_messages() {
       render_live_messages(true);
       return;
     } catch (error) {
+      log_app_error("supabase_live_messages_load_threw", error);
       render_live_messages();
       return;
     }
@@ -3006,6 +3031,7 @@ async function delete_live_message(message_id) {
         .eq("room_slug", current_room_slug);
 
       if (error) {
+        log_app_error("supabase_live_message_delete_failed", error);
         throw error;
       }
 
@@ -3016,6 +3042,7 @@ async function delete_live_message(message_id) {
       render_live_messages(true);
       return;
     } catch (error) {
+      log_app_error("supabase_live_message_delete_threw", error);
       // Local fallback below remains available.
     }
   }
@@ -3095,6 +3122,7 @@ async function send_live_message(event) {
           .single();
 
         if (error) {
+          log_app_error("supabase_live_message_update_failed", error);
           throw error;
         }
 
@@ -3123,10 +3151,11 @@ async function send_live_message(event) {
       upsert_live_message(result.message || updated_message, true);
       clear_live_message_composer();
       burst_reaction(dom_references.live_messages_list, "spark", 8);
-    } catch (error) {
-      upsert_live_message(updated_message, true);
-      clear_live_message_composer();
-      window.console.error(translate("live_message_send_error"));
+      } catch (error) {
+        log_app_error("supabase_live_message_update_threw", error);
+        upsert_live_message(updated_message, true);
+        clear_live_message_composer();
+        window.console.error(translate("live_message_send_error"));
     } finally {
       dom_references.send_live_message_button.disabled = false;
     }
@@ -3157,6 +3186,7 @@ async function send_live_message(event) {
         .single();
 
       if (error) {
+        log_app_error("supabase_live_message_insert_failed", error);
         throw error;
       }
 
@@ -3183,6 +3213,7 @@ async function send_live_message(event) {
     clear_live_message_composer();
     burst_reaction(dom_references.live_messages_list, "heart", 8);
   } catch (error) {
+    log_app_error("supabase_live_message_insert_threw", error);
     upsert_live_message(message_item, true);
     clear_live_message_composer();
     window.console.error(translate("live_message_send_error"));
