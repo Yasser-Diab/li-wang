@@ -146,6 +146,7 @@ const translations = {
     login_email_hint: (email) => `Reset email: ${email}`,
     forgot_password_button: "Forgot password?",
     forgot_password_username_missing: "Write the same name first so I know which email should receive the reset link.",
+    forgot_password_sent_generic: "The reset email was sent.",
     forgot_password_sent: (email) => `A reset email was sent to ${email}.`,
     forgot_password_error: "The reset email could not be sent right now.",
     login_button: "Enter our world",
@@ -287,6 +288,7 @@ const translations = {
     login_email_hint: (email) => `Reset-E-Mail: ${email}`,
     forgot_password_button: "Passwort vergessen?",
     forgot_password_username_missing: "Schreib zuerst denselben Namen, damit ich weiß, an welche E-Mail der Reset-Link gehen soll.",
+    forgot_password_sent_generic: "Die Reset-E-Mail wurde gesendet.",
     forgot_password_sent: (email) => `Eine Reset-E-Mail wurde an ${email} gesendet.`,
     forgot_password_error: "Die Reset-E-Mail konnte gerade nicht gesendet werden.",
     login_button: "Unsere Welt betreten",
@@ -428,6 +430,7 @@ const translations = {
     login_email_hint: (email) => `بريد إعادة التعيين: ${email}`,
     forgot_password_button: "نسيت كلمة السر؟",
     forgot_password_username_missing: "اكتب الاسم نفسه أولًا حتى أعرف إلى أي بريد يجب أن يذهب رابط إعادة التعيين.",
+    forgot_password_sent_generic: "تم إرسال رسالة إعادة التعيين.",
     forgot_password_sent: (email) => `تم إرسال رسالة إعادة التعيين إلى ${email}.`,
     forgot_password_error: "تعذر إرسال رسالة إعادة التعيين الآن.",
     login_button: "ادخل عالمنا",
@@ -866,6 +869,11 @@ function is_supabase_enabled() {
   return Boolean(supabase_client);
 }
 
+function can_use_local_api() {
+  const host_name = String(window.location.hostname || "").toLowerCase();
+  return host_name === "localhost" || host_name === "127.0.0.1" || host_name === "::1";
+}
+
 function get_supabase_user_map() {
   return (window.supabase_public_config && window.supabase_public_config.users) || {};
 }
@@ -1015,7 +1023,7 @@ function bind_event_handlers() {
   dom_references.language_toggle_button.addEventListener("click", toggle_language);
   dom_references.login_form.addEventListener("submit", handle_login);
   dom_references.username_input.addEventListener("input", () => {
-    dom_references.login_error_message.textContent = "";
+    set_status_text(dom_references.login_error_message, "", "");
     update_login_email_hint();
   });
   dom_references.forgot_password_button.addEventListener("click", handle_forgot_password_request);
@@ -1434,7 +1442,7 @@ async function handle_login(event) {
   const user_profile = await authenticate_user(submitted_username, submitted_password);
 
   if (!user_profile) {
-    dom_references.login_error_message.textContent = translate("login_error");
+    set_status_text(dom_references.login_error_message, translate("login_error"), "error");
     return;
   }
 
@@ -1447,7 +1455,7 @@ async function handle_login(event) {
   password_recovery_mode_active = false;
   load_hidden_deleted_messages();
   sessionStorage.setItem("logged_in_user", JSON.stringify(current_user_profile));
-  dom_references.login_error_message.textContent = "";
+  set_status_text(dom_references.login_error_message, "", "");
   dom_references.username_input.value = "";
   dom_references.password_input.value = "";
   update_login_email_hint();
@@ -1526,7 +1534,7 @@ function handle_logout() {
   dom_references.home_screen.classList.add("hidden");
   dom_references.welcome_overlay.classList.add("hidden");
   dom_references.login_screen.classList.remove("hidden");
-  dom_references.login_error_message.textContent = "";
+  set_status_text(dom_references.login_error_message, "", "");
   update_login_email_hint();
   close_live_messages_stream();
   clear_live_message_composer();
@@ -1565,8 +1573,8 @@ async function handle_forgot_password_request() {
       throw error;
     }
 
-    set_status_text(dom_references.login_error_message, "", "");
-    update_login_email_hint(translate("forgot_password_sent", supabase_user.email), "success");
+    set_status_text(dom_references.login_error_message, translate("forgot_password_sent_generic"), "success");
+    update_login_email_hint();
   } catch (error) {
     log_app_error("supabase_password_reset_email_threw", error);
     set_status_text(dom_references.login_error_message, translate("forgot_password_error"), "error");
@@ -1756,18 +1764,20 @@ async function load_night_tales_by_language() {
 }
 
 async function load_message_list(message_name, fallback_messages) {
-  try {
-    const response = await fetch(`/api/${message_name}`);
+  if (can_use_local_api()) {
+    try {
+      const response = await fetch(`/api/${message_name}`);
 
-    if (response.ok) {
-      const messages = await response.json();
+      if (response.ok) {
+        const messages = await response.json();
 
-      if (Array.isArray(messages) && messages.length > 0) {
-        return messages;
+        if (Array.isArray(messages) && messages.length > 0) {
+          return messages;
+        }
       }
+    } catch (error) {
+      // The JSON file fallback below keeps the experience usable.
     }
-  } catch (error) {
-    // The JSON file fallback below keeps the experience usable.
   }
 
   try {
@@ -2141,19 +2151,21 @@ async function api_get_items(item_type, storage_key, fallback_items) {
     }
   }
 
-  try {
-    const response = await fetch(`/api/${item_type}`);
+  if (can_use_local_api()) {
+    try {
+      const response = await fetch(`/api/${item_type}`);
 
-    if (response.ok) {
-      const items = await response.json();
+      if (response.ok) {
+        const items = await response.json();
 
-      if (Array.isArray(items)) {
-        localStorage.setItem(storage_key, JSON.stringify(items));
-        return items.length > 0 ? items : fallback_items;
+        if (Array.isArray(items)) {
+          localStorage.setItem(storage_key, JSON.stringify(items));
+          return items.length > 0 ? items : fallback_items;
+        }
       }
+    } catch (error) {
+      // Local storage keeps the page usable when the server is unavailable.
     }
-  } catch (error) {
-    // Local storage keeps the page usable when the server is unavailable.
   }
 
   const stored_items = JSON.parse(localStorage.getItem(storage_key) || "null");
@@ -2173,16 +2185,18 @@ async function api_save_items(item_type, storage_key, items) {
     }
   }
 
-  try {
-    await fetch(`/api/${item_type}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(items)
-    });
-  } catch (error) {
-    // The local copy is already safe in the browser.
+  if (can_use_local_api()) {
+    try {
+      await fetch(`/api/${item_type}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(items)
+      });
+    } catch (error) {
+      // The local copy is already safe in the browser.
+    }
   }
 }
 
