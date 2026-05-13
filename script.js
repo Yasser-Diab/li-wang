@@ -14,6 +14,7 @@ const allowed_users = {
 const relationship_start_date = "2025-01-18";
 const diab_birthdate = "2000-03-23";
 const svetlana_birthdate = "1991-08-29";
+const hidden_deleted_message_storage_prefix = "sveta_hidden_deleted_messages";
 const memory_storage_key = "svetlana_diab_memories";
 const event_storage_key = "svetlana_diab_events";
 const theme_storage_key = "svetlana_diab_theme";
@@ -141,6 +142,12 @@ const translations = {
     password_label: "Secret word",
     username_placeholder: "Svetlana",
     password_placeholder: "Our secret",
+    login_email_hint_empty: "The reset email will appear here once the name is known.",
+    login_email_hint: (email) => `Reset email: ${email}`,
+    forgot_password_button: "Forgot password?",
+    forgot_password_username_missing: "Write the same name first so I know which email should receive the reset link.",
+    forgot_password_sent: (email) => `A reset email was sent to ${email}.`,
+    forgot_password_error: "The reset email could not be sent right now.",
     login_button: "Enter our world",
     login_error: "This little world opens only with the right name and secret word.",
     welcome_kicker: "hello, beautiful soul",
@@ -193,6 +200,7 @@ const translations = {
     live_message_edited: "Edited",
     live_message_edited_at: (date_text) => `Edited ${date_text}`,
     live_message_deleted: "Deleted",
+    live_message_delete_local: "Delete",
     live_message_send_error: "The message could not be sent right now.",
     live_message_edit_prompt: "Edit your message",
     live_message_delete_confirm: "Delete this message?",
@@ -200,6 +208,16 @@ const translations = {
     love_note_eyebrow: "from Diab's heart",
     morning_message_heading: "your morning from Diab",
     night_message_heading: "for your night, my love",
+    password_recovery_title: "Choose a new secret word",
+    password_recovery_copy: "The reset link is ready. Set a new secret word here.",
+    new_password_label: "New password",
+    confirm_password_label: "Confirm password",
+    new_password_placeholder: "New secret word",
+    confirm_password_placeholder: "Write it again",
+    password_recovery_save: "Save new password",
+    password_recovery_mismatch: "The two password lines need to match.",
+    password_recovery_success: "Your password is updated. You can sign in with the new secret word now.",
+    password_recovery_error: "The password could not be updated right now.",
     memory_dialog_add: "Add a memory",
     memory_dialog_edit: "Edit this memory",
     event_dialog_add: "Add a beautiful day",
@@ -265,6 +283,12 @@ const translations = {
     password_label: "Geheimwort",
     username_placeholder: "Svetlana",
     password_placeholder: "Unser Geheimnis",
+    login_email_hint_empty: "Die Reset-E-Mail erscheint hier, sobald der Name bekannt ist.",
+    login_email_hint: (email) => `Reset-E-Mail: ${email}`,
+    forgot_password_button: "Passwort vergessen?",
+    forgot_password_username_missing: "Schreib zuerst denselben Namen, damit ich weiß, an welche E-Mail der Reset-Link gehen soll.",
+    forgot_password_sent: (email) => `Eine Reset-E-Mail wurde an ${email} gesendet.`,
+    forgot_password_error: "Die Reset-E-Mail konnte gerade nicht gesendet werden.",
     login_button: "Unsere Welt betreten",
     login_error: "Diese kleine Welt öffnet sich nur mit dem richtigen Namen und Geheimwort.",
     welcome_kicker: "hallo, schöne Seele",
@@ -317,6 +341,7 @@ const translations = {
     live_message_edited: "Bearbeitet",
     live_message_edited_at: (date_text) => `Bearbeitet ${date_text}`,
     live_message_deleted: "Gelöscht",
+    live_message_delete_local: "Löschen",
     live_message_send_error: "Die Nachricht konnte gerade nicht gesendet werden.",
     live_message_edit_prompt: "Bearbeite deine Nachricht",
     live_message_delete_confirm: "Diese Nachricht löschen?",
@@ -324,6 +349,16 @@ const translations = {
     love_note_eyebrow: "aus Diabs Herz",
     morning_message_heading: "dein Morgen von Diab",
     night_message_heading: "für deine Nacht, meine Liebe",
+    password_recovery_title: "Wähle ein neues Geheimwort",
+    password_recovery_copy: "Der Reset-Link ist bereit. Lege hier ein neues Geheimwort fest.",
+    new_password_label: "Neues Passwort",
+    confirm_password_label: "Passwort bestätigen",
+    new_password_placeholder: "Neues Geheimwort",
+    confirm_password_placeholder: "Noch einmal schreiben",
+    password_recovery_save: "Neues Passwort speichern",
+    password_recovery_mismatch: "Beide Passwortfelder müssen gleich sein.",
+    password_recovery_success: "Dein Passwort wurde aktualisiert. Du kannst dich jetzt mit dem neuen Geheimwort anmelden.",
+    password_recovery_error: "Das Passwort konnte gerade nicht aktualisiert werden.",
     memory_dialog_add: "Erinnerung hinzufügen",
     memory_dialog_edit: "Diese Erinnerung bearbeiten",
     event_dialog_add: "Einen schönen Tag hinzufügen",
@@ -389,6 +424,12 @@ const translations = {
     password_label: "الكلمة السرية",
     username_placeholder: "Svetlana",
     password_placeholder: "سرنا",
+    login_email_hint_empty: "سيظهر بريد إعادة التعيين هنا حين يصبح الاسم معروفًا.",
+    login_email_hint: (email) => `بريد إعادة التعيين: ${email}`,
+    forgot_password_button: "نسيت كلمة السر؟",
+    forgot_password_username_missing: "اكتب الاسم نفسه أولًا حتى أعرف إلى أي بريد يجب أن يذهب رابط إعادة التعيين.",
+    forgot_password_sent: (email) => `تم إرسال رسالة إعادة التعيين إلى ${email}.`,
+    forgot_password_error: "تعذر إرسال رسالة إعادة التعيين الآن.",
     login_button: "ادخل عالمنا",
     login_error: "هذا العالم الصغير لا يفتح إلا بالاسم الصحيح والكلمة السرية الصحيحة.",
     welcome_kicker: "مرحباً يا روح جميلة",
@@ -441,6 +482,7 @@ const translations = {
     live_message_edited: "تم التعديل",
     live_message_edited_at: (date_text) => `تم التعديل ${date_text}`,
     live_message_deleted: "تم الحذف",
+    live_message_delete_local: "حذف",
     live_message_send_error: "تعذر إرسال الرسالة الآن.",
     live_message_edit_prompt: "عدّل رسالتك",
     live_message_delete_confirm: "هل تريد حذف هذه الرسالة؟",
@@ -448,6 +490,16 @@ const translations = {
     love_note_eyebrow: "من قلب دياب",
     morning_message_heading: "صباحكِ من دياب",
     night_message_heading: "لليلتكِ يا حبيبتي",
+    password_recovery_title: "اختاري كلمة سر جديدة",
+    password_recovery_copy: "رابط إعادة التعيين جاهز. اكتبي كلمة سر جديدة هنا.",
+    new_password_label: "كلمة السر الجديدة",
+    confirm_password_label: "تأكيد كلمة السر",
+    new_password_placeholder: "كلمة السر الجديدة",
+    confirm_password_placeholder: "اكتبيها مرة أخرى",
+    password_recovery_save: "احفظ كلمة السر الجديدة",
+    password_recovery_mismatch: "يجب أن تتطابق كلمتا السر.",
+    password_recovery_success: "تم تحديث كلمة السر. يمكنك تسجيل الدخول الآن بالكلمة الجديدة.",
+    password_recovery_error: "تعذر تحديث كلمة السر الآن.",
     memory_dialog_add: "أضف ذكرى",
     memory_dialog_edit: "عدّل هذه الذكرى",
     event_dialog_add: "أضف يوماً جميلاً",
@@ -585,6 +637,7 @@ let editing_event_id = null;
 let editing_live_message_id = null;
 let editing_live_message_has_attachments = false;
 let editing_memory_image_data = "";
+let hidden_deleted_message_ids = [];
 let welcome_audio_context = null;
 let time_sensitive_interval_id = null;
 let live_message_stream = null;
@@ -594,8 +647,10 @@ let heart_shower_timeout_id = null;
 let hero_message_timer_id = null;
 let hero_message_cleanup_id = null;
 let supabase_client = null;
+let supabase_auth_subscription = null;
 let current_room_slug = supabase_room_slug_default;
 let current_auth_user_id = "";
+let password_recovery_mode_active = false;
 const flow_animation_state = {};
 const quick_emoji_source = `
 Smileys & Emotion
@@ -653,6 +708,8 @@ function collect_dom_references() {
   dom_references.login_button = document.getElementById("login_button");
   dom_references.username_input = document.getElementById("username_input");
   dom_references.password_input = document.getElementById("password_input");
+  dom_references.login_email_hint = document.getElementById("login_email_hint");
+  dom_references.forgot_password_button = document.getElementById("forgot_password_button");
   dom_references.login_error_message = document.getElementById("login_error_message");
   dom_references.welcome_overlay = document.getElementById("welcome_overlay");
   dom_references.welcome_kicker = document.getElementById("welcome_kicker");
@@ -745,6 +802,17 @@ function collect_dom_references() {
   dom_references.event_date_input = document.getElementById("event_date_input");
   dom_references.event_description_input = document.getElementById("event_description_input");
   dom_references.save_event_button = document.getElementById("save_event_button");
+  dom_references.password_recovery_dialog = document.getElementById("password_recovery_dialog");
+  dom_references.password_recovery_form = document.getElementById("password_recovery_form");
+  dom_references.password_recovery_title = document.getElementById("password_recovery_title");
+  dom_references.password_recovery_copy = document.getElementById("password_recovery_copy");
+  dom_references.close_password_recovery_button = document.getElementById("close_password_recovery_button");
+  dom_references.new_password_label = document.querySelector("label[for='new_password_input']");
+  dom_references.confirm_password_label = document.querySelector("label[for='confirm_password_input']");
+  dom_references.new_password_input = document.getElementById("new_password_input");
+  dom_references.confirm_password_input = document.getElementById("confirm_password_input");
+  dom_references.password_recovery_status = document.getElementById("password_recovery_status");
+  dom_references.save_password_button = document.getElementById("save_password_button");
   dom_references.live_message_input.removeAttribute("required");
 }
 
@@ -776,6 +844,8 @@ function initialize_supabase_client() {
       autoRefreshToken: true
     }
   });
+
+  bind_supabase_auth_listener();
 }
 
 function normalize_supabase_project_url(raw_url) {
@@ -802,6 +872,41 @@ function get_supabase_user_map() {
 
 function get_supabase_user_config(username) {
   return get_supabase_user_map()[username] || null;
+}
+
+function bind_supabase_auth_listener() {
+  if (!supabase_client || supabase_auth_subscription) {
+    return;
+  }
+
+  const auth_listener = supabase_client.auth.onAuthStateChange((event, session) => {
+    if (event !== "PASSWORD_RECOVERY") {
+      return;
+    }
+
+    window.setTimeout(() => {
+      password_recovery_mode_active = true;
+      current_auth_user_id = String(session?.user?.id || "");
+      open_password_recovery_dialog();
+    }, 0);
+  });
+
+  supabase_auth_subscription = auth_listener?.data?.subscription || auth_listener?.subscription || null;
+}
+
+function is_supabase_recovery_link_present() {
+  const search_text = String(window.location.search || "").toLowerCase();
+  const hash_text = String(window.location.hash || "").toLowerCase();
+  return search_text.includes("type=recovery") || hash_text.includes("type=recovery");
+}
+
+function clear_supabase_recovery_url_state() {
+  if (typeof window.history.replaceState !== "function") {
+    return;
+  }
+
+  const clean_url = `${window.location.pathname}${window.location.search}`;
+  window.history.replaceState({}, document.title, clean_url);
 }
 
 function build_user_profile(user_key, email = "") {
@@ -837,6 +942,10 @@ function get_profile_from_supabase_user(user) {
 }
 
 async function restore_existing_session() {
+  if (is_supabase_enabled() && (password_recovery_mode_active || is_supabase_recovery_link_present())) {
+    return false;
+  }
+
   if (is_supabase_enabled()) {
     try {
       const { data, error } = await supabase_client.auth.getSession();
@@ -847,6 +956,7 @@ async function restore_existing_session() {
         if (restored_profile) {
           current_auth_user_id = data.session.user.id;
           current_user_profile = restored_profile;
+          load_hidden_deleted_messages();
           sessionStorage.setItem("logged_in_user", JSON.stringify(restored_profile));
           await ensure_supabase_profile_row(restored_profile);
           await load_saved_content();
@@ -868,6 +978,7 @@ async function restore_existing_session() {
 
     if (saved_profile && saved_profile.user_key) {
       current_user_profile = saved_profile;
+      load_hidden_deleted_messages();
       await load_saved_content();
       update_home_for_user(saved_profile);
       dom_references.login_screen.classList.add("hidden");
@@ -903,6 +1014,11 @@ async function ensure_supabase_profile_row(user_profile) {
 function bind_event_handlers() {
   dom_references.language_toggle_button.addEventListener("click", toggle_language);
   dom_references.login_form.addEventListener("submit", handle_login);
+  dom_references.username_input.addEventListener("input", () => {
+    dom_references.login_error_message.textContent = "";
+    update_login_email_hint();
+  });
+  dom_references.forgot_password_button.addEventListener("click", handle_forgot_password_request);
   dom_references.enter_home_button.addEventListener("click", (event) => {
     burst_reaction(event.currentTarget, "heart", 10);
     enter_home_from_welcome();
@@ -937,6 +1053,8 @@ function bind_event_handlers() {
   dom_references.close_event_dialog_button.addEventListener("click", () => close_dialog(dom_references.event_dialog));
   dom_references.memory_form.addEventListener("submit", save_memory_from_form);
   dom_references.event_form.addEventListener("submit", save_event_from_form);
+  dom_references.password_recovery_form.addEventListener("submit", handle_password_recovery_submit);
+  dom_references.close_password_recovery_button.addEventListener("click", close_password_recovery_dialog);
   dom_references.live_message_form.addEventListener("submit", send_live_message);
   dom_references.live_messages_list.addEventListener("click", handle_live_message_action);
   dom_references.live_message_files_input.addEventListener("change", handle_live_message_files_selected);
@@ -968,6 +1086,47 @@ function set_placeholder(element, value) {
   if (element) {
     element.placeholder = value;
   }
+}
+
+function set_status_text(element, message_text, status_type = "") {
+  if (!element) {
+    return;
+  }
+
+  element.textContent = message_text || "";
+  element.classList.remove("is_success", "is_error");
+
+  if (status_type === "success") {
+    element.classList.add("is_success");
+  }
+
+  if (status_type === "error") {
+    element.classList.add("is_error");
+  }
+}
+
+function update_login_email_hint(custom_message = "", status_type = "") {
+  if (!dom_references.login_email_hint) {
+    return;
+  }
+
+  if (custom_message) {
+    set_status_text(dom_references.login_email_hint, custom_message, status_type);
+    return;
+  }
+
+  if (!is_supabase_enabled()) {
+    set_status_text(dom_references.login_email_hint, "", "");
+    return;
+  }
+
+  const submitted_username = String(dom_references.username_input?.value || "").trim().toLowerCase();
+  const supabase_user = get_supabase_user_config(submitted_username);
+  const hint_text = supabase_user?.email
+    ? translate("login_email_hint", supabase_user.email)
+    : translate("login_email_hint_empty");
+
+  set_status_text(dom_references.login_email_hint, hint_text, "");
 }
 
 function log_app_error(context_label, error) {
@@ -1144,7 +1303,9 @@ function apply_language() {
   set_text(document.querySelector("label[for='password_input']"), translate("password_label"));
   set_placeholder(dom_references.username_input, translate("username_placeholder"));
   set_placeholder(dom_references.password_input, translate("password_placeholder"));
+  set_text(dom_references.forgot_password_button, translate("forgot_password_button"));
   set_text(dom_references.login_button, translate("login_button"));
+  update_login_email_hint();
   set_text(dom_references.welcome_kicker, translate("welcome_kicker"));
   set_text(dom_references.enter_home_button, translate("enter_home_button"));
   set_text(dom_references.home_header_eyebrow, translate("header_eyebrow"));
@@ -1187,8 +1348,16 @@ function apply_language() {
   set_placeholder(dom_references.memory_note_input, translate("memory_note_placeholder"));
   set_placeholder(dom_references.event_title_input, translate("event_title_placeholder"));
   set_placeholder(dom_references.event_description_input, translate("event_description_placeholder"));
+  set_text(dom_references.password_recovery_title, translate("password_recovery_title"));
+  set_text(dom_references.password_recovery_copy, translate("password_recovery_copy"));
+  set_text(dom_references.new_password_label, translate("new_password_label"));
+  set_text(dom_references.confirm_password_label, translate("confirm_password_label"));
+  set_placeholder(dom_references.new_password_input, translate("new_password_placeholder"));
+  set_placeholder(dom_references.confirm_password_input, translate("confirm_password_placeholder"));
+  set_text(dom_references.save_password_button, translate("password_recovery_save"));
   dom_references.close_memory_dialog_button.setAttribute("aria-label", translate("close_dialog_label"));
   dom_references.close_event_dialog_button.setAttribute("aria-label", translate("close_dialog_label"));
+  dom_references.close_password_recovery_button.setAttribute("aria-label", translate("close_dialog_label"));
   update_theme_button(document.documentElement.dataset.theme || "light");
   translate_default_items();
   update_home_for_user(current_user_profile);
@@ -1275,10 +1444,13 @@ async function handle_login(event) {
     email: user_profile.email || ""
   };
 
+  password_recovery_mode_active = false;
+  load_hidden_deleted_messages();
   sessionStorage.setItem("logged_in_user", JSON.stringify(current_user_profile));
   dom_references.login_error_message.textContent = "";
   dom_references.username_input.value = "";
   dom_references.password_input.value = "";
+  update_login_email_hint();
   await load_saved_content();
   update_home_for_user(current_user_profile);
   show_welcome_overlay(current_user_profile);
@@ -1349,16 +1521,129 @@ function handle_logout() {
   sessionStorage.removeItem("logged_in_user");
   current_user_profile = null;
   current_auth_user_id = "";
+  hidden_deleted_message_ids = [];
+  password_recovery_mode_active = false;
   dom_references.home_screen.classList.add("hidden");
   dom_references.welcome_overlay.classList.add("hidden");
   dom_references.login_screen.classList.remove("hidden");
   dom_references.login_error_message.textContent = "";
+  update_login_email_hint();
   close_live_messages_stream();
   clear_live_message_composer();
   render_event_timeline(current_event_items);
+  close_password_recovery_dialog();
 
   if (is_supabase_enabled()) {
     supabase_client.auth.signOut().catch(() => {});
+  }
+}
+
+async function handle_forgot_password_request() {
+  if (!is_supabase_enabled()) {
+    set_status_text(dom_references.login_error_message, translate("forgot_password_error"), "error");
+    return;
+  }
+
+  const submitted_username = String(dom_references.username_input.value || "").trim().toLowerCase();
+  const supabase_user = get_supabase_user_config(submitted_username);
+
+  if (!supabase_user?.email) {
+    set_status_text(dom_references.login_error_message, translate("forgot_password_username_missing"), "error");
+    update_login_email_hint();
+    return;
+  }
+
+  const redirect_url = `${window.location.origin}${window.location.pathname}`;
+
+  try {
+    const { error } = await supabase_client.auth.resetPasswordForEmail(supabase_user.email, {
+      redirectTo: redirect_url
+    });
+
+    if (error) {
+      log_app_error("supabase_password_reset_email_failed", error);
+      throw error;
+    }
+
+    set_status_text(dom_references.login_error_message, "", "");
+    update_login_email_hint(translate("forgot_password_sent", supabase_user.email), "success");
+  } catch (error) {
+    log_app_error("supabase_password_reset_email_threw", error);
+    set_status_text(dom_references.login_error_message, translate("forgot_password_error"), "error");
+  }
+}
+
+function open_password_recovery_dialog() {
+  password_recovery_mode_active = true;
+  sessionStorage.removeItem("logged_in_user");
+  current_user_profile = null;
+  hidden_deleted_message_ids = [];
+  set_status_text(dom_references.password_recovery_status, "", "");
+  dom_references.password_recovery_form.reset();
+  dom_references.login_screen.classList.remove("hidden");
+  dom_references.welcome_overlay.classList.add("hidden");
+  dom_references.home_screen.classList.add("hidden");
+  open_dialog(dom_references.password_recovery_dialog);
+  dom_references.new_password_input.focus();
+}
+
+function close_password_recovery_dialog() {
+  set_status_text(dom_references.password_recovery_status, "", "");
+  close_dialog(dom_references.password_recovery_dialog);
+}
+
+async function handle_password_recovery_submit(event) {
+  event.preventDefault();
+
+  const new_password = String(dom_references.new_password_input.value || "");
+  const confirmed_password = String(dom_references.confirm_password_input.value || "");
+
+  if (new_password !== confirmed_password) {
+    set_status_text(dom_references.password_recovery_status, translate("password_recovery_mismatch"), "error");
+    return;
+  }
+
+  if (!is_supabase_enabled()) {
+    set_status_text(dom_references.password_recovery_status, translate("password_recovery_error"), "error");
+    return;
+  }
+
+  dom_references.save_password_button.disabled = true;
+
+  try {
+    const { error } = await supabase_client.auth.updateUser({
+      password: new_password
+    });
+
+    if (error) {
+      log_app_error("supabase_password_update_failed", error);
+      throw error;
+    }
+
+    set_status_text(dom_references.password_recovery_status, translate("password_recovery_success"), "success");
+    clear_supabase_recovery_url_state();
+    password_recovery_mode_active = false;
+    current_auth_user_id = "";
+    try {
+      await supabase_client.auth.signOut();
+    } catch (error) {
+      // The password is already updated even if sign-out is delayed.
+    }
+    sessionStorage.removeItem("logged_in_user");
+    current_user_profile = null;
+    hidden_deleted_message_ids = [];
+    dom_references.password_input.value = "";
+    dom_references.username_input.value = "";
+    set_status_text(dom_references.login_error_message, "", "");
+    update_login_email_hint(translate("password_recovery_success"), "success");
+    window.setTimeout(() => {
+      close_password_recovery_dialog();
+    }, 800);
+  } catch (error) {
+    log_app_error("supabase_password_update_threw", error);
+    set_status_text(dom_references.password_recovery_status, translate("password_recovery_error"), "error");
+  } finally {
+    dom_references.save_password_button.disabled = false;
   }
 }
 
@@ -2453,7 +2738,9 @@ async function delete_event(item_id) {
 
 function open_dialog(dialog_element) {
   if (typeof dialog_element.showModal === "function") {
-    dialog_element.showModal();
+    if (!dialog_element.open) {
+      dialog_element.showModal();
+    }
   } else {
     dialog_element.setAttribute("open", "");
   }
@@ -2461,7 +2748,9 @@ function open_dialog(dialog_element) {
 
 function close_dialog(dialog_element) {
   if (typeof dialog_element.close === "function") {
-    dialog_element.close();
+    if (dialog_element.open) {
+      dialog_element.close();
+    }
   } else {
     dialog_element.removeAttribute("open");
   }
@@ -2727,6 +3016,11 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
     current_live_messages = [...current_live_messages, message_item];
   }
 
+  if (!is_deleted_live_message(message_item) && hidden_deleted_message_ids.includes(message_item.id)) {
+    hidden_deleted_message_ids = hidden_deleted_message_ids.filter((item_id) => item_id !== message_item.id);
+    save_hidden_deleted_messages();
+  }
+
   if (editing_live_message_id === message_item.id && is_deleted_live_message(message_item)) {
     clear_live_message_composer();
   }
@@ -2752,6 +3046,56 @@ function is_deleted_live_message(message_item) {
   return Boolean(message_item) && String(message_item.text || "") === deleted_live_message_marker;
 }
 
+function get_hidden_deleted_message_storage_key() {
+  if (!current_user_profile?.user_key) {
+    return "";
+  }
+
+  return `${hidden_deleted_message_storage_prefix}_${current_room_slug}_${current_user_profile.user_key}`;
+}
+
+function load_hidden_deleted_messages() {
+  const storage_key = get_hidden_deleted_message_storage_key();
+
+  if (!storage_key) {
+    hidden_deleted_message_ids = [];
+    return;
+  }
+
+  try {
+    const stored_value = JSON.parse(localStorage.getItem(storage_key) || "[]");
+    hidden_deleted_message_ids = Array.isArray(stored_value)
+      ? [...new Set(stored_value.map((item) => String(item || "")).filter(Boolean))]
+      : [];
+  } catch (error) {
+    hidden_deleted_message_ids = [];
+  }
+}
+
+function save_hidden_deleted_messages() {
+  const storage_key = get_hidden_deleted_message_storage_key();
+
+  if (!storage_key) {
+    return;
+  }
+
+  localStorage.setItem(storage_key, JSON.stringify(hidden_deleted_message_ids));
+}
+
+function should_hide_deleted_message(message_item) {
+  return is_deleted_live_message(message_item) && hidden_deleted_message_ids.includes(message_item.id);
+}
+
+function hide_deleted_message_locally(message_id) {
+  if (hidden_deleted_message_ids.includes(message_id)) {
+    return;
+  }
+
+  hidden_deleted_message_ids = [...hidden_deleted_message_ids, message_id];
+  save_hidden_deleted_messages();
+  render_live_messages();
+}
+
 function get_live_message_display_text(message_item) {
   if (is_deleted_live_message(message_item)) {
     return translate("live_message_deleted");
@@ -2770,6 +3114,10 @@ function render_live_messages(scroll_to_bottom = false) {
   }
 
   current_live_messages.forEach((message_item) => {
+    if (should_hide_deleted_message(message_item)) {
+      return;
+    }
+
     const message_element = document.createElement("article");
     const is_own_message = current_user_profile && message_item.sender_key === current_user_profile.user_key;
     const is_deleted_message = is_deleted_live_message(message_item);
@@ -2813,7 +3161,9 @@ function render_live_messages(scroll_to_bottom = false) {
       message_element.appendChild(edit_note);
     }
 
-    if (is_own_message && !is_deleted_message) {
+    if (is_deleted_message) {
+      message_element.appendChild(create_deleted_message_tools(message_item.id));
+    } else if (is_own_message) {
       message_element.appendChild(create_live_message_tools(message_item.id));
     }
 
@@ -2851,6 +3201,23 @@ function create_live_message_tools(message_id) {
   return tool_wrap;
 }
 
+function create_deleted_message_tools(message_id) {
+  const tool_wrap = document.createElement("div");
+  tool_wrap.className = "live_message_tools";
+
+  const delete_button = document.createElement("button");
+  delete_button.className = "live_message_tool_button local_delete_tool";
+  delete_button.type = "button";
+  delete_button.dataset.action = "hide_deleted_live_message";
+  delete_button.dataset.message_id = message_id;
+  delete_button.title = translate("live_message_delete_local");
+  delete_button.setAttribute("aria-label", translate("live_message_delete_local"));
+  delete_button.append(create_action_icon("delete"), create_action_label(translate("live_message_delete_local")));
+
+  tool_wrap.appendChild(delete_button);
+  return tool_wrap;
+}
+
 function handle_live_message_action(event) {
   const action_button = event.target.closest("button[data-action]");
 
@@ -2866,6 +3233,10 @@ function handle_live_message_action(event) {
 
   if (action_button.dataset.action === "delete_live_message") {
     delete_live_message(message_id);
+  }
+
+  if (action_button.dataset.action === "hide_deleted_live_message") {
+    hide_deleted_message_locally(message_id);
   }
 }
 
