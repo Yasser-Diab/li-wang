@@ -3217,7 +3217,7 @@ function create_live_message_tools(message_id) {
 
 function create_deleted_message_tools(message_id) {
   const tool_wrap = document.createElement("div");
-  tool_wrap.className = "live_message_tools";
+  tool_wrap.className = "live_message_tools deleted_message_tools";
 
   const delete_button = document.createElement("button");
   delete_button.className = "live_message_tool_button local_delete_tool";
