@@ -2067,6 +2067,10 @@ body[data-theme="dark"] .editor_dialog {
     width: min(100% - 16px, 1180px);
   }
 
+  .home_screen {
+    padding-top: 86px;
+  }
+
   .login_panel {
     padding: 30px 18px;
   }
@@ -2088,38 +2092,59 @@ body[data-theme="dark"] .editor_dialog {
   }
 
   .language_toggle_button {
-    top: 40px;
-    right: 10px;
-    width: 62px;
-    min-width: 62px;
-    height: 56px;
-    min-height: 56px;
-    padding: 4px 4px 6px;
+    top: 10px;
+    right: 74px;
+    width: 56px;
+    min-width: 56px;
+    height: 44px;
+    min-height: 44px;
+    padding: 3px 3px 5px;
+    border-radius: 12px;
+    gap: 2px;
+  }
+
+  .language_toggle_label,
+  #theme_toggle_button .theme_toggle_label {
+    font-size: 0.48rem;
+    letter-spacing: 0.08em;
   }
 
   .flag_icon {
-    height: 28px;
+    height: 22px;
+    border-radius: 6px;
   }
 
   #logout_button {
-    top: 8px;
-    right: 10px;
-    width: 62px;
-    min-width: 62px;
-    min-height: 22px;
-    height: 22px;
-    padding: 0 5px;
-    font-size: 0.52rem;
+    top: 10px;
+    right: 138px;
+    width: 56px;
+    min-width: 56px;
+    min-height: 44px;
+    height: 44px;
+    padding: 0 4px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.46rem;
+    line-height: 1.15;
+    text-align: center;
   }
 
   #theme_toggle_button {
-    top: 100px;
+    top: 10px;
     right: 10px;
-    width: 62px;
-    min-width: 62px;
-    height: 56px;
-    min-height: 56px;
-    padding: 4px 4px 6px;
+    width: 56px;
+    min-width: 56px;
+    height: 44px;
+    min-height: 44px;
+    padding: 3px 3px 5px;
+    border-radius: 12px;
+    gap: 2px;
+  }
+
+  #theme_toggle_button .theme_toggle_icon {
+    font-size: 1.08rem;
   }
 
   .hero_section {
