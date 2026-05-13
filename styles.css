@@ -1430,6 +1430,17 @@ body[data-theme="dark"] .night_tale_card {
   color: var(--gold_soft);
 }
 
+.deleted_message_tools {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  display: inline-flex;
+  gap: 0;
+  align-self: flex-end;
+  margin-top: 4px;
+}
+
 .live_message_edit_note {
   align-self: flex-end;
   margin-top: 2px;
