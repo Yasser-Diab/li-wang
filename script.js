@@ -18,6 +18,13 @@ const memory_storage_key = "svetlana_diab_memories";
 const event_storage_key = "svetlana_diab_events";
 const theme_storage_key = "svetlana_diab_theme";
 const language_storage_key = "svetlana_diab_language";
+const supabase_room_slug_default = "svetlana-diab";
+const supabase_table_names = {
+  profiles: "app_profiles",
+  memories: "app_memories",
+  events: "app_events",
+  live_messages: "app_live_messages"
+};
 
 const language_cycle = ["en", "de", "ar"];
 const language_config = {
@@ -580,6 +587,9 @@ let heart_shower_interval_id = null;
 let heart_shower_timeout_id = null;
 let hero_message_timer_id = null;
 let hero_message_cleanup_id = null;
+let supabase_client = null;
+let current_room_slug = supabase_room_slug_default;
+let current_auth_user_id = "";
 const flow_animation_state = {};
 const quick_emoji_source = `
 Smileys & Emotion
@@ -605,12 +615,18 @@ document.addEventListener("DOMContentLoaded", initialize_application);
 async function initialize_application() {
   collect_dom_references();
   lift_emoji_picker_panel();
+  initialize_supabase_client();
   bind_event_handlers();
   apply_saved_language();
   apply_saved_theme();
   await load_all_message_lists();
   apply_language();
-  await load_saved_content();
+  const restored_session = await restore_existing_session();
+
+  if (!restored_session) {
+    await load_saved_content();
+  }
+
   update_home_counters();
   update_contextual_messages();
   start_time_sensitive_updates();
@@ -733,6 +749,133 @@ function lift_emoji_picker_panel() {
 
   if (dom_references.emoji_picker_panel.parentElement !== document.body) {
     document.body.appendChild(dom_references.emoji_picker_panel);
+  }
+}
+
+function initialize_supabase_client() {
+  const supabase_config = window.supabase_public_config || {};
+  const create_client = window.supabase && typeof window.supabase.createClient === "function"
+    ? window.supabase.createClient
+    : null;
+
+  if (!create_client || !supabase_config.url || !supabase_config.anon_key) {
+    return;
+  }
+
+  current_room_slug = supabase_config.room_slug || supabase_room_slug_default;
+  supabase_client = create_client(supabase_config.url, supabase_config.anon_key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true
+    }
+  });
+}
+
+function is_supabase_enabled() {
+  return Boolean(supabase_client);
+}
+
+function get_supabase_user_map() {
+  return (window.supabase_public_config && window.supabase_public_config.users) || {};
+}
+
+function get_supabase_user_config(username) {
+  return get_supabase_user_map()[username] || null;
+}
+
+function build_user_profile(user_key, email = "") {
+  const local_user = allowed_users[user_key];
+
+  if (!local_user) {
+    return null;
+  }
+
+  return {
+    user_key: local_user.user_key,
+    display_name: local_user.display_name,
+    email
+  };
+}
+
+function get_profile_from_supabase_user(user) {
+  const user_email = String(user?.email || "").trim().toLowerCase();
+
+  if (!user_email) {
+    return null;
+  }
+
+  const matching_entry = Object.entries(get_supabase_user_map()).find(([, config]) => {
+    return String(config?.email || "").trim().toLowerCase() === user_email;
+  });
+
+  if (!matching_entry) {
+    return null;
+  }
+
+  return build_user_profile(matching_entry[0], user_email);
+}
+
+async function restore_existing_session() {
+  if (is_supabase_enabled()) {
+    try {
+      const { data, error } = await supabase_client.auth.getSession();
+
+      if (!error && data.session?.user) {
+        const restored_profile = get_profile_from_supabase_user(data.session.user);
+
+        if (restored_profile) {
+          current_auth_user_id = data.session.user.id;
+          current_user_profile = restored_profile;
+          sessionStorage.setItem("logged_in_user", JSON.stringify(restored_profile));
+          await ensure_supabase_profile_row(restored_profile);
+          await load_saved_content();
+          update_home_for_user(restored_profile);
+          dom_references.login_screen.classList.add("hidden");
+          dom_references.welcome_overlay.classList.add("hidden");
+          dom_references.home_screen.classList.remove("hidden");
+          await initialize_live_messages_for_session();
+          return true;
+        }
+      }
+    } catch (error) {
+      // Login falls back to the manual gate below.
+    }
+  }
+
+  try {
+    const saved_profile = JSON.parse(sessionStorage.getItem("logged_in_user") || "null");
+
+    if (saved_profile && saved_profile.user_key) {
+      current_user_profile = saved_profile;
+      await load_saved_content();
+      update_home_for_user(saved_profile);
+      dom_references.login_screen.classList.add("hidden");
+      dom_references.welcome_overlay.classList.add("hidden");
+      dom_references.home_screen.classList.remove("hidden");
+      await initialize_live_messages_for_session();
+      return true;
+    }
+  } catch (error) {
+    // No local session to restore.
+  }
+
+  return false;
+}
+
+async function ensure_supabase_profile_row(user_profile) {
+  if (!is_supabase_enabled() || !current_auth_user_id || !user_profile) {
+    return;
+  }
+
+  try {
+    await supabase_client.from(supabase_table_names.profiles).upsert({
+      id: current_auth_user_id,
+      user_key: user_profile.user_key,
+      display_name: user_profile.display_name,
+      room_slug: current_room_slug
+    });
+  } catch (error) {
+    // The app still works if the profile row will be created later.
   }
 }
 
@@ -1103,13 +1246,15 @@ async function handle_login(event) {
 
   current_user_profile = {
     user_key: user_profile.user_key,
-    display_name: user_profile.display_name
+    display_name: user_profile.display_name,
+    email: user_profile.email || ""
   };
 
   sessionStorage.setItem("logged_in_user", JSON.stringify(current_user_profile));
   dom_references.login_error_message.textContent = "";
   dom_references.username_input.value = "";
   dom_references.password_input.value = "";
+  await load_saved_content();
   update_home_for_user(current_user_profile);
   show_welcome_overlay(current_user_profile);
 }
@@ -1119,6 +1264,32 @@ async function authenticate_user(username, password) {
 
   if (!local_user || local_user.password !== password) {
     return null;
+  }
+
+  if (is_supabase_enabled()) {
+    const supabase_user = get_supabase_user_config(username);
+
+    if (!supabase_user?.email) {
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase_client.auth.signInWithPassword({
+        email: supabase_user.email,
+        password
+      });
+
+      if (error || !data.user) {
+        return null;
+      }
+
+      current_auth_user_id = data.user.id;
+      const user_profile = build_user_profile(username, supabase_user.email);
+      await ensure_supabase_profile_row(user_profile);
+      return user_profile;
+    } catch (error) {
+      return null;
+    }
   }
 
   try {
@@ -1150,6 +1321,7 @@ async function authenticate_user(username, password) {
 function handle_logout() {
   sessionStorage.removeItem("logged_in_user");
   current_user_profile = null;
+  current_auth_user_id = "";
   dom_references.home_screen.classList.add("hidden");
   dom_references.welcome_overlay.classList.add("hidden");
   dom_references.login_screen.classList.remove("hidden");
@@ -1157,6 +1329,10 @@ function handle_logout() {
   close_live_messages_stream();
   clear_live_message_composer();
   render_event_timeline(current_event_items);
+
+  if (is_supabase_enabled()) {
+    supabase_client.auth.signOut().catch(() => {});
+  }
 }
 
 function show_welcome_overlay(user_profile) {
@@ -1642,6 +1818,16 @@ async function load_saved_content() {
 }
 
 async function api_get_items(item_type, storage_key, fallback_items) {
+  if (is_supabase_enabled() && current_auth_user_id) {
+    try {
+      const supabase_items = await supabase_get_items(item_type);
+      localStorage.setItem(storage_key, JSON.stringify(supabase_items));
+      return supabase_items.length > 0 ? supabase_items : fallback_items;
+    } catch (error) {
+      // Local storage fallback below keeps the app usable.
+    }
+  }
+
   try {
     const response = await fetch(`/api/${item_type}`);
 
@@ -1664,6 +1850,15 @@ async function api_get_items(item_type, storage_key, fallback_items) {
 async function api_save_items(item_type, storage_key, items) {
   localStorage.setItem(storage_key, JSON.stringify(items));
 
+  if (is_supabase_enabled() && current_auth_user_id) {
+    try {
+      await supabase_replace_items(item_type, items);
+      return;
+    } catch (error) {
+      // Local fallback below remains available.
+    }
+  }
+
   try {
     await fetch(`/api/${item_type}`, {
       method: "POST",
@@ -1675,6 +1870,100 @@ async function api_save_items(item_type, storage_key, items) {
   } catch (error) {
     // The local copy is already safe in the browser.
   }
+}
+
+async function supabase_get_items(item_type) {
+  const table_name = item_type === "memories" ? supabase_table_names.memories : supabase_table_names.events;
+  const { data, error } = await supabase_client
+    .from(table_name)
+    .select("*")
+    .eq("room_slug", current_room_slug)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  const rows = Array.isArray(data) ? data : [];
+  return item_type === "memories"
+    ? rows.map(map_memory_row_to_item)
+    : rows.map(map_event_row_to_item);
+}
+
+async function supabase_replace_items(item_type, items) {
+  const table_name = item_type === "memories" ? supabase_table_names.memories : supabase_table_names.events;
+  const rows = item_type === "memories"
+    ? items.map(map_memory_item_to_row)
+    : items.map(map_event_item_to_row);
+
+  const delete_result = await supabase_client
+    .from(table_name)
+    .delete()
+    .eq("room_slug", current_room_slug);
+
+  if (delete_result.error) {
+    throw delete_result.error;
+  }
+
+  if (rows.length === 0) {
+    return;
+  }
+
+  const insert_result = await supabase_client.from(table_name).insert(rows);
+
+  if (insert_result.error) {
+    throw insert_result.error;
+  }
+}
+
+function map_memory_item_to_row(memory_item, index) {
+  return {
+    id: String(memory_item.id),
+    room_slug: current_room_slug,
+    sort_order: index,
+    title: String(memory_item.title || ""),
+    date_label: String(memory_item.date_label || ""),
+    date_value: String(memory_item.date_value || ""),
+    note: String(memory_item.note || ""),
+    image_data: String(memory_item.image_data || "")
+  };
+}
+
+function map_memory_row_to_item(row) {
+  return {
+    id: String(row.id),
+    title: String(row.title || ""),
+    date_label: String(row.date_label || translate("fallback_memory_date")),
+    date_value: String(row.date_value || ""),
+    note: String(row.note || ""),
+    image_data: String(row.image_data || "")
+  };
+}
+
+function map_event_item_to_row(event_item, index) {
+  return {
+    id: String(event_item.id),
+    room_slug: current_room_slug,
+    sort_order: index,
+    is_locked: Boolean(event_item.is_locked),
+    is_custom: Boolean(event_item.is_custom),
+    title: String(event_item.title || ""),
+    date_label: String(event_item.date_label || ""),
+    date_value: String(event_item.date_value || ""),
+    description: String(event_item.description || "")
+  };
+}
+
+function map_event_row_to_item(row) {
+  return {
+    id: String(row.id),
+    is_locked: Boolean(row.is_locked),
+    is_custom: Boolean(row.is_custom),
+    title: String(row.title || ""),
+    date_label: String(row.date_label || translate("fallback_event_date")),
+    date_value: String(row.date_value || ""),
+    description: String(row.description || "")
+  };
 }
 
 function render_memory_gallery(memory_items) {
@@ -2266,6 +2555,27 @@ function update_theme_button(theme_name) {
 }
 
 async function load_live_messages() {
+  if (is_supabase_enabled() && current_auth_user_id) {
+    try {
+      const { data, error } = await supabase_client
+        .from(supabase_table_names.live_messages)
+        .select("*")
+        .eq("room_slug", current_room_slug)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        throw error;
+      }
+
+      current_live_messages = Array.isArray(data) ? data.map(map_live_message_row_to_item) : [];
+      render_live_messages(true);
+      return;
+    } catch (error) {
+      render_live_messages();
+      return;
+    }
+  }
+
   try {
     const response = await fetch("/api/live_messages");
 
@@ -2284,6 +2594,32 @@ async function load_live_messages() {
 
 function open_live_messages_stream() {
   close_live_messages_stream();
+
+  if (is_supabase_enabled() && current_auth_user_id) {
+    live_message_stream = supabase_client
+      .channel(`live-messages-${current_room_slug}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: supabase_table_names.live_messages,
+          filter: `room_slug=eq.${current_room_slug}`
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            current_live_messages = current_live_messages.filter((message_item) => message_item.id !== payload.old.id);
+            render_live_messages(true);
+            return;
+          }
+
+          const next_message = map_live_message_row_to_item(payload.new);
+          upsert_live_message(next_message, true);
+        }
+      )
+      .subscribe();
+    return;
+  }
 
   if (typeof window.EventSource !== "function") {
     start_live_message_polling();
@@ -2323,7 +2659,11 @@ function open_live_messages_stream() {
 
 function close_live_messages_stream() {
   if (live_message_stream) {
-    live_message_stream.close();
+    if (is_supabase_enabled()) {
+      supabase_client.removeChannel(live_message_stream);
+    } else {
+      live_message_stream.close();
+    }
     live_message_stream = null;
   }
 
@@ -2358,6 +2698,19 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
 
   current_live_messages.sort((left_item, right_item) => new Date(left_item.created_at) - new Date(right_item.created_at));
   render_live_messages(scroll_to_bottom);
+}
+
+function map_live_message_row_to_item(row) {
+  return {
+    id: String(row.id),
+    room_slug: String(row.room_slug || current_room_slug),
+    sender_key: String(row.sender_key || ""),
+    sender_name: String(row.sender_name || ""),
+    text: String(row.text || ""),
+    created_at: String(row.created_at || new Date().toISOString()),
+    edited_at: String(row.edited_at || ""),
+    attachments: Array.isArray(row.attachments) ? row.attachments : []
+  };
 }
 
 function render_live_messages(scroll_to_bottom = false) {
@@ -2644,6 +2997,29 @@ async function delete_live_message(message_id) {
     return;
   }
 
+  if (is_supabase_enabled() && current_auth_user_id) {
+    try {
+      const { error } = await supabase_client
+        .from(supabase_table_names.live_messages)
+        .delete()
+        .eq("id", message_id)
+        .eq("room_slug", current_room_slug);
+
+      if (error) {
+        throw error;
+      }
+
+      current_live_messages = current_live_messages.filter((item) => item.id !== message_id);
+      if (editing_live_message_id === message_id) {
+        clear_live_message_composer();
+      }
+      render_live_messages(true);
+      return;
+    } catch (error) {
+      // Local fallback below remains available.
+    }
+  }
+
   try {
     const response = await fetch(`/api/live_messages/${encodeURIComponent(message_id)}`, {
       method: "DELETE",
@@ -2706,6 +3082,28 @@ async function send_live_message(event) {
     dom_references.send_live_message_button.disabled = true;
 
     try {
+      if (is_supabase_enabled() && current_auth_user_id) {
+        const { data, error } = await supabase_client
+          .from(supabase_table_names.live_messages)
+          .update({
+            text: message_text,
+            edited_at: new Date().toISOString()
+          })
+          .eq("id", editing_live_message_id)
+          .eq("room_slug", current_room_slug)
+          .select()
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        upsert_live_message(map_live_message_row_to_item(data), true);
+        clear_live_message_composer();
+        burst_reaction(dom_references.live_messages_list, "spark", 8);
+        return;
+      }
+
       const response = await fetch(`/api/live_messages/${encodeURIComponent(editing_live_message_id)}`, {
         method: "PATCH",
         headers: {
@@ -2739,6 +3137,7 @@ async function send_live_message(event) {
   const attachments = await Promise.all(files.map(read_file_as_attachment));
   const message_item = {
     id: create_item_id(),
+    room_slug: current_room_slug,
     sender_key: current_user_profile.user_key,
     sender_name: current_user_profile.display_name,
     text: message_text,
@@ -2750,6 +3149,23 @@ async function send_live_message(event) {
   dom_references.send_live_message_button.disabled = true;
 
   try {
+    if (is_supabase_enabled() && current_auth_user_id) {
+      const { data, error } = await supabase_client
+        .from(supabase_table_names.live_messages)
+        .insert(message_item)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      upsert_live_message(map_live_message_row_to_item(data), true);
+      clear_live_message_composer();
+      burst_reaction(dom_references.live_messages_list, "heart", 8);
+      return;
+    }
+
     const response = await fetch("/api/live_messages", {
       method: "POST",
       headers: {
