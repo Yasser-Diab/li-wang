@@ -47,6 +47,7 @@ const language_config = {
 
 const heart_emoji = "\u2764\uFE0F";
 const kiss_heart_emoji = "\u{1F618}\u2764\uFE0F";
+const deleted_live_message_marker = "__SVETA_APP_DELETED__";
 
 const fallback_daily_joy_messages = [
   "Today feels like one of those days when coffee tries its best, but one good laugh still does the real work.",
@@ -191,6 +192,7 @@ const translations = {
     live_message_from_diab: "Diab",
     live_message_edited: "Edited",
     live_message_edited_at: (date_text) => `Edited ${date_text}`,
+    live_message_deleted: "Deleted",
     live_message_send_error: "The message could not be sent right now.",
     live_message_edit_prompt: "Edit your message",
     live_message_delete_confirm: "Delete this message?",
@@ -314,6 +316,7 @@ const translations = {
     live_message_from_diab: "Diab",
     live_message_edited: "Bearbeitet",
     live_message_edited_at: (date_text) => `Bearbeitet ${date_text}`,
+    live_message_deleted: "Gelöscht",
     live_message_send_error: "Die Nachricht konnte gerade nicht gesendet werden.",
     live_message_edit_prompt: "Bearbeite deine Nachricht",
     live_message_delete_confirm: "Diese Nachricht löschen?",
@@ -435,6 +438,9 @@ const translations = {
     live_message_from_you: "أنت",
     live_message_from_svetlana: "سفيتلانا",
     live_message_from_diab: "دياب",
+    live_message_edited: "تم التعديل",
+    live_message_edited_at: (date_text) => `تم التعديل ${date_text}`,
+    live_message_deleted: "تم الحذف",
     live_message_send_error: "تعذر إرسال الرسالة الآن.",
     live_message_edit_prompt: "عدّل رسالتك",
     live_message_delete_confirm: "هل تريد حذف هذه الرسالة؟",
@@ -2721,6 +2727,10 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
     current_live_messages = [...current_live_messages, message_item];
   }
 
+  if (editing_live_message_id === message_item.id && is_deleted_live_message(message_item)) {
+    clear_live_message_composer();
+  }
+
   current_live_messages.sort((left_item, right_item) => new Date(left_item.created_at) - new Date(right_item.created_at));
   render_live_messages(scroll_to_bottom);
 }
@@ -2738,6 +2748,18 @@ function map_live_message_row_to_item(row) {
   };
 }
 
+function is_deleted_live_message(message_item) {
+  return Boolean(message_item) && String(message_item.text || "") === deleted_live_message_marker;
+}
+
+function get_live_message_display_text(message_item) {
+  if (is_deleted_live_message(message_item)) {
+    return translate("live_message_deleted");
+  }
+
+  return String(message_item.text || "");
+}
+
 function render_live_messages(scroll_to_bottom = false) {
   dom_references.live_messages_list.innerHTML = "";
   const has_messages = current_live_messages.length > 0;
@@ -2750,7 +2772,12 @@ function render_live_messages(scroll_to_bottom = false) {
   current_live_messages.forEach((message_item) => {
     const message_element = document.createElement("article");
     const is_own_message = current_user_profile && message_item.sender_key === current_user_profile.user_key;
+    const is_deleted_message = is_deleted_live_message(message_item);
     message_element.className = is_own_message ? "live_message_item own_message" : "live_message_item";
+
+    if (is_deleted_message) {
+      message_element.classList.add("is_deleted_message");
+    }
 
     const message_meta = document.createElement("div");
     message_meta.className = "live_message_meta";
@@ -2764,14 +2791,16 @@ function render_live_messages(scroll_to_bottom = false) {
     message_meta.append(sender_label, time_label);
     message_element.appendChild(message_meta);
 
-    if (message_item.text) {
+    const message_body_text = get_live_message_display_text(message_item);
+
+    if (message_body_text) {
       const message_body = document.createElement("div");
       message_body.className = "live_message_body";
-      message_body.textContent = message_item.text;
+      message_body.textContent = message_body_text;
       message_element.appendChild(message_body);
     }
 
-    if (Array.isArray(message_item.attachments) && message_item.attachments.length > 0) {
+    if (!is_deleted_message && Array.isArray(message_item.attachments) && message_item.attachments.length > 0) {
       const attachment_list = document.createElement("div");
       attachment_list.className = "live_message_attachments";
       message_item.attachments.forEach((attachment) => attachment_list.appendChild(render_live_message_attachment(attachment)));
@@ -2784,7 +2813,7 @@ function render_live_messages(scroll_to_bottom = false) {
       message_element.appendChild(edit_note);
     }
 
-    if (is_own_message) {
+    if (is_own_message && !is_deleted_message) {
       message_element.appendChild(create_live_message_tools(message_item.id));
     }
 
@@ -2853,7 +2882,7 @@ function get_message_sender_label(message_item, is_own_message) {
 }
 
 function render_live_message_edit_note(message_item) {
-  if (!message_item.edited_at) {
+  if (!message_item.edited_at || is_deleted_live_message(message_item)) {
     return null;
   }
 
@@ -3022,24 +3051,36 @@ async function delete_live_message(message_id) {
     return;
   }
 
+  const deleted_message = {
+    ...message_item,
+    text: deleted_live_message_marker,
+    attachments: [],
+    edited_at: new Date().toISOString()
+  };
+
   if (is_supabase_enabled() && current_auth_user_id) {
     try {
-      const { error } = await supabase_client
+      const { data, error } = await supabase_client
         .from(supabase_table_names.live_messages)
-        .delete()
+        .update({
+          text: deleted_live_message_marker,
+          attachments: [],
+          edited_at: deleted_message.edited_at
+        })
         .eq("id", message_id)
-        .eq("room_slug", current_room_slug);
+        .eq("room_slug", current_room_slug)
+        .select()
+        .single();
 
       if (error) {
         log_app_error("supabase_live_message_delete_failed", error);
         throw error;
       }
 
-      current_live_messages = current_live_messages.filter((item) => item.id !== message_id);
       if (editing_live_message_id === message_id) {
         clear_live_message_composer();
       }
-      render_live_messages(true);
+      upsert_live_message(map_live_message_row_to_item(data || deleted_message), true);
       return;
     } catch (error) {
       log_app_error("supabase_live_message_delete_threw", error);
@@ -3049,32 +3090,33 @@ async function delete_live_message(message_id) {
 
   try {
     const response = await fetch(`/api/live_messages/${encodeURIComponent(message_id)}`, {
-      method: "DELETE",
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        sender_key: current_user_profile.user_key
+        sender_key: current_user_profile.user_key,
+        text: deleted_live_message_marker,
+        attachments: []
       })
     });
 
     if (response.ok) {
-      current_live_messages = current_live_messages.filter((item) => item.id !== message_id);
+      const result = await response.json();
       if (editing_live_message_id === message_id) {
         clear_live_message_composer();
       }
-      render_live_messages(true);
+      upsert_live_message(result.message || deleted_message, true);
       return;
     }
   } catch (error) {
     // The local update below still keeps the interface usable.
   }
 
-  current_live_messages = current_live_messages.filter((item) => item.id !== message_id);
   if (editing_live_message_id === message_id) {
     clear_live_message_composer();
   }
-  render_live_messages(true);
+  upsert_live_message(deleted_message, true);
 }
 
 async function send_live_message(event) {
