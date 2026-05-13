@@ -1033,6 +1033,21 @@ body[data-theme="dark"] .night_tale_card {
   word-break: break-word;
 }
 
+.live_message_item.is_deleted_message {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(214, 206, 222, 0.36));
+  border-style: dashed;
+}
+
+.live_message_item.is_deleted_message.own_message {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.68), rgba(228, 214, 222, 0.42));
+}
+
+.live_message_item.is_deleted_message .live_message_body {
+  color: rgba(100, 92, 102, 0.88);
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+
 .live_message_attachments {
   display: grid;
   gap: 10px;
@@ -1687,9 +1702,19 @@ body[data-theme="dark"] .live_message_item.own_message {
   background: linear-gradient(145deg, rgba(79, 95, 118, 0.9), rgba(60, 74, 96, 0.82));
 }
 
+html[data-theme="dark"] .live_message_item.is_deleted_message,
+body[data-theme="dark"] .live_message_item.is_deleted_message {
+  background: linear-gradient(145deg, rgba(55, 52, 67, 0.88), rgba(69, 73, 88, 0.72));
+}
+
 html[data-theme="dark"] .live_message_body,
 body[data-theme="dark"] .live_message_body {
   color: #f8f3ef;
+}
+
+html[data-theme="dark"] .live_message_item.is_deleted_message .live_message_body,
+body[data-theme="dark"] .live_message_item.is_deleted_message .live_message_body {
+  color: rgba(229, 222, 232, 0.82);
 }
 
 html[data-theme="dark"] .live_message_meta,
