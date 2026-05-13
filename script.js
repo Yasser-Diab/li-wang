@@ -3171,7 +3171,7 @@ async function send_live_message(event) {
     sender_name: current_user_profile.display_name,
     text: message_text,
     created_at: new Date().toISOString(),
-    edited_at: "",
+    edited_at: null,
     attachments
   };
 
