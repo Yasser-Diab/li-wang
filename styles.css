@@ -551,6 +551,10 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+.login_error_message.is_success {
+  color: #4c7b56;
+}
+
 .login_email_hint,
 .form_status_message {
   min-height: 1.2rem;
@@ -1803,7 +1807,9 @@ body[data-theme="dark"] .live_message_tool_button {
 html[data-theme="dark"] .login_email_hint.is_success,
 body[data-theme="dark"] .login_email_hint.is_success,
 html[data-theme="dark"] .form_status_message.is_success,
-body[data-theme="dark"] .form_status_message.is_success {
+body[data-theme="dark"] .form_status_message.is_success,
+html[data-theme="dark"] .login_error_message.is_success,
+body[data-theme="dark"] .login_error_message.is_success {
   color: #b7e3bc;
 }
 
