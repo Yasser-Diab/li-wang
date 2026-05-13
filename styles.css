@@ -551,6 +551,43 @@ textarea:focus {
   font-size: 0.9rem;
 }
 
+.login_email_hint,
+.form_status_message {
+  min-height: 1.2rem;
+  margin: -2px 0 0;
+  color: var(--ink_soft);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.login_email_hint.is_success,
+.form_status_message.is_success {
+  color: #4c7b56;
+}
+
+.login_email_hint.is_error,
+.form_status_message.is_error {
+  color: #b33762;
+}
+
+.text_link_button {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--gold_soft);
+  text-align: left;
+  justify-self: start;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.text_link_button:hover {
+  transform: none;
+  color: var(--gold_bright);
+}
+
 .welcome_overlay {
   position: fixed;
   inset: 0;
@@ -1381,6 +1418,14 @@ body[data-theme="dark"] .night_tale_card {
   color: #b13b58;
 }
 
+.live_message_tool_button.local_delete_tool {
+  color: var(--ink_soft);
+}
+
+.live_message_tool_button.local_delete_tool:hover {
+  color: var(--gold_soft);
+}
+
 .live_message_edit_note {
   align-self: flex-end;
   margin-top: 2px;
@@ -1753,6 +1798,13 @@ body[data-theme="dark"] #live_message_input::placeholder {
 html[data-theme="dark"] .live_message_tool_button,
 body[data-theme="dark"] .live_message_tool_button {
   background: transparent;
+}
+
+html[data-theme="dark"] .login_email_hint.is_success,
+body[data-theme="dark"] .login_email_hint.is_success,
+html[data-theme="dark"] .form_status_message.is_success,
+body[data-theme="dark"] .form_status_message.is_success {
+  color: #b7e3bc;
 }
 
 html[data-theme="dark"] .editor_dialog,
