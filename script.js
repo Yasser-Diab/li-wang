@@ -654,6 +654,7 @@ let supabase_auth_subscription = null;
 let current_room_slug = supabase_room_slug_default;
 let current_auth_user_id = "";
 let password_recovery_mode_active = false;
+let last_exit_sound_time = 0;
 const flow_animation_state = {};
 const quick_emoji_source = `
 Smileys & Emotion
@@ -1070,7 +1071,10 @@ function bind_event_handlers() {
   dom_references.live_message_input.addEventListener("keydown", handle_live_message_keydown);
   dom_references.emoji_toggle_button.addEventListener("click", toggle_emoji_picker);
   document.addEventListener("click", handle_document_click);
+  document.addEventListener("keydown", handle_global_keydown, true);
   window.addEventListener("beforeunload", close_live_messages_stream);
+  window.addEventListener("pagehide", handle_page_exit_sound);
+  window.addEventListener("popstate", handle_page_exit_sound);
 }
 
 function translate(key, ...args) {
@@ -1526,6 +1530,7 @@ async function authenticate_user(username, password) {
 }
 
 function handle_logout() {
+  play_logout_sound();
   sessionStorage.removeItem("logged_in_user");
   current_user_profile = null;
   current_auth_user_id = "";
@@ -1544,6 +1549,32 @@ function handle_logout() {
   if (is_supabase_enabled()) {
     supabase_client.auth.signOut().catch(() => {});
   }
+}
+
+function handle_global_keydown(event) {
+  if (event.key !== "Escape" || !current_user_profile) {
+    return;
+  }
+
+  if (editing_live_message_id) {
+    return;
+  }
+
+  const open_dialog_present = document.querySelector("dialog[open]");
+
+  if (open_dialog_present) {
+    return;
+  }
+
+  play_logout_sound();
+}
+
+function handle_page_exit_sound() {
+  if (!current_user_profile) {
+    return;
+  }
+
+  play_logout_sound();
 }
 
 async function handle_forgot_password_request() {
@@ -2603,33 +2634,86 @@ function prepare_welcome_audio() {
 
 function play_welcome_sound() {
   if (!welcome_audio_context) {
+    prepare_welcome_audio();
+  }
+
+  if (!welcome_audio_context) {
     return;
   }
 
   const now = welcome_audio_context.currentTime;
   const master_gain = welcome_audio_context.createGain();
   master_gain.gain.setValueAtTime(0.0001, now);
-  master_gain.gain.exponentialRampToValueAtTime(0.08, now + 0.04);
-  master_gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.45);
+  master_gain.gain.exponentialRampToValueAtTime(0.17, now + 0.07);
+  master_gain.gain.exponentialRampToValueAtTime(0.06, now + 1.3);
+  master_gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.7);
   master_gain.connect(welcome_audio_context.destination);
 
   [
-    { frequency: 523.25, start: 0, duration: 0.56 },
-    { frequency: 659.25, start: 0.16, duration: 0.62 },
-    { frequency: 783.99, start: 0.34, duration: 0.72 },
-    { frequency: 1046.5, start: 0.62, duration: 0.64 }
+    { frequency: 523.25, start: 0, duration: 0.84, type: "triangle", peak: 0.38 },
+    { frequency: 659.25, start: 0.18, duration: 0.98, type: "triangle", peak: 0.42 },
+    { frequency: 783.99, start: 0.42, duration: 1.12, type: "triangle", peak: 0.46 },
+    { frequency: 1046.5, start: 0.76, duration: 1, type: "sine", peak: 0.34 },
+    { frequency: 1174.66, start: 1.12, duration: 0.9, type: "sine", peak: 0.28 },
+    { frequency: 1318.51, start: 1.44, duration: 0.88, type: "sine", peak: 0.22 }
   ].forEach((note) => {
     const oscillator = welcome_audio_context.createOscillator();
     const note_gain = welcome_audio_context.createGain();
-    oscillator.type = "sine";
+    oscillator.type = note.type;
     oscillator.frequency.setValueAtTime(note.frequency, now + note.start);
     note_gain.gain.setValueAtTime(0.0001, now + note.start);
-    note_gain.gain.exponentialRampToValueAtTime(0.34, now + note.start + 0.05);
+    note_gain.gain.exponentialRampToValueAtTime(note.peak, now + note.start + 0.08);
+    note_gain.gain.exponentialRampToValueAtTime(Math.max(0.03, note.peak * 0.45), now + note.start + (note.duration * 0.55));
     note_gain.gain.exponentialRampToValueAtTime(0.0001, now + note.start + note.duration);
     oscillator.connect(note_gain);
     note_gain.connect(master_gain);
     oscillator.start(now + note.start);
-    oscillator.stop(now + note.start + note.duration + 0.08);
+    oscillator.stop(now + note.start + note.duration + 0.16);
+  });
+}
+
+function play_logout_sound() {
+  if (!welcome_audio_context) {
+    prepare_welcome_audio();
+  }
+
+  if (!welcome_audio_context) {
+    return;
+  }
+
+  const now_ms = Date.now();
+
+  if (now_ms - last_exit_sound_time < 650) {
+    return;
+  }
+
+  last_exit_sound_time = now_ms;
+
+  const now = welcome_audio_context.currentTime;
+  const master_gain = welcome_audio_context.createGain();
+  master_gain.gain.setValueAtTime(0.0001, now);
+  master_gain.gain.exponentialRampToValueAtTime(0.09, now + 0.05);
+  master_gain.gain.exponentialRampToValueAtTime(0.03, now + 0.7);
+  master_gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+  master_gain.connect(welcome_audio_context.destination);
+
+  [
+    { frequency: 659.25, start: 0, duration: 0.74, type: "sine", peak: 0.28 },
+    { frequency: 523.25, start: 0.2, duration: 0.88, type: "triangle", peak: 0.24 },
+    { frequency: 392, start: 0.48, duration: 0.92, type: "sine", peak: 0.2 }
+  ].forEach((note) => {
+    const oscillator = welcome_audio_context.createOscillator();
+    const note_gain = welcome_audio_context.createGain();
+    oscillator.type = note.type;
+    oscillator.frequency.setValueAtTime(note.frequency, now + note.start);
+    note_gain.gain.setValueAtTime(0.0001, now + note.start);
+    note_gain.gain.exponentialRampToValueAtTime(note.peak, now + note.start + 0.06);
+    note_gain.gain.exponentialRampToValueAtTime(Math.max(0.025, note.peak * 0.5), now + note.start + (note.duration * 0.52));
+    note_gain.gain.exponentialRampToValueAtTime(0.0001, now + note.start + note.duration);
+    oscillator.connect(note_gain);
+    note_gain.connect(master_gain);
+    oscillator.start(now + note.start);
+    oscillator.stop(now + note.start + note.duration + 0.16);
   });
 }
 
