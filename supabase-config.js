@@ -5,7 +5,7 @@ window.supabase_public_config = {
   room_slug: "svetlana-diab",
   users: {
     svetlana: {
-      email: "yasserarabic5@gmail.com",
+      email: "svetlanamorlang91@online.de",
     },
     diab: {
       email: "yasserdiabhassan@gmail.com",
