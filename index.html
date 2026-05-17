@@ -113,6 +113,26 @@
             <span class="music_toggle_icon" aria-hidden="true">&#128266;</span>
             <span id="music_toggle_label" class="music_toggle_label">On</span>
           </button>
+          <div id="music_control_pill" class="music_control_pill" aria-label="Music controls">
+            <button id="music_previous_button" class="music_control_button" type="button" aria-label="Previous track"
+              title="Previous track">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M11 6v12L3 12l8-6Zm10 0v12l-8-6 8-6Z"></path>
+              </svg>
+            </button>
+            <button id="music_play_pause_button" class="music_control_button" type="button" aria-label="Pause music"
+              title="Pause music">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z"></path>
+              </svg>
+            </button>
+            <button id="music_next_button" class="music_control_button" type="button" aria-label="Next track"
+              title="Next track">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M13 6v12l8-6-8-6ZM3 6v12l8-6-8-6Z"></path>
+              </svg>
+            </button>
+          </div>
           <button id="logout_button" class="ghost_button" type="button">Leave softly</button>
         </div>
       </header>
@@ -236,8 +256,25 @@
             <p class="eyebrow_text" id="cycle_eyebrow">for her comfort</p>
             <h2 id="cycle_heading">Cycle Calendar</h2>
           </div>
-          <button id="open_cycle_settings_button" class="ghost_button" type="button">Adjust</button>
+          <div class="section_header_actions">
+            <button id="open_cycle_settings_button" class="ghost_button" type="button">Adjust</button>
+            <button id="cycle_expand_button" class="panel_expand_button" type="button" aria-expanded="false"
+              aria-label="Expand cycle calendar" title="Expand cycle calendar">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 3h6v2H9.8l4.7 4.7-1.4 1.4L8.4 6.4V10H6V3h1Zm10 18h-6v-2h3.2l-4.7-4.7 1.4-1.4 4.7 4.7V14H18v7h-1Z"></path>
+              </svg>
+            </button>
+          </div>
         </div>
+        <button id="cycle_compact_summary" class="compact_panel_summary" type="button" aria-label="Open cycle calendar">
+          <span class="compact_panel_dot"></span>
+          <span id="cycle_compact_summary_text">Period starts in 0 days</span>
+          <span class="compact_panel_arrows" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 4h5v2h-2.2l3.7 3.7-1.4 1.4L9.4 7.4V10H7V4h1Zm8 16h-5v-2h2.2l-3.7-3.7 1.4-1.4 3.7 3.7V14H17v6h-1Z"></path>
+            </svg>
+          </span>
+        </button>
         <div class="cycle_shell">
           <div class="cycle_top_row">
             <div>
@@ -295,7 +332,22 @@
             <p class="eyebrow_text" id="live_messages_eyebrow">just us, in real time</p>
             <h2 id="live_messages_heading">Live Messages</h2>
           </div>
+          <button id="messages_expand_button" class="panel_expand_button" type="button" aria-expanded="false"
+            aria-label="Expand messages" title="Expand messages">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 3h6v2H9.8l4.7 4.7-1.4 1.4L8.4 6.4V10H6V3h1Zm10 18h-6v-2h3.2l-4.7-4.7 1.4-1.4 4.7 4.7V14H18v7h-1Z"></path>
+            </svg>
+          </button>
         </div>
+        <button id="messages_compact_summary" class="compact_panel_summary" type="button" aria-label="Open messages">
+          <span class="compact_panel_dot"></span>
+          <span id="messages_compact_summary_text">Private chat</span>
+          <span class="compact_panel_arrows" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 4h5v2h-2.2l3.7 3.7-1.4 1.4L9.4 7.4V10H7V4h1Zm8 16h-5v-2h2.2l-3.7-3.7 1.4-1.4 3.7 3.7V14H17v6h-1Z"></path>
+            </svg>
+          </span>
+        </button>
         <div class="live_messages_shell">
           <div id="live_messages_empty_state" class="live_messages_empty_state">
             Your little private chat will appear here.
@@ -481,6 +533,12 @@
 
   <div id="memory_lightbox" class="memory_lightbox hidden" aria-hidden="true">
     <div class="memory_lightbox_inner">
+      <a id="memory_lightbox_download_button" class="memory_lightbox_download_button" href="#" download
+        aria-label="Download image" title="Download image">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M11 4h2v8.2l3.2-3.2 1.4 1.4L12 16 6.4 10.4 7.8 9l3.2 3.2V4Zm-5 14h12v2H6v-2Z"></path>
+        </svg>
+      </a>
       <img id="memory_lightbox_image" src="" alt="">
       <p id="memory_lightbox_caption"></p>
     </div>

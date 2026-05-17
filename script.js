@@ -1,4 +1,4 @@
-﻿const allowed_users = {
+﻿﻿const allowed_users = {
   svetlana: {
     user_key: "svetlana",
     display_name: "Svetlana",
@@ -83,6 +83,21 @@ const night_tale_magic_emojis = ["✨", "🔮", "🪄", "💫"];
 const empty_sound_manifest = Object.freeze({
   background_music: [],
   welcome: [],
+  logout: [],
+  message_send: [],
+  message_receive: [],
+});
+const local_sound_manifest_fallback = Object.freeze({
+  background_music: [
+    "sound/Aeris - Moving Mountains (freetouse.com).mp3",
+    "sound/Alegend - Dawn (freetouse.com).mp3",
+    "sound/Calima - Glass Shop (freetouse.com).mp3",
+    "sound/Moavii - We Are (freetouse.com).mp3",
+    "sound/Piki - Momo Island (freetouse.com).mp3",
+    "sound/Pufino - Glamorous (freetouse.com).mp3",
+    "sound/Pufino - Thoughtful (freetouse.com).mp3",
+  ].map((sound_path) => encodeURI(sound_path)),
+  welcome: ["assets/intro.wav"],
   logout: [],
   message_send: [],
   message_receive: [],
@@ -1155,11 +1170,13 @@ let current_lightbox_title = "";
 let most_used_emojis = [];
 let emoji_usage_counts = {};
 let welcome_audio_context = null;
-let current_sound_manifest = { ...empty_sound_manifest };
+let current_sound_manifest = { ...local_sound_manifest_fallback };
 let background_music_audio = null;
 let last_background_music_url = "";
 let background_music_needs_unlock = false;
+let background_music_paused_by_user = false;
 let music_enabled = true;
+let fullscreen_panel_name = "";
 let time_sensitive_interval_id = null;
 let live_message_stream = null;
 let live_message_poll_id = null;
@@ -1423,6 +1440,8 @@ async function initialize_application() {
   await load_sound_manifest();
   await load_all_message_lists();
   apply_language();
+  sync_fullscreen_panel_state();
+  update_music_control_buttons();
   const restored_session = await restore_existing_session();
 
   if (!restored_session) {
@@ -1498,6 +1517,16 @@ function collect_dom_references() {
   );
   dom_references.music_toggle_label =
     document.getElementById("music_toggle_label");
+  dom_references.music_control_pill =
+    document.getElementById("music_control_pill");
+  dom_references.music_previous_button = document.getElementById(
+    "music_previous_button",
+  );
+  dom_references.music_play_pause_button = document.getElementById(
+    "music_play_pause_button",
+  );
+  dom_references.music_next_button =
+    document.getElementById("music_next_button");
   dom_references.logout_button = document.getElementById("logout_button");
   dom_references.theme_toggle_button = document.getElementById(
     "theme_toggle_button",
@@ -1617,9 +1646,20 @@ function collect_dom_references() {
   dom_references.add_event_button = document.getElementById("add_event_button");
   dom_references.event_timeline = document.getElementById("event_timeline");
   dom_references.cycle_eyebrow = document.getElementById("cycle_eyebrow");
+  dom_references.cycle_tracker_section = document.getElementById(
+    "cycle_tracker_section",
+  );
   dom_references.cycle_heading = document.getElementById("cycle_heading");
   dom_references.open_cycle_settings_button = document.getElementById(
     "open_cycle_settings_button",
+  );
+  dom_references.cycle_expand_button =
+    document.getElementById("cycle_expand_button");
+  dom_references.cycle_compact_summary = document.getElementById(
+    "cycle_compact_summary",
+  );
+  dom_references.cycle_compact_summary_text = document.getElementById(
+    "cycle_compact_summary_text",
   );
   dom_references.cycle_shell = document.querySelector(".cycle_shell");
   dom_references.cycle_status_label =
@@ -1705,6 +1745,16 @@ function collect_dom_references() {
   );
   dom_references.live_messages_heading = document.getElementById(
     "live_messages_heading",
+  );
+  dom_references.messages_section = document.getElementById("messages_section");
+  dom_references.messages_expand_button = document.getElementById(
+    "messages_expand_button",
+  );
+  dom_references.messages_compact_summary = document.getElementById(
+    "messages_compact_summary",
+  );
+  dom_references.messages_compact_summary_text = document.getElementById(
+    "messages_compact_summary_text",
   );
   dom_references.live_messages_empty_state = document.getElementById(
     "live_messages_empty_state",
@@ -1921,6 +1971,9 @@ function collect_dom_references() {
   );
   dom_references.memory_lightbox_caption = document.getElementById(
     "memory_lightbox_caption",
+  );
+  dom_references.memory_lightbox_download_button = document.getElementById(
+    "memory_lightbox_download_button",
   );
   dom_references.live_message_input.removeAttribute("required");
 }
@@ -2351,6 +2404,16 @@ function bind_event_handlers() {
     enter_home_from_welcome();
   });
   dom_references.music_toggle_button.addEventListener("click", toggle_music);
+  dom_references.music_previous_button?.addEventListener("click", () =>
+    change_background_track(-1),
+  );
+  dom_references.music_play_pause_button?.addEventListener(
+    "click",
+    toggle_background_music_playback,
+  );
+  dom_references.music_next_button?.addEventListener("click", () =>
+    change_background_track(1),
+  );
   dom_references.logout_button.addEventListener("click", (event) => {
     burst_reaction(event.currentTarget, "spark", 8);
     handle_logout();
@@ -2396,6 +2459,12 @@ function bind_event_handlers() {
   );
   dom_references.open_cycle_feeling_button.addEventListener("click", () =>
     open_cycle_feeling_dialog(),
+  );
+  dom_references.cycle_expand_button?.addEventListener("click", () =>
+    toggle_fullscreen_panel("cycle"),
+  );
+  dom_references.cycle_compact_summary?.addEventListener("click", () =>
+    toggle_fullscreen_panel("cycle", true),
   );
   dom_references.cycle_support_message.addEventListener(
     "click",
@@ -2579,6 +2648,12 @@ function bind_event_handlers() {
   dom_references.live_message_form.addEventListener(
     "submit",
     send_live_message,
+  );
+  dom_references.messages_expand_button?.addEventListener("click", () =>
+    toggle_fullscreen_panel("messages"),
+  );
+  dom_references.messages_compact_summary?.addEventListener("click", () =>
+    toggle_fullscreen_panel("messages", true),
   );
   dom_references.live_messages_list.addEventListener(
     "click",
@@ -2925,6 +3000,61 @@ function close_app_navigation() {
   dom_references.app_nav_overlay.setAttribute("aria-hidden", "true");
 }
 
+function set_panel_expand_button_state(button, is_open, open_label, close_label) {
+  if (!button) {
+    return;
+  }
+
+  const label = is_open ? close_label : open_label;
+  button.setAttribute("aria-expanded", String(is_open));
+  button.setAttribute("aria-label", label);
+  button.title = label;
+}
+
+function sync_fullscreen_panel_state() {
+  const messages_open = fullscreen_panel_name === "messages";
+  const cycle_open = fullscreen_panel_name === "cycle";
+
+  dom_references.messages_section?.classList.toggle(
+    "is_panel_expanded",
+    messages_open,
+  );
+  dom_references.cycle_tracker_section?.classList.toggle(
+    "is_panel_expanded",
+    cycle_open,
+  );
+  document.body.classList.toggle(
+    "panel_fullscreen_open",
+    messages_open || cycle_open,
+  );
+  set_panel_expand_button_state(
+    dom_references.messages_expand_button,
+    messages_open,
+    "Expand messages",
+    "Close messages",
+  );
+  set_panel_expand_button_state(
+    dom_references.cycle_expand_button,
+    cycle_open,
+    "Expand cycle calendar",
+    "Close cycle calendar",
+  );
+}
+
+function toggle_fullscreen_panel(panel_name, force_open = false) {
+  fullscreen_panel_name =
+    force_open || fullscreen_panel_name !== panel_name ? panel_name : "";
+  sync_fullscreen_panel_state();
+
+  if (fullscreen_panel_name) {
+    const target =
+      panel_name === "messages"
+        ? dom_references.messages_section
+        : dom_references.cycle_tracker_section;
+    target?.scrollTo({ top: 0, behavior: "auto" });
+  }
+}
+
 function handle_app_navigation_click(event) {
   if (event.target === dom_references.app_nav_overlay) {
     close_app_navigation();
@@ -2937,7 +3067,9 @@ function handle_app_navigation_link_click(event) {
 
   if (target) {
     set_active_navigation_target(target_id);
-    scroll_to_and_highlight(target);
+    close_app_navigation();
+    window.requestAnimationFrame(() => scroll_to_section(target));
+    return;
   }
 
   close_app_navigation();
@@ -3374,6 +3506,17 @@ function scroll_to_and_highlight(target_element) {
     () => target_element.classList.remove("is_temporarily_highlighted"),
     1800,
   );
+}
+
+function scroll_to_section(target_element) {
+  const top =
+    target_element.getBoundingClientRect().top +
+    window.scrollY -
+    Math.min(92, Math.max(56, window.innerHeight * 0.08));
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: "smooth",
+  });
 }
 
 function scroll_to_message_by_id(message_id) {
@@ -4016,6 +4159,12 @@ function handle_global_keydown(event) {
 
   if (active_overlay_name === "memory_lightbox") {
     close_memory_lightbox();
+    return;
+  }
+
+  if (fullscreen_panel_name) {
+    fullscreen_panel_name = "";
+    sync_fullscreen_panel_state();
     return;
   }
 
@@ -6305,6 +6454,30 @@ function render_message_segments_into_body(container, segments) {
   });
 }
 
+function build_download_filename(label_text = "memory") {
+  const normalized_label = String(label_text || "memory")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 42);
+
+  return `${normalized_label || "memory"}-image.png`;
+}
+
+function download_data_url(data_url, filename) {
+  if (!data_url) {
+    return;
+  }
+
+  const link = document.createElement("a");
+  link.href = data_url;
+  link.download = filename || "memory-image.png";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
 function open_memory_lightbox(image_data, caption_text = "") {
   if (!image_data) {
     return;
@@ -6315,16 +6488,29 @@ function open_memory_lightbox(image_data, caption_text = "") {
   dom_references.memory_lightbox_image.src = image_data;
   dom_references.memory_lightbox_image.alt = caption_text;
   dom_references.memory_lightbox_caption.textContent = caption_text;
+  if (dom_references.memory_lightbox_download_button) {
+    dom_references.memory_lightbox_download_button.href = image_data;
+    dom_references.memory_lightbox_download_button.download =
+      build_download_filename(caption_text);
+  }
   dom_references.memory_lightbox.classList.remove("hidden");
   dom_references.memory_lightbox.setAttribute("aria-hidden", "false");
   open_overlay_layer("memory_lightbox");
 }
 
 function close_memory_lightbox(event = null, from_history = false) {
+  if (event && event.target !== dom_references.memory_lightbox) {
+    return;
+  }
+
   dom_references.memory_lightbox.classList.add("hidden");
   dom_references.memory_lightbox.setAttribute("aria-hidden", "true");
   dom_references.memory_lightbox_image.src = "";
   dom_references.memory_lightbox_caption.textContent = "";
+  if (dom_references.memory_lightbox_download_button) {
+    dom_references.memory_lightbox_download_button.href = "#";
+    dom_references.memory_lightbox_download_button.removeAttribute("download");
+  }
   current_lightbox_image_data = "";
   current_lightbox_title = "";
   close_overlay_layer("memory_lightbox", from_history);
@@ -6369,6 +6555,7 @@ function render_memory_gallery(memory_items) {
     if (!memory_item.is_placeholder) {
       const memory_actions = create_item_actions("memory", memory_item.id, {
         with_text: true,
+        allow_download: Boolean(memory_item.image_data),
       });
       memory_text.appendChild(memory_actions);
     }
@@ -6440,7 +6627,12 @@ function render_event_timeline(event_items) {
 }
 
 function create_item_actions(item_type, item_id, options = {}) {
-  const { with_text = false, allow_edit = true, allow_delete = true } = options;
+  const {
+    with_text = false,
+    allow_edit = true,
+    allow_delete = true,
+    allow_download = true,
+  } = options;
   const action_bar = document.createElement("div");
   action_bar.className = "item_actions";
 
@@ -6491,6 +6683,18 @@ function create_item_actions(item_type, item_id, options = {}) {
   mention_button.appendChild(create_action_label(translate("mention")));
   action_bar.appendChild(mention_button);
 
+  if (item_type === "memory" && allow_download) {
+    const download_button = document.createElement("button");
+    download_button.className = "small_action_button";
+    download_button.type = "button";
+    download_button.dataset.action = "download_memory";
+    download_button.dataset.item_id = item_id;
+    download_button.title = "Download";
+    download_button.setAttribute("aria-label", "Download");
+    download_button.appendChild(create_action_icon("download"));
+    action_bar.appendChild(download_button);
+  }
+
   return action_bar;
 }
 
@@ -6517,6 +6721,11 @@ function create_action_icon(icon_name) {
     path.setAttribute(
       "d",
       "M12 4a8 8 0 1 0 5.7 13.6M16.8 8.6v4.7c0 1 .8 1.7 1.7 1.7.9 0 1.7-.8 1.7-1.7V12a8.2 8.2 0 1 0-2.4 5.8",
+    );
+  } else if (icon_name === "download") {
+    path.setAttribute(
+      "d",
+      "M11 4h2v8.2l3.2-3.2 1.4 1.4L12 16 6.4 10.4 7.8 9l3.2 3.2V4Zm-5 14h12v2H6v-2Z",
     );
   } else {
     path.setAttribute(
@@ -6777,13 +6986,21 @@ async function load_sound_manifest() {
     });
 
     if (!response.ok) {
-      current_sound_manifest = { ...empty_sound_manifest };
+      current_sound_manifest = normalize_sound_manifest(
+        local_sound_manifest_fallback,
+      );
       return;
     }
 
-    current_sound_manifest = normalize_sound_manifest(await response.json());
+    const fetched_manifest = normalize_sound_manifest(await response.json());
+    current_sound_manifest =
+      fetched_manifest.background_music.length > 0
+        ? fetched_manifest
+        : normalize_sound_manifest(local_sound_manifest_fallback);
   } catch (error) {
-    current_sound_manifest = { ...empty_sound_manifest };
+    current_sound_manifest = normalize_sound_manifest(
+      local_sound_manifest_fallback,
+    );
   }
 }
 
@@ -6813,6 +7030,12 @@ function update_music_button() {
   if (music_icon) {
     music_icon.textContent = music_enabled ? "🔊" : "🔇";
   }
+
+  if (background_music_audio) {
+    background_music_audio.muted = !music_enabled;
+  }
+
+  update_music_control_buttons();
 }
 
 function toggle_music() {
@@ -6820,12 +7043,10 @@ function toggle_music() {
   localStorage.setItem(music_toggle_storage_key, music_enabled ? "on" : "off");
   update_music_button();
 
-  if (!music_enabled) {
-    stop_cycle_ambient_audio();
-    return;
+  if (!background_music_audio && music_enabled) {
+    background_music_paused_by_user = false;
+    sync_cycle_audio();
   }
-
-  sync_cycle_audio();
 }
 
 function handle_audio_unlock_pointerdown() {
@@ -6892,9 +7113,46 @@ function play_effect_sound_from_manifest(manifest_key, volume = 0.5) {
   return true;
 }
 
+function get_background_music_tracks() {
+  return Array.isArray(current_sound_manifest.background_music)
+    ? current_sound_manifest.background_music
+    : [];
+}
+
+function get_current_background_track_index() {
+  const track_list = get_background_music_tracks();
+  const current_index = track_list.indexOf(last_background_music_url);
+  return current_index >= 0 ? current_index : 0;
+}
+
+function update_music_control_buttons() {
+  const has_tracks = get_background_music_tracks().length > 0;
+  const is_paused =
+    background_music_paused_by_user ||
+    !background_music_audio ||
+    background_music_audio.paused;
+  const play_pause_button = dom_references.music_play_pause_button;
+
+  dom_references.music_control_pill?.classList.toggle(
+    "has_no_tracks",
+    !has_tracks,
+  );
+  dom_references.music_previous_button?.toggleAttribute("disabled", !has_tracks);
+  dom_references.music_next_button?.toggleAttribute("disabled", !has_tracks);
+  play_pause_button?.toggleAttribute("disabled", !has_tracks);
+
+  if (play_pause_button) {
+    const label = is_paused ? "Play music" : "Pause music";
+    play_pause_button.setAttribute("aria-label", label);
+    play_pause_button.title = label;
+    play_pause_button.innerHTML = is_paused
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"></path></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z"></path></svg>';
+  }
+}
+
 function should_play_background_music() {
   return (
-    music_enabled &&
     Boolean(current_user_profile) &&
     dom_references.login_screen?.classList.contains("hidden")
   );
@@ -6902,8 +7160,10 @@ function should_play_background_music() {
 
 function stop_background_music() {
   background_music_needs_unlock = false;
+  background_music_paused_by_user = false;
 
   if (!background_music_audio) {
+    update_music_control_buttons();
     return;
   }
 
@@ -6911,6 +7171,66 @@ function stop_background_music() {
   background_music_audio.removeAttribute("src");
   background_music_audio.load();
   background_music_audio = null;
+  update_music_control_buttons();
+}
+
+function start_background_music_track(selected_url, force_restart = true) {
+  if (!selected_url) {
+    return;
+  }
+
+  if (force_restart) {
+    const previous_audio = background_music_audio;
+
+    if (previous_audio) {
+      previous_audio.pause();
+      previous_audio.removeAttribute("src");
+      previous_audio.load();
+    }
+
+    background_music_audio = null;
+  }
+
+  const audio = new Audio(selected_url);
+  audio.preload = "auto";
+  audio.volume = 0.42;
+  audio.muted = !music_enabled;
+  audio.loop = false;
+  audio.addEventListener("ended", () => {
+    if (background_music_audio === audio) {
+      background_music_audio = null;
+      update_music_control_buttons();
+      sync_cycle_audio();
+    }
+  });
+  audio.addEventListener("error", () => {
+    if (background_music_audio === audio) {
+      background_music_audio = null;
+      update_music_control_buttons();
+    }
+  });
+  audio.addEventListener("play", update_music_control_buttons);
+  audio.addEventListener("pause", update_music_control_buttons);
+
+  background_music_audio = audio;
+  last_background_music_url = selected_url;
+  const play_result = audio.play();
+
+  if (play_result?.catch) {
+    play_result
+      .then(() => {
+        background_music_needs_unlock = false;
+        update_music_control_buttons();
+      })
+      .catch(() => {
+        background_music_needs_unlock = true;
+        update_music_control_buttons();
+      });
+    return;
+  }
+
+  background_music_needs_unlock = false;
+  update_music_control_buttons();
 }
 
 function ensure_background_music(force_restart = false) {
@@ -6919,7 +7239,12 @@ function ensure_background_music(force_restart = false) {
     return;
   }
 
-  const track_list = current_sound_manifest.background_music || [];
+  if (background_music_paused_by_user) {
+    update_music_control_buttons();
+    return;
+  }
+
+  const track_list = get_background_music_tracks();
 
   if (track_list.length === 0) {
     stop_background_music();
@@ -6935,7 +7260,14 @@ function ensure_background_music(force_restart = false) {
   }
 
   if (force_restart) {
-    stop_background_music();
+    const previous_audio = background_music_audio;
+
+    if (previous_audio) {
+      previous_audio.pause();
+      previous_audio.removeAttribute("src");
+      previous_audio.load();
+      background_music_audio = null;
+    }
   }
 
   const selected_url = select_random_sound_url(
@@ -6947,41 +7279,59 @@ function ensure_background_music(force_restart = false) {
     return;
   }
 
-  const audio = new Audio(selected_url);
-  audio.preload = "auto";
-  audio.volume = 0.42;
-  audio.loop = false;
-  audio.addEventListener("ended", () => {
-    if (background_music_audio === audio) {
-      background_music_audio = null;
-      sync_cycle_audio();
-    }
-  });
-  audio.addEventListener("error", () => {
-    if (background_music_audio === audio) {
-      background_music_audio = null;
-    }
-  });
+  start_background_music_track(selected_url, true);
+}
 
-  background_music_audio = audio;
-  last_background_music_url = selected_url;
-  const play_result = audio.play();
+function change_background_track(direction) {
+  const track_list = get_background_music_tracks();
 
-  if (play_result?.catch) {
-    play_result
-      .then(() => {
-        background_music_needs_unlock = false;
-      })
-      .catch(() => {
-        background_music_needs_unlock = true;
-      });
+  if (track_list.length === 0) {
     return;
   }
 
-  background_music_needs_unlock = false;
+  const current_index = get_current_background_track_index();
+  const next_index =
+    (current_index + direction + track_list.length) % track_list.length;
+  background_music_paused_by_user = false;
+  start_background_music_track(track_list[next_index], true);
+}
+
+function toggle_background_music_playback() {
+  const has_context = should_play_background_music();
+
+  if (!has_context) {
+    return;
+  }
+
+  if (background_music_audio && !background_music_audio.paused) {
+    background_music_paused_by_user = true;
+    background_music_audio.pause();
+    update_music_control_buttons();
+    return;
+  }
+
+  background_music_paused_by_user = false;
+
+  if (background_music_audio) {
+    background_music_audio.muted = !music_enabled;
+    const play_result = background_music_audio.play();
+
+    if (play_result?.catch) {
+      play_result.catch(() => {
+        background_music_needs_unlock = true;
+        update_music_control_buttons();
+      });
+    }
+
+    update_music_control_buttons();
+    return;
+  }
+
+  ensure_background_music();
 }
 
 function play_welcome_sound() {
+  background_music_paused_by_user = false;
   play_effect_sound_from_manifest("welcome", 0.62);
   ensure_background_music(true);
 }
@@ -7105,6 +7455,17 @@ function handle_memory_action(event) {
         behavior: "smooth",
         block: "nearest",
       });
+    }
+  }
+
+  if (action_button.dataset.action === "download_memory") {
+    const memory_item = current_memory_items.find((item) => item.id === item_id);
+
+    if (memory_item?.image_data) {
+      download_data_url(
+        memory_item.image_data,
+        build_download_filename(memory_item.title),
+      );
     }
   }
 }
@@ -8221,8 +8582,12 @@ function render_cycle_status_panel() {
   const cycle_message_event = get_active_cycle_message_event();
   const selected_date = get_cycle_selected_date_or_today();
   const thread_lines = format_cycle_checkin_thread();
-  dom_references.cycle_status_label.textContent = get_cycle_status_text();
+  const cycle_status_text = get_cycle_status_text();
+  dom_references.cycle_status_label.textContent = cycle_status_text;
   dom_references.cycle_summary_text.textContent = `${format_cycle_long_date(today_context.today_text)} - ${translate("cycle_summary", cycle_stats.cycle_length, cycle_stats.period_length)}`;
+  if (dom_references.cycle_compact_summary_text) {
+    dom_references.cycle_compact_summary_text.textContent = cycle_status_text;
+  }
   dom_references.cycle_support_card.classList.toggle(
     "hidden",
     !cycle_message_event && !today_context.window_is_active,
@@ -8917,6 +9282,7 @@ function get_live_message_display_text(message_item) {
 function render_live_messages(scroll_to_bottom = false) {
   dom_references.live_messages_list.innerHTML = "";
   const has_messages = current_live_messages.length > 0;
+  update_messages_compact_summary();
   dom_references.live_messages_empty_state.classList.toggle(
     "hidden",
     has_messages,
@@ -9027,6 +9393,30 @@ function render_live_messages(scroll_to_bottom = false) {
   }
 
   live_messages_history_loaded = true;
+}
+
+function update_messages_compact_summary() {
+  if (!dom_references.messages_compact_summary_text) {
+    return;
+  }
+
+  const visible_count = current_live_messages.filter(
+    (message_item) => !should_hide_deleted_message(message_item),
+  ).length;
+  const last_message = [...current_live_messages]
+    .reverse()
+    .find((message_item) => !should_hide_deleted_message(message_item));
+  const last_text = last_message
+    ? get_live_message_display_text(last_message).replace(/\s+/g, " ").trim()
+    : translate("live_messages_empty");
+  const preview_text = last_text
+    ? last_text.slice(0, 54)
+    : translate("live_messages_empty");
+
+  dom_references.messages_compact_summary_text.textContent =
+    visible_count > 0
+      ? `${visible_count} • ${preview_text}${last_text.length > 54 ? "..." : ""}`
+      : preview_text;
 }
 
 function create_live_message_tools(message_id) {
