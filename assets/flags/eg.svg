@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40" role="img" aria-label="Egypt flag">
+  <rect width="60" height="13.333" y="0" fill="#ce1126"/>
+  <rect width="60" height="13.333" y="13.333" fill="#fff"/>
+  <rect width="60" height="13.333" y="26.667" fill="#000"/>
+  <g transform="translate(30 20)">
+    <path d="M-3.2-6.5h6.4v9.2l-1.9 2.1h-2.6l-1.9-2.1z" fill="#c9a45d"/>
+    <path d="M-5.4 0h10.8v1.6H-5.4z" fill="#c9a45d"/>
+    <path d="M-1.2-4.8h2.4v4.1h-2.4z" fill="#fff"/>
+  </g>
+</svg>
