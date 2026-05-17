@@ -1,0 +1,11 @@
+{
+  "appId": "com.svetlanadiab.happinessspace",
+  "appName": "Svetlana & Diab",
+  "webDir": "dist/mobile",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
