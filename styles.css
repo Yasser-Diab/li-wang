@@ -135,7 +135,7 @@ body[data-theme="dark"] .background_glow {
   position: fixed;
   top: 12px;
   left: 5px;
-  z-index: 36;
+  z-index: 86;
   width: 70px;
   height: 30px;
   border: none;
@@ -170,7 +170,7 @@ body[data-theme="dark"] .background_glow {
 .app_nav_overlay {
   position: fixed;
   inset: 0;
-  z-index: 34;
+  z-index: 84;
   background: rgba(17, 13, 23, 0.22);
   backdrop-filter: blur(8px);
   padding: 74px 12px 12px;
@@ -449,32 +449,31 @@ body[data-theme="dark"] .background_glow {
 }
 
 #music_toggle_button {
-  position: fixed;
-  top: 10px;
-  right: 88px;
-  z-index: 31;
-  width: 74px;
-  min-width: 74px;
-  min-height: 24px;
-  height: 24px;
-  padding: 0 8px;
-  border-radius: 12px;
+  position: static;
+  width: 24px;
+  min-width: 24px;
+  min-height: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  font-size: 0.58rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.62rem;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .music_control_pill {
   position: fixed;
-  top: 40px;
+  top: 10px;
   right: 88px;
   z-index: 31;
-  min-height: 30px;
-  padding: 3px;
+  min-height: 24px;
+  padding: 2px;
   border: 1px solid var(--line_gold);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.78);
@@ -482,7 +481,7 @@ body[data-theme="dark"] .background_glow {
   backdrop-filter: blur(14px);
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 1px;
 }
 
 .music_control_pill.has_no_tracks {
@@ -490,10 +489,10 @@ body[data-theme="dark"] .background_glow {
 }
 
 .music_control_button {
-  width: 28px;
-  min-width: 28px;
-  height: 24px;
-  min-height: 24px;
+  width: 24px;
+  min-width: 24px;
+  height: 20px;
+  min-height: 20px;
   border: 0;
   border-radius: 999px;
   background: transparent;
@@ -514,12 +513,12 @@ body[data-theme="dark"] .background_glow {
 }
 
 .music_toggle_icon {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   line-height: 1;
 }
 
 .music_toggle_label {
-  line-height: 1;
+  display: none;
 }
 
 #theme_toggle_button .theme_toggle_icon {
@@ -1285,8 +1284,7 @@ body.panel_fullscreen_open {
   overflow: hidden;
 }
 
-#messages_section.is_panel_expanded,
-#cycle_tracker_section.is_panel_expanded {
+#messages_section.is_panel_expanded {
   position: fixed;
   inset: 0;
   z-index: 62;
@@ -1299,30 +1297,62 @@ body.panel_fullscreen_open {
   overscroll-behavior: contain;
 }
 
-#messages_section.is_panel_expanded .section_header,
-#cycle_tracker_section.is_panel_expanded .section_header {
+#messages_section.is_panel_expanded .section_header {
   position: sticky;
   top: 0;
   z-index: 2;
-  margin: 0 0 14px;
-  padding: 8px 0 12px;
+  margin: 0 0 10px;
+  padding: 8px 4px 10px;
+  border-top: 7px solid rgba(201, 164, 93, 0.38);
+  border-radius: 0 0 16px 16px;
   background: linear-gradient(180deg, rgba(255, 247, 251, 0.98), rgba(255, 247, 251, 0.72));
   backdrop-filter: blur(12px);
 }
 
+#messages_section.is_panel_expanded .section_header > div {
+  min-width: 0;
+}
+
+#messages_section.is_panel_expanded .section_header .eyebrow_text {
+  display: none;
+}
+
+#messages_section.is_panel_expanded #live_messages_heading {
+  margin: 0;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  line-height: 1.1;
+}
+
+#messages_section.is_panel_expanded .panel_expand_button {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  min-height: 34px;
+}
+
 #messages_section.is_panel_expanded .live_messages_shell {
-  min-height: calc(100dvh - 126px);
-  border-radius: 24px;
+  min-height: calc(100dvh - 92px);
+  border-radius: 18px;
 }
 
 #messages_section.is_panel_expanded .live_messages_list {
-  height: calc(100dvh - 272px);
+  height: calc(100dvh - 226px);
   max-height: none;
 }
 
 #cycle_tracker_section.is_panel_expanded .cycle_shell {
-  min-height: calc(100dvh - 126px);
+  min-height: auto;
   border-radius: 24px;
+}
+
+#cycle_tracker_section.is_panel_expanded .section_header {
+  position: sticky;
+  top: 6px;
+  z-index: 4;
+  margin-bottom: 14px;
+  padding: 10px 0 12px;
+  background: linear-gradient(180deg, rgba(255, 247, 251, 0.94), rgba(255, 247, 251, 0.62));
+  backdrop-filter: blur(12px);
 }
 
 .cycle_shell {
@@ -1884,6 +1914,18 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   padding-inline: 22px;
 }
 
+#cycle_day_set_start_button {
+  background:
+    linear-gradient(135deg, rgba(210, 66, 86, 0.5), rgba(234, 231, 226, 0.5)),
+    rgba(255, 255, 255, 0.28);
+}
+
+#cycle_day_set_end_button {
+  background:
+    linear-gradient(135deg, rgba(66, 126, 210, 0.5), rgba(234, 231, 226, 0.5)),
+    rgba(255, 255, 255, 0.28);
+}
+
 #cycle_day_remove_button {
   grid-column: 1 / -1;
   min-height: 40px;
@@ -2101,6 +2143,8 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   color: #fff7fb;
   display: inline-grid;
   place-items: center;
+  padding: 0;
+  cursor: pointer;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
   backdrop-filter: blur(10px);
 }
@@ -3193,19 +3237,28 @@ body[data-theme="dark"] .live_message_input:empty::before {
 }
 
 html[data-theme="dark"] .mention_search_panel,
-html[data-theme="dark"] .mention_result_item,
 html[data-theme="dark"] .composer_mention_chip,
 html[data-theme="dark"] .message_mention_chip,
 body[data-theme="dark"] .mention_search_panel,
-body[data-theme="dark"] .mention_result_item,
 body[data-theme="dark"] .composer_mention_chip,
 body[data-theme="dark"] .message_mention_chip {
-  background: rgba(255, 248, 240, 0.08);
+  background: rgba(31, 27, 39, 0.96);
+  border-color: rgba(236, 203, 122, 0.28);
 }
 
 html[data-theme="dark"] .mention_result_item,
 body[data-theme="dark"] .mention_result_item {
+  background: rgba(45, 41, 58, 0.96);
+  border-color: rgba(236, 203, 122, 0.24);
   color: #fff7f2;
+}
+
+html[data-theme="dark"] .mention_result_item.is_active,
+html[data-theme="dark"] .mention_result_item:hover,
+body[data-theme="dark"] .mention_result_item.is_active,
+body[data-theme="dark"] .mention_result_item:hover {
+  background: rgba(73, 61, 77, 0.98);
+  border-color: rgba(236, 203, 122, 0.56);
 }
 
 html[data-theme="dark"] .mention_result_badge,
@@ -3685,36 +3738,30 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   #music_toggle_button {
-    top: 10px;
-    right: 202px;
-    width: 56px;
-    min-width: 56px;
-    min-height: 44px;
-    height: 44px;
-    padding: 0 4px;
-    border-radius: 12px;
-    gap: 2px;
-    flex-direction: column;
-    font-size: 0.46rem;
-    line-height: 1.1;
+    width: 26px;
+    min-width: 26px;
+    min-height: 28px;
+    height: 28px;
+    padding: 0;
   }
 
   .music_control_pill {
-    top: 60px;
-    right: 10px;
-    min-height: 34px;
-    padding: 4px;
+    top: 10px;
+    right: 202px;
+    min-height: 44px;
+    height: 44px;
+    padding: 3px;
   }
 
   .music_control_button {
-    width: 34px;
-    min-width: 34px;
+    width: 26px;
+    min-width: 26px;
     height: 28px;
     min-height: 28px;
   }
 
   .music_toggle_icon {
-    font-size: 1.04rem;
+    font-size: 1rem;
   }
 
   #theme_toggle_button {
@@ -3845,8 +3892,7 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
     min-height: 40px;
   }
 
-  #messages_section.is_panel_expanded,
-  #cycle_tracker_section.is_panel_expanded {
+  #messages_section.is_panel_expanded {
     padding: 12px;
   }
 
@@ -3863,7 +3909,7 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   #messages_section.is_panel_expanded .live_messages_list {
-    height: calc(100dvh - 250px);
+    height: calc(100dvh - 216px);
   }
 
   .live_message_item {

@@ -320,8 +320,8 @@ const translations = {
     cycle_settings_save: "Save cycle",
     cycle_note_saved: "Feeling saved for today.",
     cycle_add_note: "Add Note",
-    cycle_set_start: "Set As Start",
-    cycle_set_end: "Set As End",
+    cycle_set_start: "Period start",
+    cycle_set_end: "Period end",
     cycle_set_ovulation: "Set As Ovulation",
     cycle_remove_entry: "Remove Entry",
     cycle_state_period: "Period",
@@ -971,6 +971,24 @@ Object.assign(translations.en, {
   music_on_short: "On",
   music_mute_short: "Mute",
   music_toggle_label: "Music",
+  music_controls_label: "Music controls",
+  music_previous_track: "Previous track",
+  music_next_track: "Next track",
+  music_play: "Play music",
+  music_pause: "Pause music",
+  messages_short_heading: "Messages",
+  expand_messages: "Expand messages",
+  close_messages: "Close messages",
+  open_messages: "Open messages",
+  expand_cycle_calendar: "Expand cycle calendar",
+  close_cycle_calendar: "Close cycle calendar",
+  open_cycle_calendar: "Open cycle calendar",
+  download: "Download",
+  download_image: "Download image",
+  download_saved: (path_text) => `Saved to ${path_text}.`,
+  download_failed: "The image could not be saved from this device.",
+  cycle_set_start: "Period start",
+  cycle_set_end: "Period end",
   birthday_write_wish: "Write birthday wish",
 });
 
@@ -979,6 +997,24 @@ Object.assign(translations.de, {
   music_on_short: "An",
   music_mute_short: "Stumm",
   music_toggle_label: "Musik",
+  music_controls_label: "Musiksteuerung",
+  music_previous_track: "Vorheriger Titel",
+  music_next_track: "Nächster Titel",
+  music_play: "Musik abspielen",
+  music_pause: "Musik pausieren",
+  messages_short_heading: "Nachrichten",
+  expand_messages: "Nachrichten erweitern",
+  close_messages: "Nachrichten schließen",
+  open_messages: "Nachrichten öffnen",
+  expand_cycle_calendar: "Zykluskalender erweitern",
+  close_cycle_calendar: "Zykluskalender schließen",
+  open_cycle_calendar: "Zykluskalender öffnen",
+  download: "Herunterladen",
+  download_image: "Bild herunterladen",
+  download_saved: (path_text) => `Gespeichert unter ${path_text}.`,
+  download_failed: "Das Bild konnte auf diesem Gerät nicht gespeichert werden.",
+  cycle_set_start: "Periodenstart",
+  cycle_set_end: "Periodenende",
   birthday_write_wish: "Geburtstagsgruß schreiben",
 });
 
@@ -987,6 +1023,24 @@ Object.assign(translations.ar, {
   music_on_short: "تشغيل",
   music_mute_short: "كتم",
   music_toggle_label: "الموسيقى",
+  music_controls_label: "تحكم الموسيقى",
+  music_previous_track: "المقطع السابق",
+  music_next_track: "المقطع التالي",
+  music_play: "تشغيل الموسيقى",
+  music_pause: "إيقاف الموسيقى مؤقتاً",
+  messages_short_heading: "الرسائل",
+  expand_messages: "توسيع الرسائل",
+  close_messages: "إغلاق الرسائل",
+  open_messages: "فتح الرسائل",
+  expand_cycle_calendar: "توسيع تقويم الدورة",
+  close_cycle_calendar: "إغلاق تقويم الدورة",
+  open_cycle_calendar: "فتح تقويم الدورة",
+  download: "تنزيل",
+  download_image: "تنزيل الصورة",
+  download_saved: (path_text) => `تم الحفظ في ${path_text}.`,
+  download_failed: "تعذر حفظ الصورة من هذا الجهاز.",
+  cycle_set_start: "بداية الدورة",
+  cycle_set_end: "نهاية الدورة",
   birthday_write_wish: "اكتب تهنئة عيد ميلاد",
 });
 
@@ -1175,8 +1229,11 @@ let background_music_audio = null;
 let last_background_music_url = "";
 let background_music_needs_unlock = false;
 let background_music_paused_by_user = false;
+let background_music_paused_by_lifecycle = false;
 let music_enabled = true;
 let fullscreen_panel_name = "";
+let cycle_panel_user_compacted = false;
+let cycle_panel_auto_expanded = false;
 let time_sensitive_interval_id = null;
 let live_message_stream = null;
 let live_message_poll_id = null;
@@ -2414,6 +2471,10 @@ function bind_event_handlers() {
   dom_references.music_next_button?.addEventListener("click", () =>
     change_background_track(1),
   );
+  dom_references.memory_lightbox_download_button?.addEventListener(
+    "click",
+    handle_memory_lightbox_download,
+  );
   dom_references.logout_button.addEventListener("click", (event) => {
     burst_reaction(event.currentTarget, "spark", 8);
     handle_logout();
@@ -2717,9 +2778,12 @@ function bind_event_handlers() {
   );
   document.addEventListener("click", handle_document_click);
   document.addEventListener("keydown", handle_global_keydown, true);
+  document.addEventListener("visibilitychange", handle_app_visibility_change);
   window.addEventListener("beforeunload", close_live_messages_stream);
-  window.addEventListener("pagehide", handle_page_exit_sound);
+  window.addEventListener("pagehide", pause_background_music_for_lifecycle);
+  window.addEventListener("pageshow", resume_background_music_from_lifecycle);
   window.addEventListener("popstate", handle_global_popstate);
+  bind_capacitor_app_lifecycle();
 }
 
 function translate(key, ...args) {
@@ -3025,25 +3089,46 @@ function sync_fullscreen_panel_state() {
   );
   document.body.classList.toggle(
     "panel_fullscreen_open",
-    messages_open || cycle_open,
+    messages_open,
+  );
+  set_text(
+    dom_references.live_messages_heading,
+    translate(messages_open ? "messages_short_heading" : "live_messages_heading"),
   );
   set_panel_expand_button_state(
     dom_references.messages_expand_button,
     messages_open,
-    "Expand messages",
-    "Close messages",
+    translate("expand_messages"),
+    translate("close_messages"),
   );
   set_panel_expand_button_state(
     dom_references.cycle_expand_button,
     cycle_open,
-    "Expand cycle calendar",
-    "Close cycle calendar",
+    translate("expand_cycle_calendar"),
+    translate("close_cycle_calendar"),
+  );
+  dom_references.messages_compact_summary?.setAttribute(
+    "aria-label",
+    translate("open_messages"),
+  );
+  dom_references.cycle_compact_summary?.setAttribute(
+    "aria-label",
+    translate("open_cycle_calendar"),
   );
 }
 
 function toggle_fullscreen_panel(panel_name, force_open = false) {
-  fullscreen_panel_name =
-    force_open || fullscreen_panel_name !== panel_name ? panel_name : "";
+  const should_open = force_open || fullscreen_panel_name !== panel_name;
+
+  if (panel_name === "cycle" && !should_open) {
+    cycle_panel_user_compacted = true;
+    cycle_panel_auto_expanded = false;
+  } else if (panel_name === "cycle" && should_open && !force_open) {
+    cycle_panel_user_compacted = false;
+    cycle_panel_auto_expanded = false;
+  }
+
+  fullscreen_panel_name = should_open ? panel_name : "";
   sync_fullscreen_panel_state();
 
   if (fullscreen_panel_name) {
@@ -3051,7 +3136,47 @@ function toggle_fullscreen_panel(panel_name, force_open = false) {
       panel_name === "messages"
         ? dom_references.messages_section
         : dom_references.cycle_tracker_section;
-    target?.scrollTo({ top: 0, behavior: "auto" });
+    if (panel_name === "messages") {
+      target?.scrollTo({ top: 0, behavior: "auto" });
+    } else {
+      target?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+}
+
+function should_auto_expand_cycle_panel(today_context, cycle_message_event) {
+  return Boolean(
+    cycle_message_event &&
+      today_context?.today_status?.state === "period",
+  );
+}
+
+function sync_cycle_auto_expansion(today_context, cycle_message_event) {
+  const should_auto_expand = should_auto_expand_cycle_panel(
+    today_context,
+    cycle_message_event,
+  );
+
+  if (!should_auto_expand) {
+    cycle_panel_user_compacted = false;
+
+    if (cycle_panel_auto_expanded && fullscreen_panel_name === "cycle") {
+      fullscreen_panel_name = "";
+      sync_fullscreen_panel_state();
+    }
+
+    cycle_panel_auto_expanded = false;
+    return;
+  }
+
+  if (
+    !cycle_panel_user_compacted &&
+    fullscreen_panel_name !== "messages" &&
+    fullscreen_panel_name !== "cycle"
+  ) {
+    fullscreen_panel_name = "cycle";
+    cycle_panel_auto_expanded = true;
+    sync_fullscreen_panel_state();
   }
 }
 
@@ -3068,7 +3193,13 @@ function handle_app_navigation_link_click(event) {
   if (target) {
     set_active_navigation_target(target_id);
     close_app_navigation();
-    window.requestAnimationFrame(() => scroll_to_section(target));
+    if (fullscreen_panel_name) {
+      fullscreen_panel_name = "";
+      sync_fullscreen_panel_state();
+    }
+    window.requestAnimationFrame(() =>
+      window.requestAnimationFrame(() => scroll_to_section(target)),
+    );
     return;
   }
 
@@ -3593,6 +3724,26 @@ function apply_language() {
     translate("menu_button_label"),
   );
   dom_references.app_nav_toggle_button.title = translate("menu_button_label");
+  dom_references.music_control_pill?.setAttribute(
+    "aria-label",
+    translate("music_controls_label"),
+  );
+  dom_references.music_previous_button?.setAttribute(
+    "aria-label",
+    translate("music_previous_track"),
+  );
+  if (dom_references.music_previous_button) {
+    dom_references.music_previous_button.title = translate(
+      "music_previous_track",
+    );
+  }
+  dom_references.music_next_button?.setAttribute(
+    "aria-label",
+    translate("music_next_track"),
+  );
+  if (dom_references.music_next_button) {
+    dom_references.music_next_button.title = translate("music_next_track");
+  }
 
   set_text(dom_references.login_panel_eyebrow, translate("login_eyebrow"));
   set_text(dom_references.login_copy, translate("login_copy"));
@@ -3880,8 +4031,17 @@ function apply_language() {
     "aria-label",
     translate("close_dialog_label"),
   );
+  dom_references.memory_lightbox_download_button?.setAttribute(
+    "aria-label",
+    translate("download_image"),
+  );
+  if (dom_references.memory_lightbox_download_button) {
+    dom_references.memory_lightbox_download_button.title =
+      translate("download_image");
+  }
   update_theme_button(document.documentElement.dataset.theme || "light");
   update_music_button();
+  sync_fullscreen_panel_state();
   translate_default_items();
   update_home_for_user(current_user_profile);
   update_welcome_text();
@@ -6465,17 +6625,107 @@ function build_download_filename(label_text = "memory") {
   return `${normalized_label || "memory"}-image.png`;
 }
 
-function download_data_url(data_url, filename) {
+function parse_data_url(data_url) {
+  const match = String(data_url || "").match(/^data:([^;,]+)?(;base64)?,(.*)$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, mime_type = "application/octet-stream", base64_marker, payload] =
+    match;
+  const decoded_payload = decodeURIComponent(payload || "");
+  const base64_data = base64_marker
+    ? decoded_payload
+    : btoa(unescape(encodeURIComponent(decoded_payload)));
+
+  return {
+    mime_type,
+    base64_data,
+  };
+}
+
+function data_url_to_blob(data_url) {
+  const parsed_data_url = parse_data_url(data_url);
+
+  if (!parsed_data_url) {
+    return null;
+  }
+
+  const byte_string = atob(parsed_data_url.base64_data);
+  const byte_numbers = new Array(byte_string.length);
+
+  for (let index = 0; index < byte_string.length; index += 1) {
+    byte_numbers[index] = byte_string.charCodeAt(index);
+  }
+
+  return new Blob([new Uint8Array(byte_numbers)], {
+    type: parsed_data_url.mime_type,
+  });
+}
+
+async function save_data_url_with_capacitor(data_url, filename) {
+  const filesystem_plugin = window.Capacitor?.Plugins?.Filesystem;
+  const parsed_data_url = parse_data_url(data_url);
+
+  if (!filesystem_plugin || !parsed_data_url) {
+    return false;
+  }
+
+  const safe_filename = filename || "memory-image.png";
+  const file_path = `Svetlana-Diab/${safe_filename}`;
+
+  try {
+    await filesystem_plugin.writeFile({
+      path: file_path,
+      data: parsed_data_url.base64_data,
+      directory: "DOCUMENTS",
+      recursive: true,
+    });
+    void show_app_alert(translate("download_saved", `Documents/${file_path}`), {
+      title: translate("download"),
+    });
+    return true;
+  } catch (error) {
+    log_app_error("capacitor_memory_download_failed", error);
+    return false;
+  }
+}
+
+async function download_data_url(data_url, filename) {
   if (!data_url) {
     return;
   }
 
+  const saved_natively = await save_data_url_with_capacitor(
+    data_url,
+    filename,
+  );
+
+  if (saved_natively) {
+    return;
+  }
+
+  const blob = data_url_to_blob(data_url);
+  const object_url = blob ? URL.createObjectURL(blob) : "";
   const link = document.createElement("a");
-  link.href = data_url;
+  link.href = object_url || data_url;
   link.download = filename || "memory-image.png";
   document.body.appendChild(link);
   link.click();
   link.remove();
+
+  if (object_url) {
+    window.setTimeout(() => URL.revokeObjectURL(object_url), 1000);
+  }
+}
+
+function handle_memory_lightbox_download(event) {
+  event?.stopPropagation();
+  void download_data_url(
+    current_lightbox_image_data,
+    build_download_filename(current_lightbox_title),
+  );
 }
 
 function open_memory_lightbox(image_data, caption_text = "") {
@@ -6488,11 +6738,6 @@ function open_memory_lightbox(image_data, caption_text = "") {
   dom_references.memory_lightbox_image.src = image_data;
   dom_references.memory_lightbox_image.alt = caption_text;
   dom_references.memory_lightbox_caption.textContent = caption_text;
-  if (dom_references.memory_lightbox_download_button) {
-    dom_references.memory_lightbox_download_button.href = image_data;
-    dom_references.memory_lightbox_download_button.download =
-      build_download_filename(caption_text);
-  }
   dom_references.memory_lightbox.classList.remove("hidden");
   dom_references.memory_lightbox.setAttribute("aria-hidden", "false");
   open_overlay_layer("memory_lightbox");
@@ -6507,10 +6752,6 @@ function close_memory_lightbox(event = null, from_history = false) {
   dom_references.memory_lightbox.setAttribute("aria-hidden", "true");
   dom_references.memory_lightbox_image.src = "";
   dom_references.memory_lightbox_caption.textContent = "";
-  if (dom_references.memory_lightbox_download_button) {
-    dom_references.memory_lightbox_download_button.href = "#";
-    dom_references.memory_lightbox_download_button.removeAttribute("download");
-  }
   current_lightbox_image_data = "";
   current_lightbox_title = "";
   close_overlay_layer("memory_lightbox", from_history);
@@ -6689,8 +6930,8 @@ function create_item_actions(item_type, item_id, options = {}) {
     download_button.type = "button";
     download_button.dataset.action = "download_memory";
     download_button.dataset.item_id = item_id;
-    download_button.title = "Download";
-    download_button.setAttribute("aria-label", "Download");
+    download_button.title = translate("download");
+    download_button.setAttribute("aria-label", translate("download"));
     download_button.appendChild(create_action_icon("download"));
     action_bar.appendChild(download_button);
   }
@@ -7038,15 +7279,114 @@ function update_music_button() {
   update_music_control_buttons();
 }
 
+function play_existing_background_music() {
+  if (!background_music_audio) {
+    return;
+  }
+
+  background_music_audio.muted = !music_enabled;
+  const play_result = background_music_audio.play();
+
+  if (play_result?.catch) {
+    play_result
+      .then(() => {
+        background_music_needs_unlock = false;
+        update_music_control_buttons();
+      })
+      .catch(() => {
+        background_music_needs_unlock = true;
+        update_music_control_buttons();
+      });
+    return;
+  }
+
+  background_music_needs_unlock = false;
+  update_music_control_buttons();
+}
+
 function toggle_music() {
   music_enabled = !music_enabled;
   localStorage.setItem(music_toggle_storage_key, music_enabled ? "on" : "off");
   update_music_button();
 
-  if (!background_music_audio && music_enabled) {
+  if (!music_enabled) {
+    return;
+  }
+
+  if (background_music_paused_by_user) {
+    update_music_control_buttons();
+    return;
+  }
+
+  if (background_music_audio && background_music_audio.paused) {
+    background_music_paused_by_lifecycle = false;
+    play_existing_background_music();
+    return;
+  }
+
+  if (!background_music_audio) {
     background_music_paused_by_user = false;
     sync_cycle_audio();
   }
+}
+
+function pause_background_music_for_lifecycle() {
+  if (!background_music_audio || background_music_audio.paused) {
+    return;
+  }
+
+  background_music_paused_by_lifecycle = true;
+  background_music_audio.pause();
+  update_music_control_buttons();
+}
+
+function resume_background_music_from_lifecycle() {
+  if (!background_music_paused_by_lifecycle) {
+    return;
+  }
+
+  if (!music_enabled || background_music_paused_by_user) {
+    return;
+  }
+
+  if (!should_play_background_music()) {
+    return;
+  }
+
+  background_music_paused_by_lifecycle = false;
+
+  if (background_music_audio) {
+    play_existing_background_music();
+    return;
+  }
+
+  ensure_background_music();
+}
+
+function handle_app_visibility_change() {
+  if (document.hidden) {
+    pause_background_music_for_lifecycle();
+    return;
+  }
+
+  resume_background_music_from_lifecycle();
+}
+
+function bind_capacitor_app_lifecycle() {
+  const app_plugin = window.Capacitor?.Plugins?.App;
+
+  if (!app_plugin?.addListener) {
+    return;
+  }
+
+  app_plugin.addListener("appStateChange", (state) => {
+    if (state?.isActive) {
+      resume_background_music_from_lifecycle();
+      return;
+    }
+
+    pause_background_music_for_lifecycle();
+  });
 }
 
 function handle_audio_unlock_pointerdown() {
@@ -7142,7 +7482,9 @@ function update_music_control_buttons() {
   play_pause_button?.toggleAttribute("disabled", !has_tracks);
 
   if (play_pause_button) {
-    const label = is_paused ? "Play music" : "Pause music";
+    const label = is_paused
+      ? translate("music_play")
+      : translate("music_pause");
     play_pause_button.setAttribute("aria-label", label);
     play_pause_button.title = label;
     play_pause_button.innerHTML = is_paused
@@ -7161,6 +7503,7 @@ function should_play_background_music() {
 function stop_background_music() {
   background_music_needs_unlock = false;
   background_music_paused_by_user = false;
+  background_music_paused_by_lifecycle = false;
 
   if (!background_music_audio) {
     update_music_control_buttons();
@@ -7178,6 +7521,8 @@ function start_background_music_track(selected_url, force_restart = true) {
   if (!selected_url) {
     return;
   }
+
+  background_music_paused_by_lifecycle = false;
 
   if (force_restart) {
     const previous_audio = background_music_audio;
@@ -7244,6 +7589,16 @@ function ensure_background_music(force_restart = false) {
     return;
   }
 
+  if (!music_enabled && !background_music_audio) {
+    update_music_control_buttons();
+    return;
+  }
+
+  if (document.hidden) {
+    update_music_control_buttons();
+    return;
+  }
+
   const track_list = get_background_music_tracks();
 
   if (track_list.length === 0) {
@@ -7293,6 +7648,7 @@ function change_background_track(direction) {
   const next_index =
     (current_index + direction + track_list.length) % track_list.length;
   background_music_paused_by_user = false;
+  background_music_paused_by_lifecycle = false;
   start_background_music_track(track_list[next_index], true);
 }
 
@@ -7311,19 +7667,10 @@ function toggle_background_music_playback() {
   }
 
   background_music_paused_by_user = false;
+  background_music_paused_by_lifecycle = false;
 
   if (background_music_audio) {
-    background_music_audio.muted = !music_enabled;
-    const play_result = background_music_audio.play();
-
-    if (play_result?.catch) {
-      play_result.catch(() => {
-        background_music_needs_unlock = true;
-        update_music_control_buttons();
-      });
-    }
-
-    update_music_control_buttons();
+    play_existing_background_music();
     return;
   }
 
@@ -7462,7 +7809,7 @@ function handle_memory_action(event) {
     const memory_item = current_memory_items.find((item) => item.id === item_id);
 
     if (memory_item?.image_data) {
-      download_data_url(
+      void download_data_url(
         memory_item.image_data,
         build_download_filename(memory_item.title),
       );
@@ -8617,6 +8964,7 @@ function render_cycle_status_panel() {
     dom_references.cycle_today_feeling.textContent = "";
   }
 
+  sync_cycle_auto_expansion(today_context, cycle_message_event);
   sync_cycle_audio();
 }
 

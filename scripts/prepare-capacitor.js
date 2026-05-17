@@ -5,6 +5,7 @@ const project_root = path.resolve(__dirname, "..");
 const mobile_web_dir = path.join(project_root, "dist", "mobile");
 const audio_extensions = new Set([".mp3", ".wav", ".ogg", ".m4a", ".aac"]);
 const static_entries = [
+  "favicon.png",
   "favicon.svg",
   "styles.css",
   "script.js",

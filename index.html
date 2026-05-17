@@ -5,7 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Svetlana & Diab</title>
-  <link rel="icon" href="favicon.svg?v=20260517e" type="image/svg+xml">
+  <link rel="icon" href="favicon.png?v=20260517f" type="image/png">
+  <link rel="apple-touch-icon" href="favicon.png?v=20260517f">
   <script>
     (function () {
       try {
@@ -109,11 +110,12 @@
         </div>
         <div class="header_actions">
           <button id="theme_toggle_button" class="ghost_button" type="button" aria-pressed="false">Dark theme</button>
-          <button id="music_toggle_button" class="ghost_button music_toggle_button" type="button" aria-pressed="false">
-            <span class="music_toggle_icon" aria-hidden="true">&#128266;</span>
-            <span id="music_toggle_label" class="music_toggle_label">On</span>
-          </button>
           <div id="music_control_pill" class="music_control_pill" aria-label="Music controls">
+            <button id="music_toggle_button" class="music_control_button music_toggle_button" type="button"
+              aria-pressed="false">
+              <span class="music_toggle_icon" aria-hidden="true">&#128266;</span>
+              <span id="music_toggle_label" class="music_toggle_label">On</span>
+            </button>
             <button id="music_previous_button" class="music_control_button" type="button" aria-label="Previous track"
               title="Previous track">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -317,8 +319,8 @@
             <div class="cycle_day_detail_actions">
               <button id="cycle_day_mood_button" class="ghost_button" type="button">Mood</button>
               <button id="cycle_day_note_button" class="ghost_button" type="button">Add Note</button>
-              <button id="cycle_day_set_start_button" class="ghost_button" type="button">Set As Start</button>
-              <button id="cycle_day_set_end_button" class="ghost_button" type="button">Set As End</button>
+              <button id="cycle_day_set_start_button" class="ghost_button" type="button">Period start</button>
+              <button id="cycle_day_set_end_button" class="ghost_button" type="button">Period end</button>
               <button id="cycle_day_remove_button" class="ghost_button" type="button">Remove Entry</button>
             </div>
             <div id="cycle_day_mood_picker" class="cycle_day_mood_picker hidden"></div>
@@ -533,12 +535,12 @@
 
   <div id="memory_lightbox" class="memory_lightbox hidden" aria-hidden="true">
     <div class="memory_lightbox_inner">
-      <a id="memory_lightbox_download_button" class="memory_lightbox_download_button" href="#" download
+      <button id="memory_lightbox_download_button" class="memory_lightbox_download_button" type="button"
         aria-label="Download image" title="Download image">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M11 4h2v8.2l3.2-3.2 1.4 1.4L12 16 6.4 10.4 7.8 9l3.2 3.2V4Zm-5 14h12v2H6v-2Z"></path>
         </svg>
-      </a>
+      </button>
       <img id="memory_lightbox_image" src="" alt="">
       <p id="memory_lightbox_caption"></p>
     </div>
