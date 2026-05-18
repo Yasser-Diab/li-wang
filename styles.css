@@ -93,6 +93,11 @@ img {
   display: none !important;
 }
 
+body:not(.is_logged_in) .app_nav_toggle_button,
+body.panel_fullscreen_open .app_nav_toggle_button {
+  display: none;
+}
+
 .background_glow {
   position: fixed;
   inset: 0;
@@ -512,6 +517,61 @@ body[data-theme="dark"] .background_glow {
   cursor: default;
 }
 
+#music_file_input {
+  display: none;
+}
+
+.music_library_panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(260px, calc(100vw - 28px));
+  max-height: 260px;
+  overflow-y: auto;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--line_gold);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 48px rgba(91, 71, 90, 0.16);
+}
+
+.music_library_item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(201, 164, 93, 0.22);
+  border-radius: 12px;
+  color: var(--ink_deep);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.music_library_item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.music_library_delete_button {
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(180, 38, 76, 0.12);
+  color: #b4264c;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: none;
+  font-size: 0.95rem;
+}
+
 .music_toggle_icon {
   font-size: 0.8rem;
   line-height: 1;
@@ -652,6 +712,48 @@ input {
   padding: 0 18px;
 }
 
+.password_input_shell {
+  position: relative;
+  display: grid;
+}
+
+.password_input_shell input {
+  padding-left: 48px;
+}
+
+.password_visibility_button {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  color: var(--gold_soft);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  transform: translateY(-50%);
+  box-shadow: none;
+}
+
+.password_visibility_button svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.password_visibility_button.is_visible {
+  color: var(--ink_deep);
+}
+
 textarea {
   resize: none;
   padding: 14px 18px;
@@ -743,6 +845,10 @@ textarea:focus {
 .text_link_button:hover {
   transform: none;
   color: var(--gold_bright);
+}
+
+.biometric_login_button {
+  margin-top: -4px;
 }
 
 .welcome_overlay {
@@ -1284,12 +1390,45 @@ body.panel_fullscreen_open {
   overflow: hidden;
 }
 
+body.panel_fullscreen_open #theme_toggle_button {
+  top: 10px;
+  right: min(330px, calc(100vw - 72px));
+  z-index: 70;
+  width: 54px;
+  min-width: 54px;
+  height: 24px;
+  min-height: 24px;
+  grid-template-columns: auto auto;
+  grid-template-rows: 1fr;
+  gap: 2px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 0.5rem;
+}
+
+body.panel_fullscreen_open #theme_toggle_button .theme_toggle_icon {
+  font-size: 0.85rem;
+}
+
+body.panel_fullscreen_open .music_control_pill {
+  top: 10px;
+  right: 82px;
+  z-index: 71;
+  min-height: 24px;
+}
+
+body.panel_fullscreen_open #logout_button {
+  top: 10px;
+  right: 12px;
+  z-index: 71;
+}
+
 #messages_section.is_panel_expanded {
   position: fixed;
   inset: 0;
   z-index: 62;
   margin: 0;
-  padding: 18px clamp(12px, 3vw, 34px) 24px;
+  padding: 48px clamp(12px, 3vw, 34px) 24px;
   overflow-y: auto;
   background:
     linear-gradient(145deg, rgba(255, 247, 251, 0.98), rgba(250, 246, 239, 0.97)),
@@ -1301,8 +1440,10 @@ body.panel_fullscreen_open {
   position: sticky;
   top: 0;
   z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr;
   margin: 0 0 10px;
-  padding: 8px 4px 10px;
+  padding: 5px 4px 8px;
   border-top: 7px solid rgba(201, 164, 93, 0.38);
   border-radius: 0 0 16px 16px;
   background: linear-gradient(180deg, rgba(255, 247, 251, 0.98), rgba(255, 247, 251, 0.72));
@@ -1310,6 +1451,8 @@ body.panel_fullscreen_open {
 }
 
 #messages_section.is_panel_expanded .section_header > div {
+  width: min(420px, 100%);
+  margin: 0 auto;
   min-width: 0;
 }
 
@@ -1321,13 +1464,20 @@ body.panel_fullscreen_open {
   margin: 0;
   font-size: clamp(1rem, 2.5vw, 1.2rem);
   line-height: 1.1;
+  text-align: center;
 }
 
 #messages_section.is_panel_expanded .panel_expand_button {
+  position: fixed;
+  top: 10px;
+  right: 242px;
+  left: auto;
+  z-index: 72;
   width: 34px;
   min-width: 34px;
   height: 34px;
   min-height: 34px;
+  transform: translateY(-55px);
 }
 
 #messages_section.is_panel_expanded .live_messages_shell {
@@ -1338,6 +1488,71 @@ body.panel_fullscreen_open {
 #messages_section.is_panel_expanded .live_messages_list {
   height: calc(100dvh - 226px);
   max-height: none;
+}
+
+.messages_title_bar {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.messages_title_bar h2 {
+  background: linear-gradient(90deg, var(--gold_soft), var(--silver_soft), var(--gold_bright2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.messages_header_icon_button {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  border: 1px solid rgba(201, 164, 93, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--gold_soft);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: none;
+}
+
+.messages_header_icon_button svg {
+  width: 17px;
+  height: 17px;
+  fill: currentColor;
+}
+
+.messages_search_panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.messages_search_panel input {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+}
+
+.message_presence_bar {
+  min-height: 18px;
+  margin-top: 5px;
+  border-top: 5px solid rgba(201, 164, 93, 0.24);
+  border-bottom: 5px solid rgba(201, 164, 93, 0.16);
+  display: grid;
+  place-items: center;
+  color: var(--gold_bright2);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-align: center;
 }
 
 #cycle_tracker_section.is_panel_expanded .cycle_shell {
@@ -1868,7 +2083,7 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
 }
 
 #cycle_day_detail_title {
-  color: var(--ink_deep);
+  color: var(--gold_bright2);
   font-family: var(--serif_font);
   font-size: 1.3rem;
   font-weight: 600;
@@ -1883,7 +2098,7 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
 }
 
 .cycle_day_detail_note {
-  color: var(--ink_soft);
+  color: var(--gold_bright2);
   line-height: 1.55;
 }
 
@@ -2154,6 +2369,7 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
 }
 
 .live_messages_shell {
+  position: relative;
   display: grid;
   gap: 14px;
   border: 1px solid var(--line_gold);
@@ -2201,6 +2417,36 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   border-radius: 22px 22px 22px 10px;
   position: relative;
   transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.live_message_item.is_search_match {
+  border-color: rgba(201, 164, 93, 0.68);
+  box-shadow: 0 16px 34px rgba(201, 164, 93, 0.16);
+}
+
+.live_message_item.is_current_search_match {
+  outline: 3px solid rgba(244, 215, 142, 0.38);
+  outline-offset: 2px;
+}
+
+.messages_scroll_bottom_button {
+  position: absolute;
+  right: 18px;
+  bottom: 86px;
+  z-index: 5;
+  width: 38px;
+  height: 38px;
+  min-height: 38px;
+  border: 1px solid var(--line_gold);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--gold_bright2);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: 0 12px 28px rgba(91, 71, 90, 0.14);
+  font-size: 1.05rem;
+  font-weight: 900;
 }
 
 .live_message_item.own_message {
@@ -2436,6 +2682,15 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   gap: 10px;
 }
 
+body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_shell {
+  padding-bottom: min(356px, 46vh);
+}
+
+body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
+  height: calc(100dvh - 560px);
+  min-height: 160px;
+}
+
 .mention_search_panel {
   position: absolute;
   left: 12px;
@@ -2524,6 +2779,29 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   overflow-x: auto;
   padding-bottom: 2px;
   scrollbar-width: none;
+}
+
+.emoji_picker_topbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.emoji_picker_delete_button {
+  width: 38px;
+  min-width: 38px;
+  height: 32px;
+  min-height: 32px;
+  border: 1px solid rgba(201, 164, 93, 0.28);
+  border-radius: 999px;
+  background: rgba(244, 215, 142, 0.22);
+  color: var(--ink_deep);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  box-shadow: none;
+  font-weight: 900;
 }
 
 .emoji_picker_tabs::-webkit-scrollbar {
@@ -2889,6 +3167,23 @@ body[data-theme="dark"] .memory_text {
   line-height: 1.5;
 }
 
+.item_thought_list {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.item_thought_line {
+  margin: 0;
+  color: var(--ink_soft);
+  line-height: 1.5;
+}
+
+.item_thought_author {
+  color: var(--gold_bright2);
+  font-weight: 800;
+}
+
 .memory_date {
   margin-bottom: 8px !important;
   color: var(--gold_soft) !important;
@@ -3118,11 +3413,26 @@ body[data-theme="dark"] .cycle_shell {
 html[data-theme="dark"] .compact_panel_summary,
 html[data-theme="dark"] .panel_expand_button,
 html[data-theme="dark"] .music_control_pill,
+html[data-theme="dark"] .music_library_panel,
+html[data-theme="dark"] .messages_header_icon_button,
 body[data-theme="dark"] .compact_panel_summary,
 body[data-theme="dark"] .panel_expand_button,
-body[data-theme="dark"] .music_control_pill {
+body[data-theme="dark"] .music_control_pill,
+body[data-theme="dark"] .music_library_panel,
+body[data-theme="dark"] .messages_header_icon_button {
   background: rgba(31, 27, 39, 0.86);
   color: var(--gold_bright2);
+}
+
+html[data-theme="dark"] .password_visibility_button,
+body[data-theme="dark"] .password_visibility_button {
+  background: rgba(255, 248, 240, 0.08);
+}
+
+html[data-theme="dark"] .music_library_item,
+body[data-theme="dark"] .music_library_item {
+  background: rgba(45, 41, 58, 0.96);
+  color: #fff7f2;
 }
 
 html[data-theme="dark"] #messages_section.is_panel_expanded,
@@ -3242,7 +3552,7 @@ html[data-theme="dark"] .message_mention_chip,
 body[data-theme="dark"] .mention_search_panel,
 body[data-theme="dark"] .composer_mention_chip,
 body[data-theme="dark"] .message_mention_chip {
-  background: rgba(31, 27, 39, 0.96);
+  background: rgba(31, 27, 39, 0.98);
   border-color: rgba(236, 203, 122, 0.28);
 }
 
@@ -3265,6 +3575,22 @@ html[data-theme="dark"] .mention_result_badge,
 body[data-theme="dark"] .mention_result_badge {
   background: rgba(236, 203, 122, 0.12);
   color: #f0d793;
+}
+
+html[data-theme="dark"] .mention_result_meta,
+html[data-theme="dark"] .mention_result_snippet,
+body[data-theme="dark"] .mention_result_meta,
+body[data-theme="dark"] .mention_result_snippet {
+  color: rgba(255, 247, 242, 0.82);
+}
+
+html[data-theme="dark"] .message_presence_bar,
+body[data-theme="dark"] .message_presence_bar,
+html[data-theme="dark"] #cycle_day_detail_title,
+html[data-theme="dark"] .cycle_day_detail_note,
+body[data-theme="dark"] #cycle_day_detail_title,
+body[data-theme="dark"] .cycle_day_detail_note {
+  color: var(--gold_bright2);
 }
 
 html[data-theme="dark"] .mention_chip_icon,
@@ -3893,7 +4219,7 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   #messages_section.is_panel_expanded {
-    padding: 12px;
+    padding: 48px 12px 12px;
   }
 
   .daily_love_note {
@@ -3910,6 +4236,11 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
 
   #messages_section.is_panel_expanded .live_messages_list {
     height: calc(100dvh - 216px);
+  }
+
+  body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
+    height: calc(100dvh - 536px);
+    min-height: 140px;
   }
 
   .live_message_item {

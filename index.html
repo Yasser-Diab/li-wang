@@ -77,8 +77,20 @@
           <input id="username_input" name="username_input" type="text" placeholder="Svetlana" required>
 
           <label for="password_input">Secret word</label>
-          <input id="password_input" name="password_input" type="password" placeholder="Our secret" required>
+          <div class="password_input_shell">
+            <button id="password_visibility_button" class="password_visibility_button" type="button"
+              aria-label="Show password" title="Show password">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"></path>
+                <circle cx="12" cy="12" r="2.7"></circle>
+              </svg>
+            </button>
+            <input id="password_input" name="password_input" type="password" placeholder="Our secret" required>
+          </div>
           <button id="forgot_password_button" class="text_link_button" type="button">Forgot password?</button>
+          <button id="biometric_login_button" class="text_link_button biometric_login_button hidden" type="button">
+            Use fingerprint
+          </button>
 
           <button id="login_button" type="submit">Enter our world</button>
           <p id="login_error_message" class="login_error_message" role="alert"></p>
@@ -134,6 +146,12 @@
                 <path d="M13 6v12l8-6-8-6ZM3 6v12l8-6-8-6Z"></path>
               </svg>
             </button>
+            <button id="music_add_button" class="music_control_button" type="button" aria-label="Add music"
+              title="Add music">+</button>
+            <button id="music_library_button" class="music_control_button" type="button" aria-label="Your music"
+              title="Your music">▽</button>
+            <input id="music_file_input" name="music_file_input" type="file" accept="audio/*" multiple>
+            <div id="music_library_panel" class="music_library_panel hidden" aria-label="Your music"></div>
           </div>
           <button id="logout_button" class="ghost_button" type="button">Leave softly</button>
         </div>
@@ -332,7 +350,31 @@
         <div class="section_header">
           <div>
             <p class="eyebrow_text" id="live_messages_eyebrow">just us, in real time</p>
-            <h2 id="live_messages_heading">Live Messages</h2>
+            <div class="messages_title_bar">
+              <button id="messages_search_button" class="messages_header_icon_button" type="button"
+                aria-label="Search messages" title="Search messages">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M10.7 4.5a6.2 6.2 0 1 0 0 12.4 6.2 6.2 0 0 0 0-12.4Zm0 2a4.2 4.2 0 1 1 0 8.4 4.2 4.2 0 0 1 0-8.4Zm4.7 9 4.1 4.1-1.4 1.4-4.1-4.1 1.4-1.4Z"></path>
+                </svg>
+              </button>
+              <h2 id="live_messages_heading">Live Messages</h2>
+              <button id="message_visibility_button" class="messages_header_icon_button" type="button"
+                aria-label="Presence settings" title="Presence settings">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M19.4 13.5c.1-.5.1-1 .1-1.5s0-1-.1-1.5l2-1.5-2-3.5-2.4 1a7 7 0 0 0-2.6-1.5L14 2h-4l-.4 2.5A7 7 0 0 0 7 6L4.6 5 2.6 8.5l2 1.5c-.1.5-.1 1-.1 1.5s0 1 .1 1.5l-2 1.5 2 3.5 2.4-1a7 7 0 0 0 2.6 1.5L10 22h4l.4-2.5A7 7 0 0 0 17 18l2.4 1 2-3.5-2-1.5ZM12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7Z"></path>
+                </svg>
+              </button>
+            </div>
+            <div id="messages_search_panel" class="messages_search_panel hidden">
+              <input id="messages_search_input" type="search" placeholder="Search messages" aria-label="Search messages">
+              <button id="messages_search_previous_button" class="messages_header_icon_button" type="button"
+                aria-label="Previous match" title="Previous match">↑</button>
+              <button id="messages_search_next_button" class="messages_header_icon_button" type="button"
+                aria-label="Next match" title="Next match">↓</button>
+              <button id="messages_search_close_button" class="messages_header_icon_button" type="button"
+                aria-label="Close search" title="Close search">×</button>
+            </div>
+            <div id="message_presence_bar" class="message_presence_bar" aria-live="polite">Online</div>
           </div>
           <button id="messages_expand_button" class="panel_expand_button" type="button" aria-expanded="false"
             aria-label="Expand messages" title="Expand messages">
@@ -355,6 +397,8 @@
             Your little private chat will appear here.
           </div>
           <div id="live_messages_list" class="live_messages_list" aria-live="polite"></div>
+          <button id="messages_scroll_bottom_button" class="messages_scroll_bottom_button hidden" type="button"
+            aria-label="Go to latest message" title="Go to latest message">↓</button>
           <form id="live_message_form" class="live_message_form">
             <div id="live_message_context_preview" class="live_message_context_preview hidden">
               <div class="live_message_context_texts">
