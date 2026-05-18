@@ -1,0 +1,34 @@
+{
+  "name": "svetlana_and_diab_happiness_space",
+  "version": "1.0.0",
+  "description": "A private joyful memory space for Svetlana and Diab.",
+  "main": "server.js",
+  "scripts": {
+    "generate:messages": "node scripts/generate_daily_messages.js",
+    "start": "node server.js",
+    "check": "node --check script.js && node --check server.js && node --check scripts/prepare-capacitor.js && node --check scripts/run-android-gradle.js",
+    "mobile:prepare": "node scripts/prepare-capacitor.js",
+    "mobile:sync": "npm run mobile:prepare && npx cap sync android",
+    "android:apk": "npm run mobile:sync && node scripts/run-android-gradle.js assembleDebug",
+    "android:aab": "npm run mobile:sync && node scripts/run-android-gradle.js bundleRelease"
+  },
+  "keywords": [
+    "private",
+    "memories",
+    "love",
+    "static",
+    "node"
+  ],
+  "author": "Diab",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.0",
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/filesystem": "^8.1.2",
+    "@capacitor/local-notifications": "^8.2.0",
+    "@capgo/capacitor-native-biometric": "^8.4.5",
+    "@supabase/supabase-js": "^2.105.4"
+  }
+}

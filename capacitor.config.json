@@ -1,0 +1,18 @@
+{
+  "appId": "com.svetlanadiab.happinessspace",
+  "appName": "Svetlana & Diab",
+  "webDir": "dist/mobile",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_notification",
+      "iconColor": "#c9a45d",
+      "presentationOptions": ["badge", "sound", "banner", "list"]
+    }
+  }
+}

@@ -1,0 +1,14 @@
+window.supabase_public_config = {
+  url: "https://raggjtzizfcfoaxvkgov.supabase.co",
+  anon_key:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhZ2dqdHppemZjZm9heHZrZ292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NDgwNDAsImV4cCI6MjA5NDIyNDA0MH0.qsNj79Ki4YcqzLQleVYEyIXj0ZeMaM-k72skTV2YeEs",
+  room_slug: "svetlana-diab",
+  users: {
+    svetlana: {
+      email: "svetlanamorlang91@online.de",
+    },
+    diab: {
+      email: "yasserdiabhassan@gmail.com",
+    },
+  },
+};
