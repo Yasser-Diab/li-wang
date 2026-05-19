@@ -94,7 +94,7 @@ img {
 }
 
 body:not(.is_logged_in) .app_nav_toggle_button,
-body.panel_fullscreen_open .app_nav_toggle_button {
+body:not(.is_logged_in) .app_nav_overlay {
   display: none;
 }
 
@@ -156,7 +156,7 @@ body[data-theme="dark"] .background_glow {
 
 .app_nav_toggle_button span {
   display: block;
-  width: 25px;
+  width: 30px;
   height: 1px;
   border-radius: 999px;
   background: var(--ink_deep);
@@ -539,7 +539,7 @@ body[data-theme="dark"] .background_glow {
 
 .music_library_item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
@@ -551,15 +551,38 @@ body[data-theme="dark"] .background_glow {
   font-weight: 700;
 }
 
+.music_library_heading {
+  margin: 8px 6px 0;
+  color: var(--gold_soft);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.music_library_empty {
+  margin: 0;
+  padding: 8px 10px;
+  color: var(--ink_soft);
+  font-size: 0.78rem;
+}
+
 .music_library_item span {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.music_library_item.is_current_track {
+  border-color: var(--line_gold);
+  background: rgba(244, 215, 142, 0.18);
+}
+
+.music_library_play_button,
 .music_library_delete_button {
   width: 26px;
   height: 26px;
+  min-width: 26px;
   min-height: 26px;
   border: 0;
   border-radius: 999px;
@@ -570,6 +593,17 @@ body[data-theme="dark"] .background_glow {
   padding: 0;
   box-shadow: none;
   font-size: 0.95rem;
+}
+
+.music_library_play_button {
+  background: rgba(244, 215, 142, 0.18);
+  color: var(--gold_bright2);
+  font-size: 0.78rem;
+}
+
+.music_library_delete_button {
+  color: #d9364a;
+  font-weight: 900;
 }
 
 .music_toggle_icon {
@@ -632,7 +666,18 @@ body[data-theme="dark"] .background_glow {
   box-shadow: var(--shadow_soft);
   backdrop-filter: blur(20px);
   position: relative;
+  z-index: 5;
   overflow: hidden;
+}
+
+.login_form,
+.login_form label,
+.login_form input,
+.password_input_shell,
+.text_link_button,
+#login_button {
+  position: relative;
+  z-index: 6;
 }
 
 .login_panel::before,
@@ -1388,20 +1433,37 @@ body[data-theme="dark"] .night_tale_card {
 
 body.panel_fullscreen_open {
   overflow: hidden;
+  --panel_top_gap: 8px;
+  --panel_top_available: calc(100vw - (var(--panel_top_gap) * 7));
+}
+
+body.panel_fullscreen_open .app_nav_toggle_button {
+  top: var(--panel_top_gap);
+  left: var(--panel_top_gap);
+  right: auto;
+  z-index: 73;
+  width: calc(var(--panel_top_available) * 0.12);
+  min-width: 48px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(201, 164, 93, 0.25);
 }
 
 body.panel_fullscreen_open #theme_toggle_button {
-  top: 10px;
-  right: min(330px, calc(100vw - 72px));
+  top: var(--panel_top_gap);
+  left: calc(var(--panel_top_gap) * 2 + var(--panel_top_available) * 0.12);
+  right: auto;
   z-index: 70;
-  width: 54px;
-  min-width: 54px;
-  height: 24px;
-  min-height: 24px;
+  width: calc(var(--panel_top_available) * 0.12);
+  min-width: 48px;
+  height: 36px;
+  min-height: 36px;
   grid-template-columns: auto auto;
   grid-template-rows: 1fr;
   gap: 2px;
-  padding: 0 6px;
+  padding: 0 8px;
   border-radius: 999px;
   font-size: 0.5rem;
 }
@@ -1411,16 +1473,59 @@ body.panel_fullscreen_open #theme_toggle_button .theme_toggle_icon {
 }
 
 body.panel_fullscreen_open .music_control_pill {
-  top: 10px;
-  right: 82px;
+  top: var(--panel_top_gap);
+  left: calc(var(--panel_top_gap) * 4 + var(--panel_top_available) * 0.34);
+  right: auto;
   z-index: 71;
-  min-height: 24px;
+  width: calc(var(--panel_top_available) * 0.30);
+  min-width: 164px;
+  height: 36px;
+  min-height: 36px;
+  justify-content: center;
+}
+
+body.panel_fullscreen_open .music_control_button {
+  width: 21px;
+  min-width: 21px;
+  height: 28px;
+  min-height: 28px;
+}
+
+body.panel_fullscreen_open .music_toggle_button {
+  width: 25px;
+  min-width: 25px;
 }
 
 body.panel_fullscreen_open #logout_button {
-  top: 10px;
-  right: 12px;
+  top: var(--panel_top_gap);
+  left: calc(var(--panel_top_gap) * 6 + var(--panel_top_available) * 0.80);
+  right: auto;
   z-index: 71;
+  width: calc(var(--panel_top_available) * 0.20);
+  min-width: 54px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+}
+
+body.panel_fullscreen_open .language_toggle_button {
+  top: var(--panel_top_gap);
+  left: calc(var(--panel_top_gap) * 5 + var(--panel_top_available) * 0.64);
+  right: auto;
+  z-index: 71;
+  width: calc(var(--panel_top_available) * 0.16);
+  min-width: 54px;
+  height: 36px;
+  min-height: 36px;
+  padding: 2px 4px;
+  grid-template-rows: 1fr auto;
+  border-radius: 999px;
+}
+
+body.panel_fullscreen_open .language_toggle_button .flag_icon {
+  height: 20px;
 }
 
 #messages_section.is_panel_expanded {
@@ -1428,7 +1533,7 @@ body.panel_fullscreen_open #logout_button {
   inset: 0;
   z-index: 62;
   margin: 0;
-  padding: 48px clamp(12px, 3vw, 34px) 24px;
+  padding: 54px clamp(12px, 3vw, 34px) 24px;
   overflow-y: auto;
   background:
     linear-gradient(145deg, rgba(255, 247, 251, 0.98), rgba(250, 246, 239, 0.97)),
@@ -1444,10 +1549,11 @@ body.panel_fullscreen_open #logout_button {
   grid-template-columns: 1fr;
   margin: 0 0 10px;
   padding: 5px 4px 8px;
-  border-top: 7px solid rgba(201, 164, 93, 0.38);
+  border-top: 1px solid rgba(201, 164, 93, 0.38);
   border-radius: 0 0 16px 16px;
   background: linear-gradient(180deg, rgba(255, 247, 251, 0.98), rgba(255, 247, 251, 0.72));
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 #messages_section.is_panel_expanded .section_header > div {
@@ -1469,15 +1575,16 @@ body.panel_fullscreen_open #logout_button {
 
 #messages_section.is_panel_expanded .panel_expand_button {
   position: fixed;
-  top: 10px;
-  right: 242px;
-  left: auto;
+  top: var(--panel_top_gap);
+  left: calc(var(--panel_top_gap) * 3 + var(--panel_top_available) * 0.24);
+  right: auto;
   z-index: 72;
-  width: 34px;
-  min-width: 34px;
-  height: 34px;
-  min-height: 34px;
-  transform: translateY(-55px);
+  width: calc(var(--panel_top_available) * 0.10);
+  min-width: 42px;
+  height: 36px;
+  min-height: 36px;
+  border-radius: 999px;
+  transform: none;
 }
 
 #messages_section.is_panel_expanded .live_messages_shell {
@@ -1492,7 +1599,7 @@ body.panel_fullscreen_open #logout_button {
 
 .messages_title_bar {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  grid-template-columns: minmax(34px, auto) minmax(0, 1fr) minmax(82px, auto);
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -1526,6 +1633,43 @@ body.panel_fullscreen_open #logout_button {
   fill: currentColor;
 }
 
+#message_visibility_button {
+  width: auto;
+  min-width: 82px;
+  padding: 0 10px;
+  grid-template-columns: auto auto;
+  gap: 6px;
+  justify-content: center;
+  color: var(--gold_bright2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.74), rgba(244, 215, 142, 0.2));
+}
+
+#message_visibility_button.is_hidden {
+  color: var(--silver_soft);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.66), rgba(201, 206, 216, 0.18));
+}
+
+.presence_toggle_icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.presence_toggle_icon circle {
+  fill: none;
+  stroke: currentColor;
+}
+
+.presence_toggle_text {
+  font-size: 0.66rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
 .messages_search_panel {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto auto;
@@ -1544,8 +1688,8 @@ body.panel_fullscreen_open #logout_button {
 .message_presence_bar {
   min-height: 18px;
   margin-top: 5px;
-  border-top: 5px solid rgba(201, 164, 93, 0.24);
-  border-bottom: 5px solid rgba(201, 164, 93, 0.16);
+  border-top: 1px solid rgba(201, 164, 93, 0.38);
+  border-bottom: 1px solid rgba(201, 164, 93, 0.28);
   display: grid;
   place-items: center;
   color: var(--gold_bright2);
@@ -2057,7 +2201,7 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   padding: 16px;
   border: 1px solid var(--line_gold);
   border-radius: 24px;
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(244, 215, 142, 0.1));
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.8) 78%, rgba(244, 215, 142, 0.1));
   display: grid;
   gap: 12px;
 }
@@ -2130,12 +2274,16 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
 }
 
 #cycle_day_set_start_button {
+  color: var(--gold_bright2);
+  font-weight: 600;
   background:
     linear-gradient(135deg, rgba(210, 66, 86, 0.5), rgba(234, 231, 226, 0.5)),
     rgba(255, 255, 255, 0.28);
 }
 
 #cycle_day_set_end_button {
+  color: var(--gold_bright2);
+  font-weight: 600;
   background:
     linear-gradient(135deg, rgba(66, 126, 210, 0.5), rgba(234, 231, 226, 0.5)),
     rgba(255, 255, 255, 0.28);
@@ -2429,6 +2577,15 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   outline-offset: 2px;
 }
 
+.message_search_highlight {
+  padding: 0 3px;
+  border-radius: 6px;
+  background: rgba(244, 215, 142, 0.72);
+  color: #2d241c;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
 .messages_scroll_bottom_button {
   position: absolute;
   right: 18px;
@@ -2553,6 +2710,9 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
 
 .live_message_composer {
   position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 62px;
   border: 1px solid var(--line_silver);
   border-radius: 26px;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(244, 215, 142, 0.1));
@@ -2878,14 +3038,15 @@ body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
 }
 
 .live_message_input {
+  width: 100%;
   min-height: 62px;
   max-height: 180px;
-  padding: 14px 118px 14px 18px;
+  padding: 18px 128px 14px 18px;
   border: 0;
   border-radius: 26px;
   background: transparent;
   box-shadow: none;
-  line-height: 1.55;
+  line-height: 1.35;
   overflow-y: auto;
   outline: none;
   white-space: pre-wrap;
@@ -3177,11 +3338,32 @@ body[data-theme="dark"] .memory_text {
   margin: 0;
   color: var(--ink_soft);
   line-height: 1.5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
 }
 
 .item_thought_author {
   color: var(--gold_bright2);
   font-weight: 800;
+}
+
+.item_thought_text {
+  color: var(--ink_soft);
+}
+
+.thought_action_button {
+  width: fit-content;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(201, 164, 93, 0.32);
+  border-radius: 999px;
+  background: rgba(244, 215, 142, 0.14);
+  color: var(--gold_bright2);
+  box-shadow: none;
+  font-size: 0.68rem;
+  font-weight: 850;
 }
 
 .memory_date {
@@ -3462,6 +3644,13 @@ body[data-theme="dark"] .live_message_reference_preview {
   background: rgba(255, 248, 240, 0.08);
 }
 
+html[data-theme="dark"] #clear_live_message_context_button,
+body[data-theme="dark"] #clear_live_message_context_button {
+  border: 1px solid rgba(236, 203, 122, 0.4);
+  background: rgba(236, 203, 122, 0.16);
+  color: #fff7f2;
+}
+
 html[data-theme="dark"] .live_message_item,
 body[data-theme="dark"] .live_message_item {
   background: rgba(45, 41, 58, 0.9);
@@ -3587,8 +3776,10 @@ body[data-theme="dark"] .mention_result_snippet {
 html[data-theme="dark"] .message_presence_bar,
 body[data-theme="dark"] .message_presence_bar,
 html[data-theme="dark"] #cycle_day_detail_title,
+html[data-theme="dark"] #cycle_day_detail_state,
 html[data-theme="dark"] .cycle_day_detail_note,
 body[data-theme="dark"] #cycle_day_detail_title,
+body[data-theme="dark"] #cycle_day_detail_state,
 body[data-theme="dark"] .cycle_day_detail_note {
   color: var(--gold_bright2);
 }
@@ -4239,8 +4430,8 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
-    height: calc(100dvh - 536px);
-    min-height: 140px;
+    height: calc(100dvh - min(316px, 42dvh) - 214px);
+    min-height: 190px;
   }
 
   .live_message_item {
@@ -4268,23 +4459,141 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   .emoji_picker_panel {
-    height: min(360px, 52vh);
+    height: min(316px, 42dvh);
   }
 
   .live_message_input {
     min-height: 58px;
     max-height: 160px;
-    padding: 13px 112px 13px 16px;
+    padding: 17px 112px 13px 16px;
+  }
+
+  body.panel_fullscreen_open {
+    --panel_top_gap: 5px;
+    --panel_top_available: calc(100vw - (var(--panel_top_gap) * 7));
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) {
+    --mobile_top_gap: 5px;
+    --mobile_top_available: calc(100vw - (var(--mobile_top_gap) * 6));
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .app_nav_toggle_button,
+  body.is_logged_in:not(.panel_fullscreen_open) .language_toggle_button,
+  body.is_logged_in:not(.panel_fullscreen_open) #logout_button,
+  body.is_logged_in:not(.panel_fullscreen_open) #theme_toggle_button,
+  body.is_logged_in:not(.panel_fullscreen_open) .music_control_pill {
+    top: var(--mobile_top_gap);
+    right: auto;
+    height: 40px;
+    min-height: 40px;
+    border-radius: 999px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .app_nav_toggle_button {
+    left: var(--mobile_top_gap);
+    width: calc(var(--mobile_top_available) * 0.11);
+    min-width: 42px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .music_control_pill {
+    left: calc(var(--mobile_top_gap) * 2 + var(--mobile_top_available) * 0.11);
+    width: calc(var(--mobile_top_available) * 0.35);
+    min-width: 150px;
+    padding: 2px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) #logout_button {
+    left: calc(var(--mobile_top_gap) * 3 + var(--mobile_top_available) * 0.46);
+    width: calc(var(--mobile_top_available) * 0.16);
+    min-width: 50px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .language_toggle_button {
+    left: calc(var(--mobile_top_gap) * 4 + var(--mobile_top_available) * 0.62);
+    width: calc(var(--mobile_top_available) * 0.18);
+    min-width: 54px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) #theme_toggle_button {
+    left: calc(var(--mobile_top_gap) * 5 + var(--mobile_top_available) * 0.80);
+    width: calc(var(--mobile_top_available) * 0.20);
+    min-width: 54px;
+  }
+
+  body.panel_fullscreen_open #theme_toggle_button,
+  body.panel_fullscreen_open .app_nav_toggle_button,
+  body.panel_fullscreen_open .language_toggle_button,
+  body.panel_fullscreen_open #logout_button,
+  body.panel_fullscreen_open #messages_section.is_panel_expanded .panel_expand_button {
+    height: 34px;
+    min-height: 34px;
+    border-radius: 999px;
+  }
+
+  body.panel_fullscreen_open #theme_toggle_button {
+    left: calc(var(--panel_top_gap) * 2 + var(--panel_top_available) * 0.12);
+    right: auto;
+    width: calc(var(--panel_top_available) * 0.12);
+    min-width: 42px;
+  }
+
+  body.panel_fullscreen_open .app_nav_toggle_button {
+    left: var(--panel_top_gap);
+    right: auto;
+    width: calc(var(--panel_top_available) * 0.12);
+    min-width: 42px;
+  }
+
+  body.panel_fullscreen_open #messages_section.is_panel_expanded .panel_expand_button {
+    left: calc(var(--panel_top_gap) * 3 + var(--panel_top_available) * 0.24);
+    width: calc(var(--panel_top_available) * 0.10);
+    min-width: 38px;
+  }
+
+  body.panel_fullscreen_open .music_control_pill {
+    left: calc(var(--panel_top_gap) * 4 + var(--panel_top_available) * 0.34);
+    right: auto;
+    width: calc(var(--panel_top_available) * 0.30);
+    min-width: 150px;
+    height: 34px;
+    min-height: 34px;
+  }
+
+  body.panel_fullscreen_open .music_control_button {
+    width: 19px;
+    min-width: 19px;
+    height: 26px;
+    min-height: 26px;
+  }
+
+  body.panel_fullscreen_open .music_toggle_button {
+    width: 23px;
+    min-width: 23px;
+  }
+
+  body.panel_fullscreen_open .language_toggle_button {
+    left: calc(var(--panel_top_gap) * 5 + var(--panel_top_available) * 0.64);
+    right: auto;
+    width: calc(var(--panel_top_available) * 0.16);
+    min-width: 44px;
+  }
+
+  body.panel_fullscreen_open #logout_button {
+    left: calc(var(--panel_top_gap) * 6 + var(--panel_top_available) * 0.8);
+    right: auto;
+    width: calc(var(--panel_top_available) * 0.2);
+    min-width: 48px;
   }
 
   .app_nav_toggle_button {
-    width: 42px;
-    min-height: 48px;
-    border-radius: 14px;
+    width: 34px;
+    height: 30px;
+    border-radius: 5px;
   }
 
   .app_nav_toggle_label {
-    font-size: 0.4rem;
+    font-size: 0.6rem;
   }
 
   .app_nav_overlay {
@@ -4299,7 +4608,14 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   .live_message_tools {
-    left: -42px;
+    position: static;
+    left: auto;
+    top: auto;
+    transform: none;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: -2px;
   }
 
   .memory_lightbox {
@@ -4308,6 +4624,220 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
 
   .welcome_ceremony {
     padding: 48px 8px;
+  }
+}
+
+@media (max-width: 430px) {
+  .home_screen {
+    padding-top: 62px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) {
+    --mobile_top_gap: 4px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .app_nav_toggle_button,
+  body.is_logged_in:not(.panel_fullscreen_open) .language_toggle_button,
+  body.is_logged_in:not(.panel_fullscreen_open) #logout_button,
+  body.is_logged_in:not(.panel_fullscreen_open) #theme_toggle_button,
+  body.is_logged_in:not(.panel_fullscreen_open) .music_control_pill {
+    top: var(--mobile_top_gap);
+    height: 34px;
+    min-height: 34px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .app_nav_toggle_button {
+    left: 4px;
+    width: 32px;
+    min-width: 32px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .music_control_pill {
+    left: 40px;
+    width: max-content;
+    max-width: calc(100vw - 178px);
+    min-width: 0;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) #logout_button {
+    left: calc(100vw - 134px);
+    width: 42px;
+    min-width: 42px;
+    padding: 0 1px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .language_toggle_button {
+    left: calc(100vw - 88px);
+    width: 46px;
+    min-width: 46px;
+    padding: 2px 1px;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) #theme_toggle_button {
+    left: calc(100vw - 38px);
+    width: 34px;
+    min-width: 34px;
+    padding: 0;
+  }
+
+  body.panel_fullscreen_open {
+    --panel_top_gap: 4px;
+    --panel_icon_size: 32px;
+  }
+
+  body.panel_fullscreen_open .app_nav_toggle_button,
+  body.panel_fullscreen_open #theme_toggle_button,
+  body.panel_fullscreen_open #messages_section.is_panel_expanded .panel_expand_button,
+  body.panel_fullscreen_open .language_toggle_button,
+  body.panel_fullscreen_open #logout_button,
+  body.panel_fullscreen_open .music_control_pill {
+    top: var(--panel_top_gap);
+    height: 34px;
+    min-height: 34px;
+  }
+
+  body.panel_fullscreen_open .app_nav_toggle_button {
+    left: 4px;
+    width: var(--panel_icon_size);
+    min-width: var(--panel_icon_size);
+  }
+
+  body.panel_fullscreen_open #theme_toggle_button {
+    left: 40px;
+    width: var(--panel_icon_size);
+    min-width: var(--panel_icon_size);
+    padding: 0;
+  }
+
+  body.panel_fullscreen_open #messages_section.is_panel_expanded .panel_expand_button {
+    left: 76px;
+    width: var(--panel_icon_size);
+    min-width: var(--panel_icon_size);
+  }
+
+  body.panel_fullscreen_open .music_control_pill {
+    left: 112px;
+    width: max-content;
+    max-width: calc(100vw - 224px);
+    min-width: 0;
+    padding: 1px 2px;
+  }
+
+  body.panel_fullscreen_open .language_toggle_button {
+    left: calc(100vw - 104px);
+    width: 46px;
+    min-width: 46px;
+    padding: 2px;
+  }
+
+  body.panel_fullscreen_open #logout_button {
+    left: calc(100vw - 54px);
+    width: 52px;
+    min-width: 52px;
+    padding: 0 1px;
+  }
+
+  body.panel_fullscreen_open .music_control_button,
+  body.is_logged_in:not(.panel_fullscreen_open) .music_control_button {
+    width: 18px;
+    min-width: 18px;
+    height: 26px;
+    min-height: 26px;
+  }
+
+  body.panel_fullscreen_open .music_toggle_button,
+  body.is_logged_in:not(.panel_fullscreen_open) .music_toggle_button {
+    width: 20px;
+    min-width: 20px;
+  }
+
+  body.panel_fullscreen_open .app_nav_toggle_label,
+  body.panel_fullscreen_open #theme_toggle_button .theme_toggle_label,
+  body.panel_fullscreen_open .language_toggle_label,
+  body.is_logged_in:not(.panel_fullscreen_open) #theme_toggle_button .theme_toggle_label {
+    display: none;
+  }
+
+  body.is_logged_in:not(.panel_fullscreen_open) .app_nav_toggle_label,
+  body.is_logged_in:not(.panel_fullscreen_open) .language_toggle_label {
+    font-size: 0.42rem;
+    letter-spacing: 0.04em;
+  }
+
+  body.panel_fullscreen_open .flag_icon,
+  body.is_logged_in:not(.panel_fullscreen_open) .flag_icon {
+    height: 18px;
+    border-radius: 5px;
+  }
+
+  body.panel_fullscreen_open #theme_toggle_button .theme_toggle_icon,
+  body.is_logged_in:not(.panel_fullscreen_open) #theme_toggle_button .theme_toggle_icon {
+    font-size: 1rem;
+  }
+
+  body.panel_fullscreen_open .app_nav_toggle_button span,
+  body.is_logged_in:not(.panel_fullscreen_open) .app_nav_toggle_button span {
+    width: 16px;
+  }
+
+  body.panel_fullscreen_open .app_nav_toggle_label,
+  body.is_logged_in:not(.panel_fullscreen_open) .app_nav_toggle_label {
+    font-size: 0.38rem;
+    letter-spacing: 0.02em;
+  }
+
+  body.panel_fullscreen_open #logout_button,
+  body.is_logged_in:not(.panel_fullscreen_open) #logout_button {
+    font-size: 0.44rem;
+    line-height: 1;
+  }
+
+  body.panel_fullscreen_open #messages_section.is_panel_expanded {
+    padding-top: 46px;
+  }
+
+  body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_shell {
+    padding-bottom: calc(min(286px, 36dvh) + 12px);
+  }
+
+  body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
+    height: calc(100dvh - min(286px, 36dvh) - 214px);
+    min-height: 220px;
+  }
+
+  .emoji_picker_panel {
+    height: min(286px, 36dvh);
+    padding: 8px;
+    border-radius: 18px;
+    gap: 8px;
+  }
+
+  .emoji_picker_topbar {
+    gap: 6px;
+  }
+
+  .emoji_picker_tabs {
+    gap: 4px;
+  }
+
+  .emoji_picker_tab {
+    min-height: 28px;
+    padding: 0 10px;
+    font-size: 0.68rem;
+  }
+
+  .emoji_picker_body {
+    gap: 10px;
+  }
+
+  .emoji_picker_grid {
+    gap: 5px;
+  }
+
+  .emoji_picker_button {
+    min-height: 30px;
+    border-radius: 10px;
+    font-size: 1.06rem;
   }
 }
 

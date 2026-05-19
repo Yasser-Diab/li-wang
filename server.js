@@ -195,6 +195,109 @@ function broadcast_live_message_deleted(message_id) {
   }
 }
 
+function sanitize_message_segment(segment) {
+  if (!segment || typeof segment !== "object") {
+    return null;
+  }
+
+  const safe_segment = {
+    type: String(segment.type || "text")
+  };
+
+  [
+    "kind",
+    "reference_type",
+    "reference_id",
+    "title",
+    "subtitle",
+    "text"
+  ].forEach((key) => {
+    if (segment[key] !== undefined) {
+      safe_segment[key] = String(segment[key] || "");
+    }
+  });
+
+  return safe_segment;
+}
+
+function sanitize_live_message_attachment(attachment) {
+  if (!attachment || typeof attachment !== "object") {
+    return null;
+  }
+
+  const safe_attachment = {};
+
+  [
+    "kind",
+    "name",
+    "type",
+    "data_url",
+    "reference_type",
+    "reference_id",
+    "title",
+    "subtitle",
+    "text",
+    "preview_label",
+    "preview_body",
+    "user_key",
+    "last_seen_at",
+    "updated_at"
+  ].forEach((key) => {
+    if (attachment[key] !== undefined) {
+      safe_attachment[key] = String(attachment[key] || "");
+    }
+  });
+
+  if (attachment.size !== undefined) {
+    safe_attachment.size = Number(attachment.size || 0);
+  }
+
+  if (attachment.visible !== undefined) {
+    safe_attachment.visible = attachment.visible !== false;
+  }
+
+  if (attachment.active !== undefined) {
+    safe_attachment.active = Boolean(attachment.active);
+  }
+
+  if (Array.isArray(attachment.hidden_deleted_message_ids)) {
+    safe_attachment.hidden_deleted_message_ids = attachment.hidden_deleted_message_ids
+      .map((item) => String(item || ""))
+      .filter(Boolean);
+  }
+
+  if (Array.isArray(attachment.segments)) {
+    safe_attachment.segments = attachment.segments
+      .map(sanitize_message_segment)
+      .filter(Boolean);
+  }
+
+  return safe_attachment;
+}
+
+function sanitize_live_message_item(message_item, existing_message = null) {
+  return {
+    id: String(message_item.id),
+    room_slug: String(message_item.room_slug || existing_message?.room_slug || "svetlana-diab"),
+    sender_key: String(message_item.sender_key),
+    sender_name: String(message_item.sender_name || existing_message?.sender_name || ""),
+    text: String(message_item.text || ""),
+    created_at: String(
+      message_item.created_at ||
+        existing_message?.created_at ||
+        new Date().toISOString()
+    ),
+    edited_at: String(message_item.edited_at || existing_message?.edited_at || ""),
+    attachments: Array.isArray(message_item.attachments)
+      ? message_item.attachments
+          .map(sanitize_live_message_attachment)
+          .filter(Boolean)
+      : Array.isArray(existing_message?.attachments)
+        ? existing_message.attachments
+        : []
+  };
+}
+
 async function handle_api_request(request, response) {
   const live_message_item_match = request.url.match(/^\/api\/live_messages\/([^/?#]+)$/);
 
@@ -380,27 +483,26 @@ async function handle_api_request(request, response) {
       return true;
     }
 
-    const safe_message = {
-      id: String(message_item.id),
-      sender_key: String(message_item.sender_key),
-      sender_name: String(message_item.sender_name || ""),
-      text: String(message_item.text || ""),
-      created_at: String(message_item.created_at || new Date().toISOString()),
-      edited_at: String(message_item.edited_at || ""),
-      attachments: Array.isArray(message_item.attachments)
-        ? message_item.attachments.map((attachment) => ({
-            name: String(attachment.name || "file"),
-            type: String(attachment.type || "application/octet-stream"),
-            size: Number(attachment.size || 0),
-            data_url: String(attachment.data_url || "")
-          }))
-        : []
-    };
-
     const app_data = await read_app_data();
-    app_data.live_messages = [...app_data.live_messages, safe_message].slice(-500);
+    const existing_index = app_data.live_messages.findIndex(
+      (item) => item.id === String(message_item.id)
+    );
+    const safe_message = sanitize_live_message_item(
+      message_item,
+      existing_index >= 0 ? app_data.live_messages[existing_index] : null
+    );
+
+    if (existing_index >= 0) {
+      app_data.live_messages[existing_index] = safe_message;
+    } else {
+      app_data.live_messages = [...app_data.live_messages, safe_message].slice(-500);
+    }
     await write_app_data(app_data);
-    broadcast_live_message(safe_message);
+    if (existing_index >= 0) {
+      broadcast_live_message_updated(safe_message);
+    } else {
+      broadcast_live_message(safe_message);
+    }
 
     send_json(response, 200, {
       ok: true,
@@ -423,21 +525,15 @@ async function handle_api_request(request, response) {
       return true;
     }
 
-    const next_attachments = Array.isArray(body.attachments)
-      ? body.attachments.map((attachment) => ({
-          name: String(attachment.name || "file"),
-          type: String(attachment.type || "application/octet-stream"),
-          size: Number(attachment.size || 0),
-          data_url: String(attachment.data_url || "")
-        }))
-      : existing_message.attachments;
-
-    const updated_message = {
-      ...existing_message,
+    const updated_message = sanitize_live_message_item({
+      ...body,
+      id: existing_message.id,
+      room_slug: existing_message.room_slug,
+      sender_key: existing_message.sender_key,
+      sender_name: existing_message.sender_name,
       text: next_text,
-      attachments: next_attachments,
       edited_at: new Date().toISOString()
-    };
+    }, existing_message);
 
     app_data.live_messages = app_data.live_messages.map((message_item) =>
       message_item.id === message_id ? updated_message : message_item

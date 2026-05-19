@@ -24,6 +24,8 @@ const local_music_storage_prefix = "svetlana_diab_local_music";
 const cycle_storage_key = "svetlana_diab_cycle_data";
 const presence_visibility_storage_prefix = "svetlana_diab_presence_visible";
 const presence_seen_storage_prefix = "svetlana_diab_presence_seen";
+const presence_state_storage_prefix = "svetlana_diab_presence_state";
+const daily_content_history_storage_prefix = "svetlana_diab_daily_content_history";
 const biometric_last_password_key = "svetlana_diab_biometric_last_password_at";
 const background_sync_server_key = "svetlana-diab-happiness-space";
 const backup_storage_key = "svetlana_diab_backup_config";
@@ -58,6 +60,7 @@ const language_config = {
 const heart_emoji = "\u2764\uFE0F";
 const kiss_heart_emoji = "\u{1F618}\u2764\uFE0F";
 const deleted_live_message_marker = "__SVETA_APP_DELETED__";
+const presence_live_message_marker = "__SVETA_APP_PRESENCE__";
 const cycle_support_messages = [
   "Girl, is it your headache days already? Are you fine, or should I help you bury somebody today.",
   "If the world is being annoying, hand it to me. I can be dramatic for both of us.",
@@ -71,20 +74,18 @@ const cycle_support_messages = [
   "Tell me whether you need quiet, sweetness, ridiculous jokes, or a dramatic partner in crime. I can do all four.",
 ];
 const cycle_music_window_days = 2;
-const cycle_support_burst_emojis = ["😝", "😜", "😋", "😄", "😂", "🥳", "😇"];
+const cycle_support_burst_emojis = ["😜", "😋", "😄", "😂", "🥳", "😇"];
 const hero_firework_emojis = [
   "🧡",
   "🩷",
   "🥰",
   "😘",
   "💕",
-  "🤍",
   "💗",
   "💖",
-  "💞",
   "❤️",
 ];
-const night_tale_magic_emojis = ["✨", "🔮", "🪄", "💫"];
+const night_tale_magic_emojis = ["✨", "🪄", "💫"];
 const empty_sound_manifest = Object.freeze({
   background_music: [],
   welcome: [],
@@ -158,6 +159,11 @@ const fallback_daily_joy_messages = [
   "Today feels like one of those days when coffee tries its best, but one good laugh still does the real work.",
   "Tiny prank idea: send one dramatic message saying, 'We need to talk.' Then confess that the topic is how unfairly beautiful life feels when she is in it.",
   "A quiet emergency has been reported: one adult tried to stay serious all morning and then lost completely to one soft memory.",
+  "Today's official prank: act mysterious for exactly twelve seconds, then reveal the secret is that somebody deserves a forehead kiss and a snack.",
+  "Breaking news: productivity applied for a leadership role today, but laughter arrived better dressed and won the room immediately.",
+  "Tiny mission for today: make one ordinary moment suspiciously cute, then deny all responsibility with a very innocent face.",
+  "The day's dramatic report says everything is under control, which is how we know the comedy is about to begin.",
+  "If the day gets too serious, please remind it that we have a private department for nonsense, warmth, and badly timed giggles.",
 ];
 
 const fallback_daily_joy_messages_de = [
@@ -223,6 +229,11 @@ const fallback_night_messages_ar = [
 const fallback_night_tales = [
   "Once upon a time, in a street where every house slept early, there lived a tailor who could fix any torn coat but could never mend his own missing buttons. One night he met a pianist who played beautifully but always started one note too late. They became friends at once, because each one made the other laugh before either could feel embarrassed. From then on, the coats looked better, the songs began on time, and the whole street learned that being gently understood can feel like magic.",
   "Once upon a time, a bookseller had a sign that read, 'Closed for five minutes,' but everyone knew those five minutes often lasted an hour. One evening a woman walked in, pointed to the sign, and said, 'I came to see whether time behaves better indoors.' The bookseller laughed so hard he forgot to be shy, and they spent the rest of the night discussing the difference between lateness and style. By midnight, even the clock seemed less strict.",
+  "In a town beside a quiet river, a baker made moon-shaped bread for anyone who could not sleep. One night a traveler arrived too tired to explain her sadness, so the baker gave her the warmest piece and sat beside her without asking for a performance. By morning, nothing had been magically solved, but the world felt possible again, which was the kind of miracle both of them trusted.",
+  "There was once a tiny cinema that showed only memories people had almost forgotten. A man bought one ticket and expected a sad film, but the screen filled with a laugh he had once shared under rain. Someone beside him laughed at the same moment. They left together under the same umbrella, both pretending the weather had arranged it by accident.",
+  "Far above the city, a tired little star kept blinking at the wrong rhythm. The moon sent a cloud to ask what was wrong, and the star admitted it was lonely from trying to shine perfectly. The cloud stayed nearby all night, making silly shapes until the star forgot to be embarrassed. After that, the sky looked softer whenever both of them were there.",
+  "A florist once kept a secret shelf for flowers that bloomed in inconvenient colors. Nobody bought them until a woman came in and said, 'Those are exactly my kind of impossible.' The florist smiled, wrapped them carefully, and added one extra stem for courage. The flowers lasted longer than expected, mostly because they had finally been understood.",
+  "In a sleepy train station, the last train refused to leave because its conductor had misplaced his confidence. A passenger offered him half a chocolate bar and said, 'Start slowly. The tracks already know the way.' The train moved, the conductor laughed, and every window carried a little more hope into the dark.",
 ];
 
 const fallback_night_tales_de = [
@@ -300,7 +311,7 @@ const translations = {
     live_messages_eyebrow: "just us, in real time",
     live_messages_heading: "Live Messages",
     live_messages_empty: "Your private chat will appear here.",
-    cycle_eyebrow: "for her comfort",
+    cycle_eyebrow: "For Your Comfort My Angel",
     cycle_heading: "Cycle Calendar",
     cycle_settings: "Adjust",
     cycle_start_today: "Starting Day",
@@ -983,6 +994,10 @@ Object.assign(translations.en, {
   music_library: "Your music",
   music_library_empty: "No personal tracks yet.",
   music_delete_track: "Remove track",
+  music_default_tracks: "Default music",
+  music_personal_tracks: "Your uploads",
+  music_play_track: "Play track",
+  music_pause_track: "Pause track",
   music_added: (count) => `${count} track${count === 1 ? "" : "s"} added.`,
   music_play: "Play music",
   music_pause: "Pause music",
@@ -1005,6 +1020,9 @@ Object.assign(translations.en, {
   presence_hidden: "Last seen hidden",
   presence_show_setting: "Show online status",
   presence_hide_setting: "Hide online status",
+  presence_seen_toggle: "Seen",
+  presence_hidden_toggle: "Hidden",
+  presence_waiting: "Status will appear soon",
   show_password: "Show password",
   hide_password: "Hide password",
   biometric_login: "Use fingerprint",
@@ -1029,6 +1047,8 @@ Object.assign(translations.en, {
   download_failed: "The image could not be saved from this device.",
   cycle_set_start: "Period start",
   cycle_set_end: "Period end",
+  add_your_thought: "Add your thought",
+  edit_your_thought: "Edit your thought",
   birthday_write_wish: "Write birthday wish",
 });
 
@@ -1044,6 +1064,10 @@ Object.assign(translations.de, {
   music_library: "Deine Musik",
   music_library_empty: "Noch keine persönlichen Titel.",
   music_delete_track: "Titel entfernen",
+  music_default_tracks: "Standardmusik",
+  music_personal_tracks: "Deine Uploads",
+  music_play_track: "Titel abspielen",
+  music_pause_track: "Titel pausieren",
   music_added: (count) => `${count} Titel hinzugefügt.`,
   music_play: "Musik abspielen",
   music_pause: "Musik pausieren",
@@ -1066,6 +1090,9 @@ Object.assign(translations.de, {
   presence_hidden: "Zuletzt gesehen verborgen",
   presence_show_setting: "Online-Status zeigen",
   presence_hide_setting: "Online-Status verbergen",
+  presence_seen_toggle: "Seen",
+  presence_hidden_toggle: "Hidden",
+  presence_waiting: "Status erscheint gleich",
   show_password: "Passwort zeigen",
   hide_password: "Passwort verbergen",
   biometric_login: "Fingerabdruck verwenden",
@@ -1092,6 +1119,8 @@ Object.assign(translations.de, {
   download_failed: "Das Bild konnte auf diesem Gerät nicht gespeichert werden.",
   cycle_set_start: "Periodenstart",
   cycle_set_end: "Periodenende",
+  add_your_thought: "Deinen Gedanken hinzufügen",
+  edit_your_thought: "Deinen Gedanken bearbeiten",
   birthday_write_wish: "Geburtstagsgruß schreiben",
 });
 
@@ -1107,6 +1136,10 @@ Object.assign(translations.ar, {
   music_library: "موسيقاي",
   music_library_empty: "لا توجد مقاطع شخصية بعد.",
   music_delete_track: "حذف المقطع",
+  music_default_tracks: "الموسيقى الأساسية",
+  music_personal_tracks: "مقاطعك",
+  music_play_track: "تشغيل المقطع",
+  music_pause_track: "إيقاف المقطع",
   music_added: (count) => `تمت إضافة ${count} مقطع.`,
   music_play: "تشغيل الموسيقى",
   music_pause: "إيقاف الموسيقى مؤقتاً",
@@ -1129,6 +1162,9 @@ Object.assign(translations.ar, {
   presence_hidden: "آخر ظهور مخفي",
   presence_show_setting: "إظهار الحالة",
   presence_hide_setting: "إخفاء الحالة",
+  presence_seen_toggle: "Seen",
+  presence_hidden_toggle: "Hidden",
+  presence_waiting: "ستظهر الحالة قريباً",
   show_password: "إظهار كلمة السر",
   hide_password: "إخفاء كلمة السر",
   biometric_login: "استخدام البصمة",
@@ -1153,6 +1189,8 @@ Object.assign(translations.ar, {
   download_failed: "تعذر حفظ الصورة من هذا الجهاز.",
   cycle_set_start: "بداية الدورة",
   cycle_set_end: "نهاية الدورة",
+  add_your_thought: "أضف فكرتك",
+  edit_your_thought: "عدّل فكرتك",
   birthday_write_wish: "اكتب تهنئة عيد ميلاد",
 });
 
@@ -1351,7 +1389,11 @@ let message_search_query = "";
 let message_search_matches = [];
 let message_search_active_index = -1;
 let presence_interval_id = null;
+let presence_sync_timeout_id = null;
+let presence_state_by_user = {};
 let current_user_presence_visible = true;
+let biometric_auto_prompt_attempted = false;
+let emoji_swipe_state = null;
 let time_sensitive_interval_id = null;
 let live_message_stream = null;
 let live_message_poll_id = null;
@@ -1364,6 +1406,7 @@ let supabase_client = null;
 let supabase_auth_subscription = null;
 let current_room_slug = supabase_room_slug_default;
 let current_auth_user_id = "";
+let current_auth_access_token = "";
 let password_recovery_mode_active = false;
 let last_exit_sound_time = 0;
 let active_overlay_name = "";
@@ -1583,21 +1626,32 @@ let current_cycle_dialog_guard = {
 };
 let current_app_notice_request = null;
 const flow_animation_state = {};
-const quick_emoji_source = `
-Smileys & Emotion
-😀 😃 😄 😁 😆 😅 😂 🤣 🥲 🥹 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 😎 🤩 🥳 😏 😒 😔 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😤 😠 😡 🤯 😳 🥵 🥶 😱 😨 😰 🤗 🤭 🤫 😶 😐 😑 🙄 😴 🤤 😵 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤠 😈 🤡 💩 👻 💀 🤖 ❤️ 💛 💖 💘 💝 ✨ 🌟 💫
+const quick_emoji_source = `Smileys & Emotion
+😀 😃 😄 😁 😆 😅 😂 🤣 🥲 🥹 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 😎 🤓 🧐 🤩 🥳 🙂‍↔️ 🙂‍↕️ 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😮‍💨 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🫣 🤗 🫡 🤔 🫢 🤭 🤫 🤥 😶 😶‍🌫️ 😐 😑 😬 🫨 🫠 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 😵‍💫 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 👺 🤡 💩 👻 💀 ☠️ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾 ❤️ 🧡 💛 💚 💙 🩵 💜 🖤 🩶 🤍 🤎 💔 ❤️‍🔥 ❤️‍🩹 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟
 
 People & Body
-👋 🤚 🖐️ ✋ 🖖 👌 🤌 🤏 ✌️ 🤞 🫰 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 🫶 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦾 🦵 🦶 👂 👀 👁️ 👅 👄 🫦 💋
+👋 🤚 🖐️ ✋ 🖖 🫱 🫲 🫳 🫴 🫷 🫸 👌 🤌 🤏 ✌️ 🤞 🫰 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 🫵 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 🫶 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦾 🦵 🦿 🦶 👂 🦻 👃 🧠 🫀 🫁 🦷 🦴 👀 👁️ 👅 👄 🫦 💋 🩸 👶 🧒 👦 👧 🧑 👱 👨 🧔 🧔‍♂️ 🧔‍♀️ 👨‍🦰 👨‍🦱 👨‍🦳 👨‍🦲 👩 👩‍🦰 🧑‍🦰 👩‍🦱 🧑‍🦱 👩‍🦳 🧑‍🦳 👩‍🦲 🧑‍🦲 👱‍♀️ 👱‍♂️ 🧓 👴 👵 🙍 🙍‍♂️ 🙍‍♀️ 🙎 🙎‍♂️ 🙎‍♀️ 🙅 🙅‍♂️ 🙅‍♀️ 🙆 🙆‍♂️ 🙆‍♀️ 💁 💁‍♂️ 💁‍♀️ 🙋 🙋‍♂️ 🙋‍♀️ 🧏 🧏‍♂️ 🧏‍♀️ 🙇 🙇‍♂️ 🙇‍♀️ 🤦 🤦‍♂️ 🤦‍♀️ 🤷 🤷‍♂️ 🤷‍♀️ 🧑‍⚕️ 👨‍⚕️ 👩‍⚕️ 🧑‍🎓 👨‍🎓 👩‍🎓 🧑‍🏫 👨‍🏫 👩‍🏫 🧑‍⚖️ 👨‍⚖️ 👩‍⚖️ 🧑‍🌾 👨‍🌾 👩‍🌾 🧑‍🍳 👨‍🍳 👩‍🍳 🧑‍🔧 👨‍🔧 👩‍🔧 🧑‍🏭 👨‍🏭 👩‍🏭 🧑‍💼 👨‍💼 👩‍💼 🧑‍🔬 👨‍🔬 👩‍🔬 🧑‍💻 👨‍💻 👩‍💻 🧑‍🎤 👨‍🎤 👩‍🎤 🧑‍🎨 👨‍🎨 👩‍🎨 🧑‍✈️ 👨‍✈️ 👩‍✈️ 🧑‍🚀 👨‍🚀 👩‍🚀 🧑‍🚒 👨‍🚒 👩‍🚒 👮 👮‍♂️ 👮‍♀️ 🕵️ 🕵️‍♂️ 🕵️‍♀️ 💂 💂‍♂️ 💂‍♀️ 🥷 👷 👷‍♂️ 👷‍♀️ 🫅 🤴 👸 👳 👳‍♂️ 👳‍♀️ 👲 🧕 🤵 🤵‍♂️ 🤵‍♀️ 👰 👰‍♂️ 👰‍♀️ 🤰 🫃 🫄 🤱 👩‍🍼 👨‍🍼 🧑‍🍼 👼 🎅 🤶 🧑‍🎄 🦸 🦸‍♂️ 🦸‍♀️ 🦹 🦹‍♂️ 🦹‍♀️ 🧙 🧙‍♂️ 🧙‍♀️ 🧚 🧚‍♂️ 🧚‍♀️ 🧛 🧛‍♂️ 🧛‍♀️ 🧜 🧜‍♂️ 🧜‍♀️ 🧝 🧝‍♂️ 🧝‍♀️ 🧞 🧞‍♂️ 🧞‍♀️ 🧟 🧟‍♂️ 🧟‍♀️ 🧌 💆 💆‍♂️ 💆‍♀️ 💇 💇‍♂️ 💇‍♀️ 🚶 🚶‍♂️ 🚶‍♀️ 🧍 🧍‍♂️ 🧍‍♀️ 🧎 🧎‍♂️ 🧎‍♀️ 🧑‍🦯 👨‍🦯 👩‍🦯 🧑‍🦼 👨‍🦼 👩‍🦼 🧑‍🦽 👨‍🦽 👩‍🦽 🏃 🏃‍♂️ 🏃‍♀️ 💃 🕺 🕴️ 👯 👯‍♂️ 👯‍♀️ 🧖 🧖‍♂️ 🧖‍♀️ 🧗 🧗‍♂️ 🧗‍♀️
 
 Animals & Nature
-🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐧 🐦 🐣 🦄 🐝 🦋 🐢 🐙 🐬 🐳 🦋 🐚 🌱 🌿 ☘️ 🍀 🌷 🌹 🌸 🌼 🌻 🌞 🌝 🌙 🌍 🌈 ☀️ ⛅ 🌧️ ⛈️ ❄️ ☔ 🌊 🔥
+🐵 🐒 🦍 🦧 🐶 🐕 🦮 🐕‍🦺 🐩 🐺 🦊 🦝 🐱 🐈 🐈‍⬛ 🦁 🐯 🐅 🐆 🐴 🫎 🫏 🐎 🦄 🦓 🦌 🦬 🐮 🐂 🐃 🐄 🐷 🐖 🐗 🐽 🐏 🐑 🐐 🐪 🐫 🦙 🦒 🐘 🦣 🦏 🦛 🐭 🐁 🐀 🐹 🐰 🐇 🐿️ 🦫 🦔 🦇 🐻 🐻‍❄️ 🐨 🐼 🦥 🦦 🦨 🦘 🦡 🐾 🦃 🐔 🐓 🐣 🐤 🐥 🐦 🐧 🕊️ 🦅 🦆 🦢 🦉 🦤 🪶 🦩 🦚 🦜 🪽 🐦‍⬛ 🪿 🐸 🐊 🐢 🦎 🐍 🐲 🐉 🦕 🦖 🐳 🐋 🐬 🦭 🐟 🐠 🐡 🦈 🐙 🐚 🪸 🪼 🐌 🦋 🐛 🐜 🐝 🪲 🐞 🦗 🪳 🕷️ 🕸️ 🦂 🦟 🪰 🪱 🦠 💐 🌸 💮 🪷 🏵️ 🌹 🥀 🌺 🌻 🌼 🌷 🪻 🌱 🪴 🌲 🌳 🌴 🌵 🌾 🌿 ☘️ 🍀 🍁 🍂 🍃 🪹 🪺 🍄 🪨 🪵 🌰 🦀 🦞 🦐 🦑
 
 Food & Drink
-🍏 🍎 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍒 🍑 🍍 🥥 🥝 🍅 🥑 🥦 🌽 🥕 🥐 🍞 🧀 🍳 🥞 🥓 🍗 🍕 🌮 🍝 🍜 🍣 🍤 🍚 🍡 🍦 🎂 🍫 🍿 ☕ 🍵 🧃 🥤 🧋 🍷 🥂 🍹 🍾
+🍇 🍈 🍉 🍊 🍋 🍋‍🟩 🍌 🍍 🥭 🍎 🍏 🍐 🍑 🍒 🍓 🫐 🥝 🍅 🫒 🥥 🥑 🍆 🥔 🥕 🌽 🌶️ 🫑 🥒 🥬 🥦 🧄 🧅 🥜 🫘 🌰 🫚 🫛 🍄‍🟫 🍞 🥐 🥖 🫓 🥨 🥯 🥞 🧇 🧀 🍖 🍗 🥩 🥓 🍔 🍟 🍕 🌭 🥪 🌮 🌯 🫔 🥙 🧆 🥚 🍳 🥘 🍲 🫕 🥣 🥗 🍿 🧈 🧂 🥫 🍱 🍘 🍙 🍚 🍛 🍜 🍝 🍠 🍢 🍣 🍤 🍥 🥮 🍡 🥟 🥠 🥡 🦪 🍦 🍧 🍨 🍩 🍪 🎂 🍰 🧁 🥧 🍫 🍬 🍭 🍮 🍯 🍼 🥛 ☕ 🫖 🍵 🍶 🍾 🍷 🍸 🍹 🍺 🍻 🥂 🥃 🫗 🥤 🧋 🧃 🧉 🧊 🥢 🍽️ 🍴 🥄 🔪 🫙 🏺
 
-Objects & Symbols
-⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 🖱️ 📷 📸 🎥 📞 ☎️ 📺 📻 ⏰ ⌛ 🔋 🔌 💡 🕯️ 💸 💰 💳 💎 🔧 🔨 ⚙️ 🧲 🔮 🧿 🧸 🎁 🎈 🎀 🎉 ✉️ 📩 📦 🏷️ 📅 📌 📎 ✂️ ✏️ 🔍 🔐 🔒 🔓 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 ☮️ ✅ ❌ ⭕ ⚠️ ♻️ 🔁 🔂 ▶️ ⏸️ ⏹️ ⏺️ ⏩ ⏪ ⬅️ ➡️ ⬆️ ⬇️ ↩️ ↪️ 🎵 🎶
+Travel & Places
+🌍 🌎 🌏 🌐 🗺️ 🗾 🧭 🏔️ ⛰️ 🌋 🗻 🏕️ 🏖️ 🏜️ 🏝️ 🏞️ 🏟️ 🏛️ 🏗️ 🧱 🪨 🪵 🛖 🏘️ 🏚️ 🏠 🏡 🏢 🏣 🏤 🏥 🏦 🏨 🏩 🏪 🏫 🏬 🏭 🏯 🏰 💒 🗼 🗽 ⛪ 🕌 🛕 🕍 ⛩️ 🕋 ⛲ ⛺ 🌁 🌃 🏙️ 🌄 🌅 🌆 🌇 🌉 ♨️ 🎠 🛝 🎡 🎢 💈 🎪 🚂 🚃 🚄 🚅 🚆 🚇 🚈 🚉 🚊 🚝 🚞 🚋 🚌 🚍 🚎 🚐 🚑 🚒 🚓 🚔 🚕 🚖 🚗 🚘 🚙 🛻 🚚 🚛 🚜 🏎️ 🏍️ 🛵 🦽 🦼 🛺 🚲 🛴 🛹 🛼 🚏 🛣️ 🛤️ 🛢️ ⛽ 🛞 🚨 🚥 🚦 🛑 🚧 ⚓ 🛟 ⛵ 🛶 🚤 🛳️ ⛴️ 🛥️ 🚢 ✈️ 🛩️ 🛫 🛬 🪂 💺 🚁 🚟 🚠 🚡 🛰️ 🚀 🛸 🛎️ 🧳 ⌛ ⏳ ⌚ ⏰ ⏱️ ⏲️ 🕰️ 🕛 🕧 🕐 🕜 🕑 🕝 🕒 🕞 🕓 🕟 🕔 🕠 🕕 🕡 🕖 🕢 🕗 🕣 🕘 🕤 🕙 🕥 🕚 🕦 🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘 🌙 🌚 🌛 🌜 🌡️ ☀️ 🌝 🌞 🪐 ⭐ 🌟 🌠 🌌 ☁️ ⛅ ⛈️ 🌤️ 🌥️ 🌦️ 🌧️ 🌨️ 🌩️ 🌪️ 🌫️ 🌬️ 🌀 🌈 🌂 ☂️ ☔ ⛱️ ⚡ ❄️ ☃️ ⛄ ☄️ 🔥 💧 🌊
+
+Activities
+🎃 🎄 🎆 🎇 🧨 ✨ 🎈 🎉 🎊 🎋 🎍 🎎 🎏 🎐 🎑 🧧 🎀 🎁 🎗️ 🎟️ 🎫 🎖️ 🏆 🏅 🥇 🥈 🥉 ⚽ ⚾ 🥎 🏀 🏐 🏈 🏉 🎾 🥏 🎳 🏏 🏑 🏒 🥍 🏓 🏸 🥊 🥋 🥅 ⛳ ⛸️ 🎣 🤿 🎽 🎿 🛷 🥌 🎯 🪀 🪁 🔫 🎱 🔮 🪄 🎮 🕹️ 🎰 🎲 🧩 🧸 🪅 🪩 🪆 ♠️ ♥️ ♦️ ♣️ ♟️ 🃏 🀄 🎴 🎭 🖼️ 🎨 🧵 🪡 🧶 🪢
+
+Objects
+👓 🕶️ 🥽 🥼 🦺 👔 👕 👖 🧣 🧤 🧥 🧦 👗 👘 🥻 🩱 🩲 🩳 👙 👚 🪭 👛 👜 👝 🛍️ 🎒 🩴 👞 👟 🥾 🥿 👠 👡 🩰 👢 🪮 👑 👒 🎩 🎓 🧢 🪖 ⛑️ 📿 💄 💍 💎 🔇 🔈 🔉 🔊 📢 📣 📯 🔔 🔕 🎼 🎵 🎶 🎙️ 🎚️ 🎛️ 🎤 🎧 📻 🎷 🪗 🎸 🎹 🎺 🎻 🪕 🥁 🪘 🪇 🪈 📱 📲 ☎️ 📞 📟 📠 🔋 🪫 🔌 💻 🖥️ 🖨️ ⌨️ 🖱️ 🖲️ 💽 💾 💿 📀 🧮 🎥 🎞️ 📽️ 🎬 📺 📷 📸 📹 📼 🔍 🔎 🕯️ 💡 🔦 🏮 🪔 📔 📕 📖 📗 📘 📙 📚 📓 📒 📃 📜 📄 📰 🗞️ 📑 🔖 🏷️ 💰 🪙 💴 💵 💶 💷 💸 💳 🧾 💹 ✉️ 📧 📨 📩 📤 📥 📦 📫 📪 📬 📭 📮 🗳️ ✏️ ✒️ 🖋️ 🖊️ 🖌️ 🖍️ 📝 💼 📁 📂 🗂️ 📅 📆 🗒️ 🗓️ 📇 📈 📉 📊 📋 📌 📍 📎 🖇️ 📏 📐 ✂️ 🗃️ 🗄️ 🗑️ 🔒 🔓 🔏 🔐 🔑 🗝️ 🔨 🪓 ⛏️ ⚒️ 🛠️ 🗡️ ⚔️ 💣 🪃 🏹 🛡️ 🪚 🔧 🪛 🔩 ⚙️ 🗜️ ⚖️ 🦯 🔗 ⛓️‍💥 ⛓️ 🪝 🧰 🧲 🪜 ⚗️ 🧪 🧫 🧬 🔬 🔭 📡 💉 🩸 💊 🩹 🩼 🩺 🩻 🚪 🛗 🪞 🪟 🛏️ 🛋️ 🪑 🚽 🪠 🚿 🛁 🪤 🪒 🧴 🧷 🧹 🧺 🧻 🪣 🧼 🫧 🪥 🧽 🧯 🛒 🚬 ⚰️ 🪦 ⚱️ 🧿 🪬 🗿 🪧 🪪
+
+Symbols
+🏧 🚮 🚰 ♿ 🚹 🚺 🚻 🚼 🚾 🛂 🛃 🛄 🛅 ⚠️ 🚸 ⛔ 🚫 🚳 🚭 🚯 🚱 🚷 📵 🔞 ☢️ ☣️ ⬆️ ↗️ ➡️ ↘️ ⬇️ ↙️ ⬅️ ↖️ ↕️ ↔️ ↩️ ↪️ ⤴️ ⤵️ 🔃 🔄 🔙 🔚 🔛 🔜 🔝 🛐 ⚛️ 🕉️ ✡️ ☸️ ☯️ ✝️ ☦️ ☪️ ☮️ 🕎 🔯 🪯 ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ ⛎ 🔀 🔁 🔂 ▶️ ⏩ ⏭️ ⏯️ ◀️ ⏪ ⏮️ 🔼 ⏫ 🔽 ⏬ ⏸️ ⏹️ ⏺️ ⏏️ 🎦 🔅 🔆 📶 🛜 📳 📴 ♀️ ♂️ ⚧️ ✖️ ➕ ➖ ➗ 🟰 ♾️ ‼️ ⁉️ ❓ ❔ ❕ ❗ 〰️ 💱 💲 ⚕️ ♻️ ⚜️ 🔱 📛 🔰 ⭕ ✅ ☑️ ✔️ ❌ ❎ ➰ ➿ 〽️ ✳️ ✴️ ❇️ ©️ ®️ ™️ #️⃣ *️⃣ 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 🔠 🔡 🔢 🔣 🔤 🅰️ 🆎 🅱️ 🆑 🆒 🆓 ℹ️ 🆔 Ⓜ️ 🆕 🆖 🅾️ 🆗 🅿️ 🆘 🆙 🆚 🈁 🈂️ 🈷️ 🈶 🈯 🉐 🈹 🈚 🈲 🉑 🈸 🈴 🈳 ㊗️ ㊙️ 🈺 🈵 🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ ⚪ 🟥 🟧 🟨 🟩 🟦 🟪 🟫 ⬛ ⬜ ◼️ ◻️ ◾ ◽ ▪️ ▫️ 🔶 🔷 🔸 🔹 🔺 🔻 💠 🔘 🔳 🔲
+
+Flags
+🏁 🚩 🎌 🏴 🏳️ 🏳️‍🌈 🏳️‍⚧️ 🏴‍☠️ AC 🇦🇩 🇦🇪 🇦🇫 🇦🇬 🇦🇮 🇦🇱 🇦🇲 🇦🇴 🇦🇶 🇦🇷 🇦🇸 🇦🇹 🇦🇺 🇦🇼 🇦🇽 🇦🇿 🇧🇦 🇧🇧 🇧🇩 🇧🇪 🇧🇫 🇧🇬 🇧🇭 🇧🇮 🇧🇯 🇧🇱 🇧🇲 🇧🇳 🇧🇴 🇧🇶 🇧🇷 🇧🇸 🇧🇹 🇧🇻 🇧🇼 🇧🇾 🇧🇿 🇨🇦 🇨🇨 🇨🇩 🇨🇫 🇨🇬 🇨🇭 🇨🇮 🇨🇰 🇨🇱 🇨🇲 🇨🇳 🇨🇴 🇨🇵 🇨🇷 🇨🇺 🔜 🔝 ⛐ ⚛️ ⛩️ ⛲ ⛺ ⛱️ ⚡ ❄️ ☃️ ⛄ ☄️ 🔥 💧 💨
 `;
 const emoji_categories = parse_emoji_categories(quick_emoji_source);
 const quick_emojis = emoji_categories.flatMap((category) => category.emojis);
@@ -1627,6 +1681,7 @@ async function initialize_application() {
   if (!restored_session) {
     await load_saved_content();
     rebuild_cycle_runtime_state();
+    void maybe_auto_prompt_biometric_login();
   }
 
   update_home_counters();
@@ -2317,7 +2372,7 @@ function handle_global_popstate() {
   }
 
   if (active_overlay_name === "emoji_picker") {
-    hide_emoji_picker(true);
+    hide_emoji_picker(true, true);
     return;
   }
 
@@ -2344,8 +2399,9 @@ function initialize_supabase_client() {
   current_room_slug = supabase_config.room_slug || supabase_room_slug_default;
   supabase_client = create_client(normalized_url, supabase_config.anon_key, {
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: true,
     },
   });
 
@@ -2403,6 +2459,7 @@ function bind_supabase_auth_listener() {
       window.setTimeout(() => {
         password_recovery_mode_active = true;
         current_auth_user_id = String(session?.user?.id || "");
+        current_auth_access_token = String(session?.access_token || "");
         open_password_recovery_dialog();
       }, 0);
     },
@@ -2481,6 +2538,11 @@ async function restore_existing_session() {
     try {
       const { data, error } = await supabase_client.auth.getSession();
 
+      if (error) {
+        await supabase_client.auth.signOut({ scope: "local" }).catch(() => {});
+        return false;
+      }
+
       if (!error && data.session?.user) {
         const restored_profile = get_profile_from_supabase_user(
           data.session.user,
@@ -2488,6 +2550,7 @@ async function restore_existing_session() {
 
         if (restored_profile) {
           current_auth_user_id = data.session.user.id;
+          current_auth_access_token = String(data.session.access_token || "");
           current_user_profile = restored_profile;
           load_local_music_tracks();
           load_hidden_deleted_messages();
@@ -2515,32 +2578,31 @@ async function restore_existing_session() {
     }
   }
 
-  if (!is_supabase_enabled()) {
-    try {
-      const saved_profile = JSON.parse(
-        sessionStorage.getItem("logged_in_user") || "null",
-      );
+  try {
+    const saved_profile = JSON.parse(
+      sessionStorage.getItem("logged_in_user") || "null",
+    );
 
-      if (saved_profile && saved_profile.user_key) {
-        current_user_profile = saved_profile;
-        load_local_music_tracks();
-        load_hidden_deleted_messages();
-        await load_saved_content();
-        update_home_for_user(saved_profile);
-        sync_authenticated_chrome();
-        start_presence_updates();
-        dom_references.login_screen.classList.add("hidden");
-        dom_references.welcome_overlay.classList.add("hidden");
-        dom_references.home_screen.classList.remove("hidden");
-        sync_cycle_audio();
-        await configure_background_message_sync();
-        await schedule_cycle_notifications();
-        await initialize_live_messages_for_session();
-        return true;
-      }
-    } catch (error) {
-      // No local session to restore.
+    if (saved_profile && saved_profile.user_key) {
+      current_user_profile = saved_profile;
+      current_auth_user_id = current_auth_user_id || "";
+      load_local_music_tracks();
+      load_hidden_deleted_messages();
+      await load_saved_content();
+      update_home_for_user(saved_profile);
+      sync_authenticated_chrome();
+      start_presence_updates();
+      dom_references.login_screen.classList.add("hidden");
+      dom_references.welcome_overlay.classList.add("hidden");
+      dom_references.home_screen.classList.remove("hidden");
+      sync_cycle_audio();
+      await configure_background_message_sync();
+      await schedule_cycle_notifications();
+      await initialize_live_messages_for_session();
+      return true;
     }
+  } catch (error) {
+    // No local session to restore.
   }
 
   return false;
@@ -2570,9 +2632,11 @@ async function get_supabase_access_token() {
 
   try {
     const { data } = await supabase_client.auth.getSession();
-    return String(data?.session?.access_token || "");
+    const session_token = String(data?.session?.access_token || "");
+    current_auth_access_token = session_token || current_auth_access_token;
+    return current_auth_access_token;
   } catch (error) {
-    return "";
+    return current_auth_access_token;
   }
 }
 
@@ -2585,7 +2649,11 @@ async function configure_background_message_sync(enabled = true) {
 
   const supabase_config = window.supabase_public_config || {};
   const latest_message = [...current_live_messages]
-    .filter((message_item) => !should_hide_deleted_message(message_item))
+    .filter(
+      (message_item) =>
+        !should_hide_deleted_message(message_item) &&
+        !is_system_live_message(message_item),
+    )
     .sort(
       (left_item, right_item) =>
         new Date(right_item.created_at) - new Date(left_item.created_at),
@@ -3327,9 +3395,25 @@ function bind_event_handlers() {
   );
   document.addEventListener("click", handle_document_click);
   document.addEventListener("keydown", handle_global_keydown, true);
+  document.addEventListener("touchstart", handle_emoji_edge_swipe_start, {
+    passive: true,
+  });
+  document.addEventListener("touchend", handle_emoji_edge_swipe_end, {
+    passive: true,
+  });
   document.addEventListener("visibilitychange", handle_app_visibility_change);
-  window.addEventListener("beforeunload", close_live_messages_stream);
-  window.addEventListener("pagehide", pause_background_music_for_lifecycle);
+  window.addEventListener("focus", () => {
+    mark_current_user_seen(is_app_active_for_presence(), true);
+    update_presence_status_text();
+  });
+  window.addEventListener("beforeunload", () => {
+    mark_current_user_seen(false, true);
+    close_live_messages_stream();
+  });
+  window.addEventListener("pagehide", () => {
+    mark_current_user_seen(false, true);
+    pause_background_music_for_lifecycle();
+  });
   window.addEventListener("pageshow", resume_background_music_from_lifecycle);
   window.addEventListener("popstate", handle_global_popstate);
   window.addEventListener("svetaNativeOpen", handle_native_open_request);
@@ -3454,6 +3538,7 @@ async function update_biometric_login_button() {
   }
 
   button.classList.toggle("hidden", !should_show);
+  return should_show;
 }
 
 async function save_biometric_credentials(username, password) {
@@ -3484,7 +3569,7 @@ async function save_biometric_credentials(username, password) {
   }
 }
 
-async function handle_biometric_login() {
+async function handle_biometric_login({ is_auto_prompt = false } = {}) {
   const biometric_plugin = get_biometric_plugin();
 
   if (!biometric_plugin) {
@@ -3526,13 +3611,34 @@ async function handle_biometric_login() {
 
     await finish_successful_login(user_profile);
   } catch (error) {
-    log_app_error("biometric_login_failed", error);
-    set_status_text(
-      dom_references.login_error_message,
-      translate("login_error"),
-      "error",
-    );
+    if (!is_auto_prompt) {
+      log_app_error("biometric_login_failed", error);
+      set_status_text(
+        dom_references.login_error_message,
+        translate("login_error"),
+        "error",
+      );
+    }
   }
+}
+
+async function maybe_auto_prompt_biometric_login() {
+  if (biometric_auto_prompt_attempted || current_user_profile) {
+    return;
+  }
+
+  biometric_auto_prompt_attempted = true;
+  const should_show = await update_biometric_login_button();
+
+  if (!should_show) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    if (!current_user_profile) {
+      void handle_biometric_login({ is_auto_prompt: true });
+    }
+  }, 350);
 }
 
 function update_login_email_hint(custom_message = "", status_type = "") {
@@ -3626,7 +3732,13 @@ function build_emoji_picker() {
   delete_button.type = "button";
   delete_button.textContent = "⌫";
   delete_button.setAttribute("aria-label", "Delete");
-  delete_button.addEventListener("click", delete_last_composer_character);
+  delete_button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    delete_last_composer_character();
+  });
+  delete_button.addEventListener("click", (event) => {
+    event.preventDefault();
+  });
   topbar.append(tabs, delete_button);
   const body = document.createElement("div");
   body.className = "emoji_picker_body";
@@ -3694,17 +3806,93 @@ function toggle_emoji_picker(event) {
     dom_references.emoji_picker_panel.classList.remove("hidden");
     document.body.classList.add("emoji_picker_open");
     open_overlay_layer("emoji_picker");
+    window.setTimeout(() => {
+      scroll_live_messages_to_bottom("auto");
+      dom_references.live_message_composer?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }, 40);
     return;
   }
 
-  hide_emoji_picker();
+  hide_emoji_picker(false, true);
 }
 
-function hide_emoji_picker(from_history = false) {
+function hide_emoji_picker(from_history = false, restore_keyboard = false) {
+  const picker_was_open =
+    dom_references.emoji_picker_panel &&
+    !dom_references.emoji_picker_panel.classList.contains("hidden");
+
+  if (!picker_was_open) {
+    return;
+  }
+
   dom_references.emoji_picker_panel.classList.add("hidden");
   dom_references.live_message_input?.setAttribute("contenteditable", "true");
   document.body.classList.remove("emoji_picker_open");
   close_overlay_layer("emoji_picker", from_history);
+
+  if (
+    restore_keyboard &&
+    dom_references.live_message_input &&
+    dom_references.messages_section?.classList.contains("is_panel_expanded")
+  ) {
+    window.setTimeout(() => {
+      dom_references.live_message_input.focus();
+      if (!saved_message_selection_range) {
+        place_caret_at_end(dom_references.live_message_input);
+      }
+    }, 80);
+  }
+}
+
+function handle_emoji_edge_swipe_start(event) {
+  if (
+    !dom_references.emoji_picker_panel ||
+    dom_references.emoji_picker_panel.classList.contains("hidden")
+  ) {
+    emoji_swipe_state = null;
+    return;
+  }
+
+  const touch = event.changedTouches?.[0];
+
+  if (!touch) {
+    emoji_swipe_state = null;
+    return;
+  }
+
+  const edge_size = 34;
+  const from_edge =
+    touch.clientX <= edge_size || touch.clientX >= window.innerWidth - edge_size;
+  emoji_swipe_state = from_edge
+    ? {
+        start_x: touch.clientX,
+        start_y: touch.clientY,
+      }
+    : null;
+}
+
+function handle_emoji_edge_swipe_end(event) {
+  if (!emoji_swipe_state) {
+    return;
+  }
+
+  const touch = event.changedTouches?.[0];
+  const state = emoji_swipe_state;
+  emoji_swipe_state = null;
+
+  if (!touch) {
+    return;
+  }
+
+  const dx = touch.clientX - state.start_x;
+  const dy = touch.clientY - state.start_y;
+
+  if (Math.abs(dx) >= 54 && Math.abs(dx) > Math.abs(dy) * 1.35) {
+    hide_emoji_picker(false, true);
+  }
 }
 
 function handle_document_click(event) {
@@ -3733,9 +3921,10 @@ function handle_document_click(event) {
   if (
     !clicked_inside_form &&
     !clicked_inside_picker &&
-    !clicked_toggle_button
+    !clicked_toggle_button &&
+    !dom_references.emoji_picker_panel.classList.contains("hidden")
   ) {
-    hide_emoji_picker();
+    hide_emoji_picker(false, true);
   }
 
   if (!clicked_inside_form && !clicked_inside_mention) {
@@ -3812,6 +4001,14 @@ function delete_last_composer_character() {
     return;
   }
 
+  while (
+    input.lastChild &&
+    input.lastChild.nodeType === Node.TEXT_NODE &&
+    !input.lastChild.textContent
+  ) {
+    input.removeChild(input.lastChild);
+  }
+
   const walker = document.createTreeWalker(input, NodeFilter.SHOW_TEXT);
   let last_text_node = null;
 
@@ -3827,7 +4024,8 @@ function delete_last_composer_character() {
     input.removeChild(input.lastChild);
   }
 
-  saved_message_selection_range = null;
+  place_caret_at_end(input);
+  save_message_selection_range();
   auto_grow_live_message_input();
   update_active_mention_search();
 }
@@ -3920,7 +4118,13 @@ function toggle_fullscreen_panel(panel_name, force_open = false) {
         ? dom_references.messages_section
         : dom_references.cycle_tracker_section;
     if (panel_name === "messages") {
-      target?.scrollTo({ top: 0, behavior: "auto" });
+      window.setTimeout(() => {
+        scroll_live_messages_to_bottom("auto");
+        dom_references.live_message_composer?.scrollIntoView({
+          behavior: "auto",
+          block: "end",
+        });
+      }, 80);
     } else {
       target?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -4133,34 +4337,40 @@ function search_memory_mentions(query_text) {
     .toLowerCase();
   const memory_candidates = current_memory_items
     .filter((item) => !item.is_placeholder)
-    .map((item) => ({
-      reference_type: "memory",
+    .map((item) => {
+      const clean_thought_text = get_item_thought_preview(item, "note");
+      return {
+        reference_type: "memory",
+        title: item.title,
+        subtitle: get_item_display_date(item, "fallback_memory_date"),
+        preview_text: "",
+        search_blob: [
+          item.title,
+          clean_thought_text,
+          get_item_display_date(item, "fallback_memory_date"),
+        ]
+          .join(" ")
+          .toLowerCase(),
+        mention_data: build_mention_context("memory", item.id),
+      };
+    });
+  const event_candidates = current_event_items.map((item) => {
+    const clean_thought_text = get_item_thought_preview(item, "description");
+    return {
+      reference_type: "event",
       title: item.title,
-      subtitle: get_item_display_date(item, "fallback_memory_date"),
-      preview_text: get_preview_snippet(item.note || item.title || ""),
+      subtitle: get_item_display_date(item, "fallback_event_date"),
+      preview_text: "",
       search_blob: [
         item.title,
-        item.note,
-        get_item_display_date(item, "fallback_memory_date"),
+        clean_thought_text,
+        get_item_display_date(item, "fallback_event_date"),
       ]
         .join(" ")
         .toLowerCase(),
-      mention_data: build_mention_context("memory", item.id),
-    }));
-  const event_candidates = current_event_items.map((item) => ({
-    reference_type: "event",
-    title: item.title,
-    subtitle: get_item_display_date(item, "fallback_event_date"),
-    preview_text: get_preview_snippet(item.description || item.title || ""),
-    search_blob: [
-      item.title,
-      item.description,
-      get_item_display_date(item, "fallback_event_date"),
-    ]
-      .join(" ")
-      .toLowerCase(),
-    mention_data: build_mention_context("event", item.id),
-  }));
+      mention_data: build_mention_context("event", item.id),
+    };
+  });
 
   return [...memory_candidates, ...event_candidates]
     .filter((item) => item.mention_data)
@@ -4232,7 +4442,10 @@ function render_mention_search_panel() {
       const snippet = document.createElement("p");
       snippet.className = "mention_result_snippet";
       snippet.textContent = result_item.preview_text || "";
-      result_button.append(title, meta, snippet);
+      result_button.append(title, meta);
+      if (snippet.textContent) {
+        result_button.appendChild(snippet);
+      }
       dom_references.mention_search_panel.appendChild(result_button);
     });
   }
@@ -5107,6 +5320,7 @@ async function authenticate_user(username, password) {
         return null;
       } else {
         current_auth_user_id = data.user.id;
+        current_auth_access_token = String(data.session?.access_token || "");
         const user_profile = build_user_profile(username, supabase_user.email);
         await ensure_supabase_profile_row(user_profile);
         return user_profile;
@@ -5145,13 +5359,14 @@ async function authenticate_user(username, password) {
 
 function handle_logout() {
   play_logout_sound();
+  stop_presence_updates();
   sessionStorage.removeItem("logged_in_user");
   current_user_profile = null;
   current_auth_user_id = "";
+  current_auth_access_token = "";
   local_music_tracks = [];
   render_music_library_panel();
   sync_authenticated_chrome();
-  stop_presence_updates();
   void configure_background_message_sync(false);
   hidden_deleted_message_ids = [];
   password_recovery_mode_active = false;
@@ -5187,7 +5402,7 @@ function handle_global_keydown(event) {
   }
 
   if (active_overlay_name === "emoji_picker") {
-    hide_emoji_picker();
+    hide_emoji_picker(false, true);
     return;
   }
 
@@ -5353,6 +5568,7 @@ async function handle_password_recovery_submit(event) {
     clear_supabase_recovery_url_state();
     password_recovery_mode_active = false;
     current_auth_user_id = "";
+    current_auth_access_token = "";
     try {
       await supabase_client.auth.signOut();
     } catch (error) {
@@ -5564,17 +5780,117 @@ async function load_message_list(message_name, fallback_messages) {
 }
 
 function get_daily_message_from_list(message_list, fallback_list, seed_key) {
-  const safe_list =
+  const source_list =
     Array.isArray(message_list) && message_list.length > 0
       ? message_list
-      : fallback_list;
+      : [];
+  const fallback_source = Array.isArray(fallback_list) ? fallback_list : [];
+  const safe_list = build_fresh_message_pool(source_list, fallback_source);
+  if (safe_list.length === 0) {
+    return "";
+  }
   const today = new Date();
-  const seed_text = `${seed_key}_${today.getFullYear()}_${today.getMonth() + 1}_${today.getDate()}`;
+  const today_key = `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  const storage_key = `${daily_content_history_storage_prefix}_${seed_key}`;
+
+  try {
+    const stored_value = JSON.parse(localStorage.getItem(storage_key) || "null");
+
+    if (stored_value?.date === today_key && stored_value?.message) {
+      return stored_value.message;
+    }
+  } catch (error) {
+    // A malformed history entry should never block fresh content.
+  }
+
+  const recent_history = get_recent_daily_content_history(storage_key);
+  const eligible_list =
+    safe_list.length > 1
+      ? safe_list.filter((message) => !recent_history.includes(message))
+      : safe_list;
+  const pick_list = eligible_list.length > 0 ? eligible_list : safe_list;
+  const seed_text = `${seed_key}_${today_key}`;
   const hash_value = Array.from(seed_text).reduce(
-    (total, character) => total + character.charCodeAt(0),
+    (total, character) => (total * 33 + character.charCodeAt(0)) % 1000003,
     0,
   );
-  return safe_list[hash_value % safe_list.length];
+  const selected_message = pick_list[hash_value % pick_list.length] || "";
+  const next_history = [selected_message, ...recent_history]
+    .filter(Boolean)
+    .slice(0, Math.min(12, Math.max(3, safe_list.length - 1)));
+
+  try {
+    localStorage.setItem(
+      storage_key,
+      JSON.stringify({
+        date: today_key,
+        message: selected_message,
+        history: next_history,
+      }),
+    );
+  } catch (error) {
+    // Local storage may be unavailable in a private browser.
+  }
+
+  return selected_message;
+}
+
+function get_recent_daily_content_history(storage_key) {
+  try {
+    const stored_value = JSON.parse(localStorage.getItem(storage_key) || "null");
+    return Array.isArray(stored_value?.history) ? stored_value.history : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function get_message_signature(message_text) {
+  return String(message_text || "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 72)
+    .toLowerCase();
+}
+
+function build_fresh_message_pool(source_list, fallback_list) {
+  const unique_messages = [
+    ...new Set(
+      [...source_list, ...fallback_list]
+        .map((message) => String(message || "").trim())
+        .filter(Boolean),
+    ),
+  ];
+
+  if (unique_messages.length <= 1) {
+    return unique_messages;
+  }
+
+  const signature_counts = unique_messages.reduce((counts, message) => {
+    const signature = get_message_signature(message);
+    counts[signature] = (counts[signature] || 0) + 1;
+    return counts;
+  }, {});
+  const dominant_count = Math.max(...Object.values(signature_counts));
+
+  if (dominant_count < unique_messages.length * 0.45) {
+    return unique_messages;
+  }
+
+  const seen_signatures = new Set();
+  const diverse_messages = [];
+
+  unique_messages.forEach((message) => {
+    const signature = get_message_signature(message);
+
+    if (seen_signatures.has(signature)) {
+      return;
+    }
+
+    seen_signatures.add(signature);
+    diverse_messages.push(message);
+  });
+
+  return [...new Set([...fallback_list, ...diverse_messages])].filter(Boolean);
 }
 
 function get_daily_joy_message() {
@@ -7672,13 +7988,19 @@ function get_item_thoughts(item, field_name) {
 
   const plain_text = String(item?.[field_name] || "").trim();
 
-  if (!plain_text || item?.is_placeholder || item?.is_locked) {
+  if (!plain_text || item?.is_placeholder) {
     return {};
   }
 
+  const legacy_author_key =
+    item?.author_key ||
+    item?.created_by ||
+    item?.owner_key ||
+    item?.added_by ||
+    (item?.id === "first_day" ? "diab" : "svetlana");
+
   return {
-    [item?.author_key || current_user_profile?.user_key || "svetlana"]:
-      plain_text,
+    [legacy_author_key]: plain_text,
   };
 }
 
@@ -7692,36 +8014,67 @@ function get_item_thought_preview(item, field_name) {
   return Object.values(thoughts).filter(Boolean).join(" ");
 }
 
-function render_item_thoughts(item, field_name) {
+function create_thought_action_button(item_type, item_id, has_current_thought) {
+  const button = document.createElement("button");
+  button.className = "thought_action_button";
+  button.type = "button";
+  button.dataset.action = `edit_${item_type}`;
+  button.dataset.item_id = item_id;
+  button.textContent = translate(
+    has_current_thought ? "edit_your_thought" : "add_your_thought",
+  );
+  button.setAttribute("aria-label", button.textContent);
+  return button;
+}
+
+function render_item_thoughts(item, field_name, item_type = "memory") {
   const thoughts = get_item_thoughts(item, field_name);
   const thought_entries = Object.entries(thoughts).filter(([, text]) =>
     String(text || "").trim(),
   );
+  const has_current_thought = Boolean(
+    current_user_profile?.user_key &&
+      String(thoughts[current_user_profile.user_key] || "").trim(),
+  );
 
   if (thought_entries.length === 0) {
-    const fallback_text = parse_item_thoughts(item?.[field_name])
-      ? ""
-      : String(item?.[field_name] || "");
-    const fallback = document.createElement("p");
-    fallback.textContent = fallback_text;
+    const fallback = document.createElement("div");
+    fallback.className = "item_thought_list";
+    if (!item?.is_placeholder) {
+      fallback.appendChild(
+        create_thought_action_button(item_type, item?.id || "", false),
+      );
+    }
     return fallback;
   }
 
   const wrap = document.createElement("div");
   wrap.className = "item_thought_list";
   thought_entries.forEach(([user_key, thought_text]) => {
-    const line = document.createElement("p");
+    const line = document.createElement("div");
     line.className = "item_thought_line";
     const author = document.createElement("span");
     author.className = "item_thought_author";
     author.textContent = `${get_person_display_name(user_key)}'s thought`;
+    const text = document.createElement("span");
+    text.className = "item_thought_text";
+    text.textContent = ` ${String(thought_text).trim()}`;
     line.append(
-      document.createTextNode("> "),
       author,
-      document.createTextNode(`: "${String(thought_text).trim()}"`),
+      text,
     );
+
     wrap.appendChild(line);
+
+    if (current_user_profile?.user_key === user_key && !item?.is_placeholder) {
+      wrap.appendChild(create_thought_action_button(item_type, item.id, true));
+    }
   });
+
+  if (!has_current_thought && !item?.is_placeholder) {
+    wrap.appendChild(create_thought_action_button(item_type, item.id, false));
+  }
+
   return wrap;
 }
 
@@ -7759,7 +8112,7 @@ function render_memory_gallery(memory_items) {
     memory_text.append(
       memory_date,
       memory_title,
-      render_item_thoughts(memory_item, "note"),
+      render_item_thoughts(memory_item, "note", "memory"),
     );
 
     if (!memory_item.is_placeholder) {
@@ -7802,7 +8155,7 @@ function render_event_timeline(event_items) {
     timeline_content.append(
       timeline_date,
       timeline_title,
-      render_item_thoughts(event_item, "description"),
+      render_item_thoughts(event_item, "description", "event"),
     );
 
     const can_diab_edit_first_day =
@@ -8187,28 +8540,7 @@ function normalize_sound_manifest(manifest_value = {}) {
 }
 
 async function load_sound_manifest() {
-  try {
-    const response = await fetch("/api/sound_manifest", {
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      current_sound_manifest = normalize_sound_manifest(
-        local_sound_manifest_fallback,
-      );
-      return;
-    }
-
-    const fetched_manifest = normalize_sound_manifest(await response.json());
-    current_sound_manifest =
-      fetched_manifest.background_music.length > 0
-        ? fetched_manifest
-        : normalize_sound_manifest(local_sound_manifest_fallback);
-  } catch (error) {
-    current_sound_manifest = normalize_sound_manifest(
-      local_sound_manifest_fallback,
-    );
-  }
+  current_sound_manifest = normalize_sound_manifest(local_sound_manifest_fallback);
 }
 
 function apply_saved_music_setting() {
@@ -8331,10 +8663,12 @@ function resume_background_music_from_lifecycle() {
 
 function handle_app_visibility_change() {
   if (document.hidden) {
+    mark_current_user_seen(false, true);
     pause_background_music_for_lifecycle();
     return;
   }
 
+  mark_current_user_seen(is_app_active_for_presence(), true);
   resume_background_music_from_lifecycle();
 }
 
@@ -8347,10 +8681,12 @@ function bind_capacitor_app_lifecycle() {
 
   app_plugin.addListener("appStateChange", (state) => {
     if (state?.isActive) {
+      mark_current_user_seen(true, true);
       resume_background_music_from_lifecycle();
       return;
     }
 
+    mark_current_user_seen(false, true);
     pause_background_music_for_lifecycle();
   });
 }
@@ -8560,6 +8896,87 @@ function toggle_music_library_panel(event = null) {
   dom_references.music_library_panel?.classList.toggle("hidden");
 }
 
+function get_track_name_from_url(track_url) {
+  const clean_url = String(track_url || "").split("?")[0].split("#")[0];
+  const filename = clean_url.split("/").pop() || "music";
+
+  try {
+    return decodeURIComponent(filename);
+  } catch (error) {
+    return filename;
+  }
+}
+
+function get_default_music_tracks() {
+  const manifest_tracks = Array.isArray(current_sound_manifest.background_music)
+    ? current_sound_manifest.background_music
+    : [];
+  return manifest_tracks.map((track_url, index) => ({
+    id: `default_${index}_${track_url}`,
+    name: get_track_name_from_url(track_url),
+    src: track_url,
+    is_default: true,
+  }));
+}
+
+function get_personal_music_tracks() {
+  return local_music_tracks
+    .map((track) => ({
+      ...track,
+      src: track.src || track.data_url || "",
+      is_default: false,
+    }))
+    .filter((track) => track.src);
+}
+
+function get_all_music_tracks() {
+  return [...get_default_music_tracks(), ...get_personal_music_tracks()];
+}
+
+function create_music_library_heading(label_text) {
+  const heading = document.createElement("p");
+  heading.className = "music_library_heading";
+  heading.textContent = label_text;
+  return heading;
+}
+
+function render_music_library_track(track) {
+  const item = document.createElement("div");
+  const is_current = track.src === last_background_music_url;
+  const is_playing =
+    is_current && background_music_audio && !background_music_audio.paused;
+  item.className = "music_library_item";
+  item.classList.toggle("is_current_track", is_current);
+
+  const play_button = document.createElement("button");
+  play_button.className = "music_library_play_button";
+  play_button.type = "button";
+  play_button.dataset.track_id = track.id;
+  play_button.textContent = is_playing ? "Ⅱ" : "▶";
+  play_button.title = translate(
+    is_playing ? "music_pause_track" : "music_play_track",
+  );
+  play_button.setAttribute("aria-label", play_button.title);
+
+  const title = document.createElement("span");
+  title.textContent = track.name || "music";
+
+  item.append(play_button, title);
+
+  if (!track.is_default) {
+    const delete_button = document.createElement("button");
+    delete_button.className = "music_library_delete_button";
+    delete_button.type = "button";
+    delete_button.dataset.track_id = track.id;
+    delete_button.textContent = "✕";
+    delete_button.title = translate("music_delete_track");
+    delete_button.setAttribute("aria-label", translate("music_delete_track"));
+    item.appendChild(delete_button);
+  }
+
+  return item;
+}
+
 function render_music_library_panel() {
   const panel = dom_references.music_library_panel;
 
@@ -8568,34 +8985,64 @@ function render_music_library_panel() {
   }
 
   panel.innerHTML = "";
+  const default_tracks = get_default_music_tracks();
+  const personal_tracks = get_personal_music_tracks();
 
-  if (local_music_tracks.length === 0) {
+  if (default_tracks.length > 0) {
+    panel.appendChild(create_music_library_heading(translate("music_default_tracks")));
+    default_tracks.forEach((track) =>
+      panel.appendChild(render_music_library_track(track)),
+    );
+  }
+
+  panel.appendChild(create_music_library_heading(translate("music_personal_tracks")));
+
+  if (personal_tracks.length === 0) {
     const empty_state = document.createElement("p");
-    empty_state.className = "music_library_item";
+    empty_state.className = "music_library_empty";
     empty_state.textContent = translate("music_library_empty");
     panel.appendChild(empty_state);
     return;
   }
 
-  local_music_tracks.forEach((track) => {
-    const item = document.createElement("div");
-    item.className = "music_library_item";
-    const title = document.createElement("span");
-    title.textContent = track.name || "music";
-    const delete_button = document.createElement("button");
-    delete_button.className = "music_library_delete_button";
-    delete_button.type = "button";
-    delete_button.dataset.track_id = track.id;
-    delete_button.textContent = "🗑️";
-    delete_button.title = translate("music_delete_track");
-    delete_button.setAttribute("aria-label", translate("music_delete_track"));
-    item.append(title, delete_button);
-    panel.appendChild(item);
-  });
+  personal_tracks.forEach((track) =>
+    panel.appendChild(render_music_library_track(track)),
+  );
 }
 
 async function handle_music_library_action(event) {
+  const play_button = event.target.closest(".music_library_play_button");
   const delete_button = event.target.closest(".music_library_delete_button");
+
+  if (play_button) {
+    const track = get_all_music_tracks().find(
+      (item) => item.id === play_button.dataset.track_id,
+    );
+
+    if (!track?.src) {
+      return;
+    }
+
+    if (
+      background_music_audio &&
+      last_background_music_url === track.src &&
+      !background_music_audio.paused
+    ) {
+      background_music_paused_by_user = true;
+      background_music_audio.pause();
+      update_music_control_buttons();
+      render_music_library_panel();
+      return;
+    }
+
+    music_enabled = true;
+    background_music_paused_by_user = false;
+    localStorage.setItem(music_toggle_storage_key, "on");
+    update_music_button();
+    start_background_music_track(track.src, true);
+    render_music_library_panel();
+    return;
+  }
 
   if (!delete_button) {
     return;
@@ -8635,14 +9082,9 @@ async function handle_music_library_action(event) {
 }
 
 function get_background_music_tracks() {
-  const manifest_tracks = Array.isArray(current_sound_manifest.background_music)
-    ? current_sound_manifest.background_music
-    : [];
-  const personal_tracks = local_music_tracks
-    .map((track) => track.src || track.data_url || "")
+  return get_all_music_tracks()
+    .map((track) => track.src)
     .filter(Boolean);
-
-  return [...manifest_tracks, ...personal_tracks];
 }
 
 function get_current_background_track_index() {
@@ -8676,6 +9118,13 @@ function update_music_control_buttons() {
     play_pause_button.innerHTML = is_paused
       ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"></path></svg>'
       : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7V5Zm6 0h4v14h-4V5Z"></path></svg>';
+  }
+
+  if (
+    dom_references.music_library_panel &&
+    !dom_references.music_library_panel.classList.contains("hidden")
+  ) {
+    render_music_library_panel();
   }
 }
 
@@ -8951,6 +9400,8 @@ function prepare_new_memory() {
 function prepare_new_event() {
   editing_event_id = null;
   dom_references.event_form.reset();
+  dom_references.event_title_input.disabled = false;
+  dom_references.event_date_input.disabled = false;
   update_dialog_titles();
   open_dialog(dom_references.event_dialog);
 }
@@ -9092,14 +9543,11 @@ function edit_event(item_id) {
     return;
   }
 
-  if (
-    event_item.is_locked &&
-    (!current_user_profile || current_user_profile.user_key !== "diab")
-  ) {
-    return;
-  }
-
   editing_event_id = item_id;
+  const locked_for_current_user =
+    event_item.is_locked && current_user_profile?.user_key !== "diab";
+  dom_references.event_title_input.disabled = locked_for_current_user;
+  dom_references.event_date_input.disabled = locked_for_current_user;
   dom_references.event_title_input.value = event_item.title || "";
   dom_references.event_date_input.value = event_item.date_value || "";
   dom_references.event_description_input.value = get_item_thought_text(
@@ -10427,6 +10875,10 @@ async function save_memory_from_form(event) {
 
   const saved_memory = {
     id: editing_memory_id || create_item_id(),
+    author_key:
+      existing_memory?.author_key ||
+      current_user_profile?.user_key ||
+      "svetlana",
     title: dom_references.memory_title_input.value.trim(),
     date_label: memory_date
       ? format_display_date(memory_date)
@@ -10469,6 +10921,11 @@ async function save_event_from_form(event) {
   };
   const active_event_thought =
     dom_references.event_description_input.value.trim();
+  const can_edit_event_fields =
+    !existing_event?.is_locked || current_user_profile?.user_key === "diab";
+  const saved_event_date = can_edit_event_fields
+    ? event_date
+    : existing_event?.date_value || "";
 
   if (current_user_profile?.user_key) {
     if (active_event_thought) {
@@ -10480,15 +10937,21 @@ async function save_event_from_form(event) {
 
   const saved_event = {
     id: editing_event_id || create_item_id(),
+    author_key:
+      existing_event?.author_key ||
+      current_user_profile?.user_key ||
+      "svetlana",
     is_locked: existing_event?.is_locked || false,
     is_custom: existing_event?.is_locked
       ? true
       : existing_event?.is_custom || false,
-    title: dom_references.event_title_input.value.trim(),
-    date_label: event_date
-      ? format_display_date(event_date)
+    title: can_edit_event_fields
+      ? dom_references.event_title_input.value.trim()
+      : existing_event?.title || "",
+    date_label: saved_event_date
+      ? format_display_date(saved_event_date)
       : existing_event?.date_label || translate("fallback_event_date"),
-    date_value: event_date || existing_event?.date_value || "",
+    date_value: saved_event_date,
     description: encode_item_thoughts(event_thoughts),
   };
 
@@ -10503,6 +10966,8 @@ async function save_event_from_form(event) {
   render_event_timeline(updated_events);
   editing_event_id = null;
   dom_references.event_form.reset();
+  dom_references.event_title_input.disabled = false;
+  dom_references.event_date_input.disabled = false;
   update_dialog_titles();
   close_dialog(dom_references.event_dialog);
   burst_reaction(dom_references.event_timeline, "heart", 12);
@@ -10593,9 +11058,9 @@ async function load_live_messages() {
         throw error;
       }
 
-      current_live_messages = Array.isArray(data)
-        ? data.map(map_live_message_row_to_item)
-        : [];
+      current_live_messages = split_visible_live_messages(
+        Array.isArray(data) ? data.map(map_live_message_row_to_item) : [],
+      );
       render_live_messages(true);
       void configure_background_message_sync();
       return;
@@ -10613,7 +11078,7 @@ async function load_live_messages() {
       const live_messages = await response.json();
 
       if (Array.isArray(live_messages)) {
-        current_live_messages = live_messages;
+        current_live_messages = split_visible_live_messages(live_messages);
         render_live_messages(true);
         void configure_background_message_sync();
       }
@@ -10647,6 +11112,10 @@ function open_live_messages_stream() {
           }
 
           const next_message = map_live_message_row_to_item(payload.new);
+          if (is_system_live_message(next_message)) {
+            apply_presence_state_from_message(next_message);
+            return;
+          }
           upsert_live_message(next_message, true);
         },
       )
@@ -10663,6 +11132,10 @@ function open_live_messages_stream() {
   live_message_stream.addEventListener("live_message", (event) => {
     try {
       const message_item = JSON.parse(event.data);
+      if (is_system_live_message(message_item)) {
+        apply_presence_state_from_message(message_item);
+        return;
+      }
       upsert_live_message(message_item, true);
     } catch (error) {
       // Ignore malformed events.
@@ -10671,6 +11144,10 @@ function open_live_messages_stream() {
   live_message_stream.addEventListener("live_message_updated", (event) => {
     try {
       const message_item = JSON.parse(event.data);
+      if (is_system_live_message(message_item)) {
+        apply_presence_state_from_message(message_item);
+        return;
+      }
       upsert_live_message(message_item, true);
     } catch (error) {
       // Ignore malformed events.
@@ -10723,6 +11200,11 @@ function stop_live_message_polling() {
 }
 
 function upsert_live_message(message_item, scroll_to_bottom = false) {
+  if (is_system_live_message(message_item)) {
+    apply_presence_state_from_message(message_item);
+    return;
+  }
+
   const existing_index = current_live_messages.findIndex(
     (item) => item.id === message_item.id,
   );
@@ -10786,11 +11268,162 @@ function map_live_message_row_to_item(row) {
   };
 }
 
+function is_system_live_message(message_item) {
+  return (
+    Boolean(message_item) &&
+    String(message_item.text || "") === presence_live_message_marker
+  );
+}
+
 function is_deleted_live_message(message_item) {
   return (
     Boolean(message_item) &&
     String(message_item.text || "") === deleted_live_message_marker
   );
+}
+
+function get_presence_attachment(message_item) {
+  const attachments = Array.isArray(message_item?.attachments)
+    ? message_item.attachments
+    : [];
+  return (
+    attachments.find((attachment) => attachment?.kind === "presence_state") ||
+    null
+  );
+}
+
+function normalize_hidden_deleted_ids(value) {
+  return [
+    ...new Set(
+      (Array.isArray(value) ? value : [])
+        .map((item) => String(item || ""))
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function get_default_presence_state(user_key) {
+  return {
+    user_key,
+    visible: true,
+    active: false,
+    last_seen_at: "",
+    updated_at: "",
+    hidden_deleted_message_ids: [],
+  };
+}
+
+function normalize_presence_state(raw_state = {}, fallback_user_key = "") {
+  const user_key = String(raw_state.user_key || fallback_user_key || "");
+  return {
+    ...get_default_presence_state(user_key),
+    user_key,
+    visible: raw_state.visible !== false,
+    active: Boolean(raw_state.active),
+    last_seen_at: String(raw_state.last_seen_at || raw_state.lastSeenAt || ""),
+    updated_at: String(raw_state.updated_at || raw_state.updatedAt || ""),
+    hidden_deleted_message_ids: normalize_hidden_deleted_ids(
+      raw_state.hidden_deleted_message_ids || raw_state.hiddenDeletedMessageIds,
+    ),
+  };
+}
+
+function get_presence_state_storage_key(user_key) {
+  return `${presence_state_storage_prefix}_${current_room_slug}_${user_key}`;
+}
+
+function read_local_presence_state(user_key) {
+  try {
+    const stored_state = JSON.parse(
+      localStorage.getItem(get_presence_state_storage_key(user_key)) || "null",
+    );
+
+    if (stored_state && typeof stored_state === "object") {
+      return normalize_presence_state(stored_state, user_key);
+    }
+  } catch (error) {
+    // Local presence falls through to the old keys/default state below.
+  }
+
+  const fallback_state = get_default_presence_state(user_key);
+  fallback_state.visible =
+    localStorage.getItem(get_presence_visibility_key(user_key)) !== "off";
+  fallback_state.last_seen_at =
+    localStorage.getItem(get_presence_seen_key(user_key)) || "";
+  return fallback_state;
+}
+
+function save_local_presence_state(user_key, state) {
+  if (!user_key) {
+    return;
+  }
+
+  localStorage.setItem(
+    get_presence_state_storage_key(user_key),
+    JSON.stringify(normalize_presence_state(state, user_key)),
+  );
+}
+
+function set_presence_state(user_key, next_state, should_save = true) {
+  if (!user_key) {
+    return get_default_presence_state("");
+  }
+
+  const normalized_state = normalize_presence_state(
+    {
+      ...(presence_state_by_user[user_key] || read_local_presence_state(user_key)),
+      ...next_state,
+      user_key,
+    },
+    user_key,
+  );
+  presence_state_by_user[user_key] = normalized_state;
+
+  if (should_save) {
+    save_local_presence_state(user_key, normalized_state);
+  }
+
+  return normalized_state;
+}
+
+function apply_presence_state_from_message(message_item) {
+  const attachment = get_presence_attachment(message_item);
+
+  if (!attachment || !message_item.sender_key) {
+    return;
+  }
+
+  const state = set_presence_state(
+    message_item.sender_key,
+    {
+      ...attachment,
+      user_key: message_item.sender_key,
+    },
+    true,
+  );
+
+  if (current_user_profile?.user_key === message_item.sender_key) {
+    current_user_presence_visible = state.visible;
+    hidden_deleted_message_ids = normalize_hidden_deleted_ids(
+      state.hidden_deleted_message_ids,
+    );
+  }
+
+  update_presence_status_text();
+}
+
+function split_visible_live_messages(message_items) {
+  const mapped_items = Array.isArray(message_items)
+    ? message_items.map((item) =>
+        item?.room_slug !== undefined ? item : map_live_message_row_to_item(item),
+      )
+    : [];
+
+  mapped_items
+    .filter(is_system_live_message)
+    .forEach(apply_presence_state_from_message);
+
+  return mapped_items.filter((message_item) => !is_system_live_message(message_item));
 }
 
 function get_hidden_deleted_message_storage_key() {
@@ -10803,6 +11436,16 @@ function get_hidden_deleted_message_storage_key() {
 
 function load_hidden_deleted_messages() {
   const storage_key = get_hidden_deleted_message_storage_key();
+  const presence_state = current_user_profile?.user_key
+    ? read_local_presence_state(current_user_profile.user_key)
+    : null;
+
+  if (presence_state?.hidden_deleted_message_ids?.length) {
+    hidden_deleted_message_ids = normalize_hidden_deleted_ids(
+      presence_state.hidden_deleted_message_ids,
+    );
+    return;
+  }
 
   if (!storage_key) {
     hidden_deleted_message_ids = [];
@@ -10831,6 +11474,17 @@ function save_hidden_deleted_messages() {
   }
 
   localStorage.setItem(storage_key, JSON.stringify(hidden_deleted_message_ids));
+  if (current_user_profile?.user_key) {
+    set_presence_state(
+      current_user_profile.user_key,
+      {
+        hidden_deleted_message_ids,
+        updated_at: new Date().toISOString(),
+      },
+      true,
+    );
+    void sync_presence_state_to_remote();
+  }
 }
 
 function should_hide_deleted_message(message_item) {
@@ -11000,6 +11654,87 @@ function handle_messages_search_input(event) {
   move_message_search_match(1);
 }
 
+function escape_reg_exp(value) {
+  return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function clear_message_search_highlights(message_node) {
+  message_node
+    .querySelectorAll("mark.message_search_highlight")
+    .forEach((highlight_node) => {
+      highlight_node.replaceWith(
+        document.createTextNode(highlight_node.textContent || ""),
+      );
+    });
+  message_node.normalize();
+}
+
+function apply_message_search_highlights(message_node, query) {
+  clear_message_search_highlights(message_node);
+
+  if (!query) {
+    return false;
+  }
+
+  const body = message_node.querySelector(".live_message_body");
+
+  if (!body) {
+    return false;
+  }
+
+  const matcher = new RegExp(escape_reg_exp(query), "gi");
+  let has_match = false;
+  const walker = document.createTreeWalker(
+    body,
+    NodeFilter.SHOW_TEXT,
+    {
+      acceptNode(node) {
+        matcher.lastIndex = 0;
+        return node.textContent && matcher.test(node.textContent)
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_REJECT;
+      },
+    },
+  );
+  const text_nodes = [];
+
+  while (walker.nextNode()) {
+    text_nodes.push(walker.currentNode);
+  }
+
+  text_nodes.forEach((text_node) => {
+    const text_value = text_node.textContent || "";
+    const fragment = document.createDocumentFragment();
+    let last_index = 0;
+    matcher.lastIndex = 0;
+
+    text_value.replace(matcher, (match_text, match_index) => {
+      has_match = true;
+
+      if (match_index > last_index) {
+        fragment.appendChild(
+          document.createTextNode(text_value.slice(last_index, match_index)),
+        );
+      }
+
+      const mark = document.createElement("mark");
+      mark.className = "message_search_highlight";
+      mark.textContent = match_text;
+      fragment.appendChild(mark);
+      last_index = match_index + match_text.length;
+      return match_text;
+    });
+
+    if (last_index < text_value.length) {
+      fragment.appendChild(document.createTextNode(text_value.slice(last_index)));
+    }
+
+    text_node.replaceWith(fragment);
+  });
+
+  return has_match;
+}
+
 function refresh_message_search_matches() {
   if (!dom_references.live_messages_list) {
     return;
@@ -11012,9 +11747,7 @@ function refresh_message_search_matches() {
   message_search_matches = [];
 
   message_nodes.forEach((message_node) => {
-    const matches =
-      query &&
-      String(message_node.textContent || "").toLowerCase().includes(query);
+    const matches = apply_message_search_highlights(message_node, query);
     message_node.classList.toggle("is_search_match", Boolean(matches));
     message_node.classList.remove("is_current_search_match");
 
@@ -11075,10 +11808,10 @@ function update_messages_scroll_button() {
   );
 }
 
-function scroll_live_messages_to_bottom() {
+function scroll_live_messages_to_bottom(behavior = "smooth") {
   dom_references.live_messages_list?.scrollTo({
     top: dom_references.live_messages_list.scrollHeight,
-    behavior: "smooth",
+    behavior,
   });
   window.setTimeout(update_messages_scroll_button, 260);
 }
@@ -11096,24 +11829,145 @@ function get_other_user_key() {
 }
 
 function load_presence_visibility() {
-  current_user_presence_visible =
-    localStorage.getItem(get_presence_visibility_key()) !== "off";
+  const current_state = read_local_presence_state(
+    current_user_profile?.user_key || "guest",
+  );
+  current_user_presence_visible = current_state.visible;
+  set_presence_state(current_user_profile?.user_key || "guest", current_state);
 }
 
-function mark_current_user_seen() {
-  if (!current_user_profile || !current_user_presence_visible) {
+function is_app_active_for_presence() {
+  return !document.hidden;
+}
+
+function get_current_presence_state_patch(is_active = !document.hidden) {
+  const now_text = new Date().toISOString();
+  return {
+    visible: current_user_presence_visible,
+    active: Boolean(is_active && current_user_presence_visible),
+    last_seen_at: now_text,
+    updated_at: now_text,
+    hidden_deleted_message_ids,
+  };
+}
+
+function mark_current_user_seen(is_active = !document.hidden, sync_remote = false) {
+  if (!current_user_profile) {
     return;
   }
 
-  localStorage.setItem(
-    get_presence_seen_key(current_user_profile.user_key),
-    new Date().toISOString(),
+  set_presence_state(
+    current_user_profile.user_key,
+    get_current_presence_state_patch(is_active),
+    true,
   );
+
+  if (sync_remote) {
+    void sync_presence_state_to_remote(true);
+  }
+}
+
+function create_presence_message_id(user_key = current_user_profile?.user_key) {
+  const safe_room = String(current_room_slug || supabase_room_slug_default)
+    .replace(/[^a-z0-9_-]+/gi, "_")
+    .toLowerCase();
+  return `presence_${safe_room}_${user_key || "guest"}`;
+}
+
+function build_presence_live_message(state) {
+  return {
+    id: create_presence_message_id(current_user_profile.user_key),
+    room_slug: current_room_slug,
+    sender_key: current_user_profile.user_key,
+    sender_name: current_user_profile.display_name,
+    text: presence_live_message_marker,
+    created_at: state.updated_at || new Date().toISOString(),
+    edited_at: state.updated_at || new Date().toISOString(),
+    attachments: [
+      {
+        kind: "presence_state",
+        user_key: current_user_profile.user_key,
+        visible: state.visible,
+        active: state.active,
+        last_seen_at: state.last_seen_at,
+        updated_at: state.updated_at,
+        hidden_deleted_message_ids: state.hidden_deleted_message_ids,
+      },
+    ],
+  };
+}
+
+function get_current_presence_state_for_remote() {
+  if (!current_user_profile) {
+    return null;
+  }
+
+  return normalize_presence_state(
+    presence_state_by_user[current_user_profile.user_key] ||
+      read_local_presence_state(current_user_profile.user_key),
+    current_user_profile.user_key,
+  );
+}
+
+async function sync_presence_state_to_remote(immediate = false) {
+  if (!current_user_profile) {
+    return;
+  }
+
+  if (!immediate) {
+    window.clearTimeout(presence_sync_timeout_id);
+    presence_sync_timeout_id = window.setTimeout(
+      () => sync_presence_state_to_remote(true),
+      400,
+    );
+    return;
+  }
+
+  window.clearTimeout(presence_sync_timeout_id);
+  presence_sync_timeout_id = null;
+  const state = get_current_presence_state_for_remote();
+
+  if (!state) {
+    return;
+  }
+
+  save_local_presence_state(current_user_profile.user_key, state);
+  const presence_message = build_presence_live_message(state);
+
+  if (!is_supabase_enabled() || !current_auth_user_id) {
+    if (can_use_local_api()) {
+      try {
+        const response = await fetch("/api/live_messages", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(presence_message),
+        });
+
+        if (!response.ok) {
+          throw new Error("presence_local_sync_failed");
+        }
+      } catch (error) {
+        // Local presence remains stored in this browser if the server is gone.
+      }
+    }
+    return;
+  }
+
+  try {
+    await supabase_client.from(supabase_table_names.live_messages).upsert(
+      presence_message,
+      { onConflict: "id" },
+    );
+  } catch (error) {
+    // Presence still works locally when the network is unavailable.
+  }
 }
 
 function start_presence_updates() {
   load_presence_visibility();
-  mark_current_user_seen();
+  mark_current_user_seen(is_app_active_for_presence(), true);
   update_presence_status_text();
 
   if (presence_interval_id) {
@@ -11121,12 +11975,14 @@ function start_presence_updates() {
   }
 
   presence_interval_id = window.setInterval(() => {
-    mark_current_user_seen();
+    mark_current_user_seen(is_app_active_for_presence(), true);
     update_presence_status_text();
-  }, 30 * 1000);
+  }, 20 * 1000);
 }
 
 function stop_presence_updates() {
+  mark_current_user_seen(false, true);
+
   if (presence_interval_id) {
     window.clearInterval(presence_interval_id);
     presence_interval_id = null;
@@ -11154,22 +12010,29 @@ function get_presence_status_text() {
   }
 
   const other_user = get_other_user_key();
-  const other_visible =
-    localStorage.getItem(get_presence_visibility_key(other_user)) !== "off";
+  const other_state =
+    presence_state_by_user[other_user] || read_local_presence_state(other_user);
+  const other_visible = other_state.visible !== false;
 
   if (!other_visible) {
     return translate("presence_hidden");
   }
 
-  const last_seen_text = localStorage.getItem(get_presence_seen_key(other_user));
+  const last_seen_text = other_state.last_seen_at || "";
   const last_seen_date = last_seen_text ? new Date(last_seen_text) : null;
+  const updated_text = other_state.updated_at || last_seen_text;
+  const updated_date = updated_text ? new Date(updated_text) : last_seen_date;
 
   if (!last_seen_date || Number.isNaN(last_seen_date.getTime())) {
-    return translate("presence_last_seen_date", "--:--", "");
+    return translate("presence_waiting");
   }
 
   const now = new Date();
   const diff_ms = now - last_seen_date;
+  const heartbeat_ms =
+    updated_date && !Number.isNaN(updated_date.getTime())
+      ? now - updated_date
+      : diff_ms;
   const diff_minutes = Math.floor(diff_ms / (60 * 1000));
   const diff_hours = Math.floor(diff_ms / (60 * 60 * 1000));
   const yesterday = add_days(start_of_today(), -1);
@@ -11180,7 +12043,7 @@ function get_presence_status_text() {
   );
   const time_text = format_presence_time(last_seen_date);
 
-  if (diff_ms < 30 * 1000) {
+  if (other_state.active && heartbeat_ms >= 0 && heartbeat_ms < 70 * 1000) {
     return translate("presence_online");
   }
 
@@ -11214,8 +12077,30 @@ function update_presence_status_text() {
     const label = current_user_presence_visible
       ? translate("presence_hide_setting")
       : translate("presence_show_setting");
+    const visible_text = current_user_presence_visible
+      ? translate("presence_seen_toggle")
+      : translate("presence_hidden_toggle");
     dom_references.message_visibility_button.setAttribute("aria-label", label);
     dom_references.message_visibility_button.title = label;
+    dom_references.message_visibility_button.classList.toggle(
+      "is_hidden",
+      !current_user_presence_visible,
+    );
+    dom_references.message_visibility_button.innerHTML = current_user_presence_visible
+      ? `
+      <svg class="presence_toggle_icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"></path>
+        <circle cx="12" cy="12" r="2.6"></circle>
+      </svg>
+      <span class="presence_toggle_text">${visible_text}</span>
+    `
+      : `
+      <svg class="presence_toggle_icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 3l18 18"></path>
+        <path d="M2.5 12s3.4-6 9.5-6c2 0 3.7.6 5.1 1.4M21.5 12s-3.4 6-9.5 6c-2 0-3.8-.6-5.2-1.5"></path>
+      </svg>
+      <span class="presence_toggle_text">${visible_text}</span>
+    `;
   }
 }
 
@@ -11225,7 +12110,7 @@ function toggle_presence_visibility() {
     get_presence_visibility_key(),
     current_user_presence_visible ? "on" : "off",
   );
-  mark_current_user_seen();
+  mark_current_user_seen(current_user_presence_visible && !document.hidden, true);
   update_presence_status_text();
 }
 
@@ -11602,6 +12487,10 @@ function get_message_text_from_segments(segment_list) {
     .join("");
 }
 
+function normalize_message_edit_payload(value) {
+  return JSON.stringify(value || null);
+}
+
 function load_message_segments_into_composer(segment_list, fallback_text = "") {
   dom_references.live_message_input.innerHTML = "";
   const safe_segments =
@@ -11679,7 +12568,7 @@ function clear_live_message_composer() {
   dom_references.live_message_files_preview.innerHTML = "";
   update_live_message_action_labels();
   render_live_message_context_preview();
-  hide_emoji_picker();
+  hide_emoji_picker(false, false);
   hide_mention_search();
   auto_grow_live_message_input();
 }
@@ -11937,6 +12826,21 @@ async function send_live_message(event) {
       ],
       edited_at: new Date().toISOString(),
     };
+    const current_payload = normalize_message_edit_payload({
+      text: String(message_item.text || "").trim(),
+      attachments: Array.isArray(message_item.attachments)
+        ? message_item.attachments
+        : [],
+    });
+    const next_payload = normalize_message_edit_payload({
+      text: message_text,
+      attachments: updated_message.attachments,
+    });
+
+    if (current_payload === next_payload) {
+      clear_live_message_composer();
+      return;
+    }
 
     dom_references.send_live_message_button.disabled = true;
 
@@ -11947,7 +12851,7 @@ async function send_live_message(event) {
           .update({
             text: message_text,
             attachments: updated_message.attachments,
-            edited_at: new Date().toISOString(),
+            edited_at: updated_message.edited_at,
           })
           .eq("id", editing_live_message_id)
           .eq("room_slug", current_room_slug)
