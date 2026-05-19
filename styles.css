@@ -524,7 +524,8 @@ body[data-theme="dark"] .background_glow {
 .music_library_panel {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  left: 50%;
+  transform: translate(-40%);
   width: min(260px, calc(100vw - 28px));
   max-height: 260px;
   overflow-y: auto;
@@ -535,6 +536,7 @@ body[data-theme="dark"] .background_glow {
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 20px 48px rgba(91, 71, 90, 0.16);
+  margin: 0 auto;
 }
 
 .music_library_item {
