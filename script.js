@@ -27,6 +27,7 @@ const presence_seen_storage_prefix = "svetlana_diab_presence_seen";
 const presence_state_storage_prefix = "svetlana_diab_presence_state";
 const daily_content_history_storage_prefix = "svetlana_diab_daily_content_history";
 const biometric_last_password_key = "svetlana_diab_biometric_last_password_at";
+const biometric_opt_in_storage_key = "svetlana_diab_biometric_opt_in";
 const background_sync_server_key = "svetlana-diab-happiness-space";
 const backup_storage_key = "svetlana_diab_backup_config";
 const emoji_usage_storage_key = "svetlana_diab_emoji_usage";
@@ -1029,6 +1030,7 @@ Object.assign(translations.en, {
   biometric_setup_saved: "Fingerprint sign-in is ready for the next 30 days.",
   biometric_unavailable: "Fingerprint sign-in is not available on this device yet.",
   biometric_expired: "Please sign in with the secret word again.",
+  biometric_opt_in_label: "Use fingerprint next time",
   notification_reply: "Reply",
   notification_confirm: "Confirm",
   cycle_notification_two_days: "Two days before predicted cycle",
@@ -1101,6 +1103,7 @@ Object.assign(translations.de, {
   biometric_unavailable:
     "Fingerabdruck-Anmeldung ist auf diesem Gerät noch nicht verfügbar.",
   biometric_expired: "Bitte melde dich wieder mit dem Geheimwort an.",
+  biometric_opt_in_label: "Fingerabdruck beim nächsten Mal nutzen",
   notification_reply: "Antworten",
   notification_confirm: "Bestätigen",
   cycle_notification_two_days: "Zwei Tage vor dem vorhergesagten Zyklus",
@@ -1171,6 +1174,7 @@ Object.assign(translations.ar, {
   biometric_setup_saved: "تسجيل الدخول بالبصمة جاهز لمدة 30 يوماً.",
   biometric_unavailable: "البصمة غير متاحة على هذا الجهاز بعد.",
   biometric_expired: "يرجى تسجيل الدخول بكلمة السر مرة أخرى.",
+  biometric_opt_in_label: "استخدام البصمة في المرة القادمة",
   notification_reply: "رد",
   notification_confirm: "تأكيد",
   cycle_notification_two_days: "قبل الدورة المتوقعة بيومين",
@@ -1674,6 +1678,7 @@ async function initialize_application() {
   apply_language();
   sync_fullscreen_panel_state();
   update_music_control_buttons();
+  sync_biometric_opt_in_checkbox();
   const restored_session = await restore_existing_session();
   sync_authenticated_chrome();
   void update_biometric_login_button();
@@ -1728,6 +1733,12 @@ function collect_dom_references() {
   );
   dom_references.biometric_login_button = document.getElementById(
     "biometric_login_button",
+  );
+  dom_references.biometric_opt_in_checkbox = document.getElementById(
+    "biometric_opt_in_checkbox",
+  );
+  dom_references.biometric_opt_in_text = document.getElementById(
+    "biometric_opt_in_text",
   );
   dom_references.login_email_hint = document.getElementById("login_email_hint");
   dom_references.forgot_password_button = document.getElementById(
@@ -3015,6 +3026,11 @@ function bind_event_handlers() {
     "click",
     toggle_password_visibility,
   );
+  dom_references.biometric_opt_in_checkbox?.addEventListener("change", () => {
+    if (!dom_references.biometric_opt_in_checkbox.checked) {
+      void clear_biometric_credentials();
+    }
+  });
   dom_references.biometric_login_button?.addEventListener(
     "click",
     handle_biometric_login,
@@ -3319,7 +3335,10 @@ function bind_event_handlers() {
   );
   dom_references.messages_scroll_bottom_button?.addEventListener(
     "click",
-    scroll_live_messages_to_bottom,
+    (event) => {
+      event.preventDefault();
+      scroll_live_messages_to_bottom("smooth");
+    },
   );
   dom_references.live_messages_list.addEventListener(
     "scroll",
@@ -3497,6 +3516,16 @@ function update_password_visibility_button() {
   button.title = label;
 }
 
+function biometric_opt_in_is_enabled() {
+  return localStorage.getItem(biometric_opt_in_storage_key) === "on";
+}
+
+function sync_biometric_opt_in_checkbox() {
+  if (dom_references.biometric_opt_in_checkbox) {
+    dom_references.biometric_opt_in_checkbox.checked = biometric_opt_in_is_enabled();
+  }
+}
+
 function get_biometric_plugin() {
   return get_capacitor_plugin("NativeBiometric");
 }
@@ -3523,7 +3552,11 @@ async function update_biometric_login_button() {
   const biometric_plugin = get_biometric_plugin();
   let should_show = false;
 
-  if (biometric_plugin && biometric_credentials_are_fresh()) {
+  if (
+    biometric_plugin &&
+    biometric_opt_in_is_enabled() &&
+    biometric_credentials_are_fresh()
+  ) {
     try {
       const availability = await biometric_plugin.isAvailable({
         useFallback: true,
@@ -3539,6 +3572,26 @@ async function update_biometric_login_button() {
 
   button.classList.toggle("hidden", !should_show);
   return should_show;
+}
+
+async function clear_biometric_credentials() {
+  localStorage.removeItem(biometric_last_password_key);
+  localStorage.removeItem(biometric_opt_in_storage_key);
+
+  const biometric_plugin = get_biometric_plugin();
+
+  if (biometric_plugin?.deleteCredentials) {
+    try {
+      await biometric_plugin.deleteCredentials({
+        server: background_sync_server_key,
+      });
+    } catch (error) {
+      log_app_error("biometric_credentials_clear_failed", error);
+    }
+  }
+
+  sync_biometric_opt_in_checkbox();
+  void update_biometric_login_button();
 }
 
 async function save_biometric_credentials(username, password) {
@@ -3563,6 +3616,8 @@ async function save_biometric_credentials(username, password) {
       server: background_sync_server_key,
     });
     localStorage.setItem(biometric_last_password_key, String(Date.now()));
+    localStorage.setItem(biometric_opt_in_storage_key, "on");
+    sync_biometric_opt_in_checkbox();
     void update_biometric_login_button();
   } catch (error) {
     log_app_error("biometric_credentials_save_failed", error);
@@ -3588,6 +3643,7 @@ async function handle_biometric_login({ is_auto_prompt = false } = {}) {
       "error",
     );
     dom_references.biometric_login_button?.classList.add("hidden");
+    sync_biometric_opt_in_checkbox();
     return;
   }
 
@@ -4799,6 +4855,10 @@ function apply_language() {
     translate("forgot_password_button"),
   );
   set_text(dom_references.biometric_login_button, translate("biometric_login"));
+  set_text(
+    dom_references.biometric_opt_in_text,
+    translate("biometric_opt_in_label"),
+  );
   set_text(dom_references.login_button, translate("login_button"));
   update_login_email_hint();
   set_text(dom_references.welcome_kicker, translate("welcome_kicker"));
@@ -5264,7 +5324,11 @@ async function handle_login(event) {
     return;
   }
 
-  await save_biometric_credentials(submitted_username, submitted_password);
+  if (dom_references.biometric_opt_in_checkbox?.checked) {
+    await save_biometric_credentials(submitted_username, submitted_password);
+  } else {
+    await clear_biometric_credentials();
+  }
   await finish_successful_login(user_profile);
 }
 
@@ -11809,9 +11873,11 @@ function update_messages_scroll_button() {
 }
 
 function scroll_live_messages_to_bottom(behavior = "smooth") {
+  const scroll_behavior =
+    typeof behavior === "string" && behavior ? behavior : "smooth";
   dom_references.live_messages_list?.scrollTo({
     top: dom_references.live_messages_list.scrollHeight,
-    behavior,
+    behavior: scroll_behavior,
   });
   window.setTimeout(update_messages_scroll_button, 260);
 }

@@ -91,6 +91,11 @@
           <button id="biometric_login_button" class="text_link_button biometric_login_button hidden" type="button">
             Use fingerprint
           </button>
+          <label id="biometric_opt_in_label" class="login_switch" for="biometric_opt_in_checkbox">
+            <input id="biometric_opt_in_checkbox" name="biometric_opt_in_checkbox" type="checkbox">
+            <span class="login_switch_track" aria-hidden="true"></span>
+            <span id="biometric_opt_in_text">Use fingerprint next time</span>
+          </label>
 
           <button id="login_button" type="submit">Enter our world</button>
           <p id="login_error_message" class="login_error_message" role="alert"></p>
