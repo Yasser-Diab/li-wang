@@ -1479,6 +1479,7 @@ let supabase_auth_subscription = null;
 let current_room_slug = supabase_room_slug_default;
 let current_auth_user_id = "";
 let current_auth_access_token = "";
+let current_auth_refresh_token = "";
 let password_recovery_mode_active = false;
 let last_exit_sound_time = 0;
 let active_overlay_name = "";
@@ -2547,6 +2548,9 @@ function bind_supabase_auth_listener() {
         password_recovery_mode_active = true;
         current_auth_user_id = String(session?.user?.id || "");
         current_auth_access_token = String(session?.access_token || "");
+        current_auth_refresh_token = String(
+          session?.refresh_token || current_auth_refresh_token || "",
+        );
         open_password_recovery_dialog();
       }, 0);
     },
@@ -2633,12 +2637,15 @@ async function restore_existing_session() {
       if (!error && data.session?.user) {
         const restored_profile = get_profile_from_supabase_user(
           data.session.user,
-        );
+          );
 
-        if (restored_profile) {
-          current_auth_user_id = data.session.user.id;
-          current_auth_access_token = String(data.session.access_token || "");
-          current_user_profile = restored_profile;
+          if (restored_profile) {
+            current_auth_user_id = data.session.user.id;
+            current_auth_access_token = String(data.session.access_token || "");
+            current_auth_refresh_token = String(
+              data.session.refresh_token || current_auth_refresh_token || "",
+            );
+            current_user_profile = restored_profile;
           load_local_music_tracks();
           await load_shared_music_tracks();
           load_hidden_deleted_messages();
@@ -2716,19 +2723,36 @@ async function ensure_supabase_profile_row(user_profile) {
   }
 }
 
-async function get_supabase_access_token() {
+async function get_supabase_session_tokens() {
   if (!is_supabase_enabled()) {
-    return "";
+    return {
+      accessToken: current_auth_access_token,
+      refreshToken: current_auth_refresh_token,
+    };
   }
 
   try {
     const { data } = await supabase_client.auth.getSession();
-    const session_token = String(data?.session?.access_token || "");
-    current_auth_access_token = session_token || current_auth_access_token;
-    return current_auth_access_token;
+    const session = data?.session || null;
+    current_auth_access_token = String(
+      session?.access_token || current_auth_access_token || "",
+    );
+    current_auth_refresh_token = String(
+      session?.refresh_token || current_auth_refresh_token || "",
+    );
   } catch (error) {
-    return current_auth_access_token;
+    // Native background sync keeps the last known tokens and refreshes them itself.
   }
+
+  return {
+    accessToken: current_auth_access_token,
+    refreshToken: current_auth_refresh_token,
+  };
+}
+
+async function get_supabase_access_token() {
+  const session_tokens = await get_supabase_session_tokens();
+  return session_tokens.accessToken;
 }
 
 async function configure_background_message_sync(enabled = true) {
@@ -2749,16 +2773,22 @@ async function configure_background_message_sync(enabled = true) {
       (left_item, right_item) =>
         new Date(right_item.created_at) - new Date(left_item.created_at),
     )[0];
+  const session_tokens = await get_supabase_session_tokens();
+  const native_cycle_data = current_cycle_data
+    ? normalize_cycle_data_store(current_cycle_data)
+    : null;
 
   try {
     await background_sync_plugin.configure({
       enabled: Boolean(enabled && current_user_profile),
       supabaseUrl: normalize_supabase_project_url(supabase_config.url),
       anonKey: String(supabase_config.anon_key || ""),
-      accessToken: await get_supabase_access_token(),
+      accessToken: session_tokens.accessToken,
+      refreshToken: session_tokens.refreshToken,
       roomSlug: current_room_slug,
       userKey: current_user_profile?.user_key || "",
       lastMessageCreatedAt: latest_message?.created_at || "",
+      cycleData: native_cycle_data ? JSON.stringify(native_cycle_data) : "",
     });
   } catch (error) {
     log_app_error("background_sync_configure_failed", error);
@@ -3065,6 +3095,11 @@ function open_messages_for_reply(message_id = "") {
 function handle_native_open_request(event) {
   if (event?.detail?.panel === "messages") {
     open_messages_for_reply(event.detail.messageId || "");
+    return;
+  }
+
+  if (event?.detail?.panel === "cycle") {
+    toggle_fullscreen_panel("cycle", true);
   }
 }
 
@@ -3988,6 +4023,7 @@ function toggle_emoji_picker(event) {
     update_emoji_picker_position();
     dom_references.emoji_picker_panel.classList.remove("hidden");
     document.body.classList.add("emoji_picker_open");
+    update_emoji_picker_position();
     open_overlay_layer("emoji_picker");
     preserve_live_messages_viewport_after_layout();
     return;
@@ -4007,6 +4043,7 @@ function hide_emoji_picker(from_history = false, restore_keyboard = false) {
 
   dom_references.emoji_picker_panel.classList.add("hidden");
   document.body.classList.remove("emoji_picker_open");
+  update_emoji_picker_position();
   close_overlay_layer("emoji_picker", from_history);
   preserve_live_messages_viewport_after_layout();
 
@@ -5583,6 +5620,9 @@ async function authenticate_user(username, password) {
       } else {
         current_auth_user_id = data.user.id;
         current_auth_access_token = String(data.session?.access_token || "");
+        current_auth_refresh_token = String(
+          data.session?.refresh_token || current_auth_refresh_token || "",
+        );
         const user_profile = build_user_profile(username, supabase_user.email);
         await ensure_supabase_profile_row(user_profile);
         return user_profile;
@@ -5626,6 +5666,7 @@ function handle_logout() {
   current_user_profile = null;
   current_auth_user_id = "";
   current_auth_access_token = "";
+  current_auth_refresh_token = "";
   local_music_tracks = [];
   shared_music_tracks = [];
   render_music_library_panel();
@@ -5833,6 +5874,7 @@ async function handle_password_recovery_submit(event) {
     password_recovery_mode_active = false;
     current_auth_user_id = "";
     current_auth_access_token = "";
+    current_auth_refresh_token = "";
     try {
       await supabase_client.auth.signOut();
     } catch (error) {
@@ -10728,6 +10770,7 @@ function edit_memory(item_id) {
 }
 
 async function delete_memory(item_id) {
+  const deleted_memory = current_memory_items.find((item) => item.id === item_id);
   const should_delete = await show_app_confirm(
     translate("delete_memory_confirm"),
     {
@@ -10744,6 +10787,11 @@ async function delete_memory(item_id) {
     (item) => item.id !== item_id,
   );
   await api_save_items("memories", memory_storage_key, current_memory_items);
+  void announce_shared_activity(
+    "memory",
+    translate("shared_activity_memory"),
+    `${translate("delete")}: ${deleted_memory?.title || ""}`.trim(),
+  );
   render_memory_gallery(
     current_memory_items.length > 0
       ? current_memory_items
@@ -10798,6 +10846,11 @@ async function delete_event(item_id) {
     (item) => item.id !== item_id,
   );
   await api_save_items("events", event_storage_key, current_event_items);
+  void announce_shared_activity(
+    "event",
+    translate("shared_activity_event"),
+    `${translate("delete")}: ${event_item.title || ""}`.trim(),
+  );
   render_event_timeline(
     current_event_items.length > 0
       ? current_event_items
@@ -13152,12 +13205,37 @@ function preserve_live_messages_viewport_after_layout() {
 
 function update_emoji_picker_position() {
   const viewport = window.visualViewport;
+  const visual_viewport_height = viewport?.height || window.innerHeight;
   const keyboard_offset = viewport
     ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
     : 0;
+  const picker_is_open =
+    dom_references.emoji_picker_panel &&
+    !dom_references.emoji_picker_panel.classList.contains("hidden");
+  const emoji_picker_height = picker_is_open
+    ? Math.ceil(dom_references.emoji_picker_panel.getBoundingClientRect().height)
+    : 0;
+  const messages_bottom_lift = picker_is_open
+    ? emoji_picker_height + 24
+    : keyboard_offset > 80
+      ? 84
+      : 18;
+
+  document.documentElement.style.setProperty(
+    "--app_visual_viewport_height",
+    `${Math.round(visual_viewport_height)}px`,
+  );
   document.documentElement.style.setProperty(
     "--emoji_keyboard_offset",
     `${Math.round(keyboard_offset)}px`,
+  );
+  document.documentElement.style.setProperty(
+    "--emoji_picker_height",
+    `${Math.round(emoji_picker_height)}px`,
+  );
+  document.documentElement.style.setProperty(
+    "--messages_bottom_lift",
+    `${Math.round(messages_bottom_lift)}px`,
   );
 }
 

@@ -18,6 +18,10 @@
   --dialog_backdrop: rgba(39, 32, 42, 0.42);
   --sans_font: "Inter", "Segoe UI", Arial, sans-serif;
   --serif_font: Georgia, "Times New Roman", serif;
+  --app_visual_viewport_height: 100dvh;
+  --emoji_keyboard_offset: 0px;
+  --emoji_picker_height: 0px;
+  --messages_bottom_lift: 18px;
   color-scheme: light;
 }
 
@@ -1649,7 +1653,9 @@ body.panel_fullscreen_open .language_toggle_button .flag_icon {
   z-index: 62;
   margin: 0;
   padding: 54px clamp(12px, 3vw, 34px) 24px;
-  overflow-y: auto;
+  height: var(--app_visual_viewport_height, 100dvh);
+  min-height: 0;
+  overflow: hidden;
   background:
     linear-gradient(145deg, rgba(255, 247, 251, 0.98), rgba(250, 246, 239, 0.97)),
     radial-gradient(circle at right top, rgba(244, 215, 142, 0.22), transparent 18rem);
@@ -1703,13 +1709,18 @@ body.panel_fullscreen_open .language_toggle_button .flag_icon {
 }
 
 #messages_section.is_panel_expanded .live_messages_shell {
-  min-height: calc(100dvh - 92px);
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  min-height: 0;
+  height: calc(var(--app_visual_viewport_height, 100dvh) - 92px);
   border-radius: 18px;
 }
 
 #messages_section.is_panel_expanded .live_messages_list {
-  height: calc(100dvh - 226px);
+  height: auto;
+  min-height: 0;
   max-height: none;
+  padding-bottom: max(18px, var(--messages_bottom_lift, 18px));
+  scroll-padding-bottom: max(18px, var(--messages_bottom_lift, 18px));
 }
 
 .messages_title_bar {
@@ -3064,8 +3075,9 @@ body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_shell 
 }
 
 body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
-  height: calc(100dvh - 226px);
   min-height: 220px;
+  padding-bottom: max(18px, calc(var(--emoji_picker_height, 0px) + 24px));
+  scroll-padding-bottom: max(18px, calc(var(--emoji_picker_height, 0px) + 24px));
 }
 
 .mention_search_panel {
@@ -4701,11 +4713,11 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   #messages_section.is_panel_expanded .live_messages_list {
-    height: calc(100dvh - 216px);
+    height: auto;
+    min-height: 0;
   }
 
   body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
-    height: calc(100dvh - 216px);
     min-height: 190px;
   }
 
@@ -5076,7 +5088,6 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
   }
 
   body.emoji_picker_open #messages_section.is_panel_expanded .live_messages_list {
-    height: calc(100dvh - 226px);
     min-height: 220px;
   }
 
