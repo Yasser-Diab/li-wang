@@ -65,7 +65,11 @@ function normalize_app_data(app_data) {
   return {
     memories: Array.isArray(app_data.memories) ? app_data.memories : [],
     events: Array.isArray(app_data.events) ? app_data.events : [],
-    live_messages: Array.isArray(app_data.live_messages) ? app_data.live_messages : []
+    live_messages: Array.isArray(app_data.live_messages) ? app_data.live_messages : [],
+    cycle_data:
+      app_data.cycle_data && typeof app_data.cycle_data === "object"
+        ? app_data.cycle_data
+        : null
   };
 }
 
@@ -232,6 +236,9 @@ function sanitize_live_message_attachment(attachment) {
     "name",
     "type",
     "data_url",
+    "bucket",
+    "storage_path",
+    "public_url",
     "reference_type",
     "reference_id",
     "title",
@@ -240,7 +247,11 @@ function sanitize_live_message_attachment(attachment) {
     "preview_label",
     "preview_body",
     "user_key",
+    "activity_type",
+    "change_type",
+    "updated_by",
     "last_seen_at",
+    "typing_until",
     "updated_at"
   ].forEach((key) => {
     if (attachment[key] !== undefined) {
@@ -270,6 +281,25 @@ function sanitize_live_message_attachment(attachment) {
     safe_attachment.segments = attachment.segments
       .map(sanitize_message_segment)
       .filter(Boolean);
+  }
+
+  if (attachment.cycle_data && typeof attachment.cycle_data === "object") {
+    safe_attachment.cycle_data = attachment.cycle_data;
+  }
+
+  if (Array.isArray(attachment.tracks)) {
+    safe_attachment.tracks = attachment.tracks
+      .map((track) => ({
+        id: String(track.id || ""),
+        name: String(track.name || "music"),
+        type: String(track.type || "audio/*"),
+        size: Number(track.size || 0),
+        bucket: String(track.bucket || ""),
+        storage_path: String(track.storage_path || ""),
+        public_url: String(track.public_url || ""),
+        owner_key: String(track.owner_key || "")
+      }))
+      .filter((track) => track.id);
   }
 
   return safe_attachment;
@@ -436,6 +466,12 @@ async function handle_api_request(request, response) {
     return true;
   }
 
+  if (request.method === "GET" && request.url === "/api/cycle_data") {
+    const app_data = await read_app_data();
+    send_json(response, 200, app_data.cycle_data || null);
+    return true;
+  }
+
   if (request.method === "GET" && request.url === "/api/live_messages_stream") {
     response.writeHead(200, {
       "Content-Type": "text/event-stream; charset=utf-8",
@@ -470,6 +506,27 @@ async function handle_api_request(request, response) {
 
     send_json(response, 200, {
       ok: true
+    });
+    return true;
+  }
+
+  if (request.method === "POST" && request.url === "/api/cycle_data") {
+    const body_text = await read_request_body(request);
+    const cycle_data = JSON.parse(body_text || "null");
+
+    if (!cycle_data || typeof cycle_data !== "object" || Array.isArray(cycle_data)) {
+      send_json(response, 400, {
+        ok: false
+      });
+      return true;
+    }
+
+    const app_data = await read_app_data();
+    app_data.cycle_data = cycle_data;
+    await write_app_data(app_data);
+    send_json(response, 200, {
+      ok: true,
+      cycle_data
     });
     return true;
   }
