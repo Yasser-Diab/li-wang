@@ -44,6 +44,8 @@ const supabase_table_names = {
   media_files: "app_media_files",
 };
 const supabase_media_bucket_name = "app-media";
+const shared_music_bucket_name_default = "shared-music";
+const shared_music_table_name_default = "shared_music_files";
 
 const language_cycle = ["en", "de", "ar"];
 const language_config = {
@@ -1551,6 +1553,7 @@ let heart_shower_timeout_id = null;
 let hero_message_timer_id = null;
 let hero_message_cleanup_id = null;
 let supabase_client = null;
+let shared_music_supabase_client = null;
 let supabase_auth_subscription = null;
 let current_room_slug = supabase_room_slug_default;
 let current_auth_user_id = "";
@@ -2654,20 +2657,50 @@ function initialize_supabase_client() {
       : null;
   const normalized_url = normalize_supabase_project_url(supabase_config.url);
 
-  if (!create_client || !normalized_url || !supabase_config.anon_key) {
+  current_room_slug = supabase_config.room_slug || supabase_room_slug_default;
+
+  if (!create_client) {
     return;
   }
 
-  current_room_slug = supabase_config.room_slug || supabase_room_slug_default;
-  supabase_client = create_client(normalized_url, supabase_config.anon_key, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-  });
+  if (normalized_url && supabase_config.anon_key) {
+    supabase_client = create_client(normalized_url, supabase_config.anon_key, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
 
-  bind_supabase_auth_listener();
+    bind_supabase_auth_listener();
+  }
+
+  initialize_shared_music_supabase_client(create_client);
+}
+
+function initialize_shared_music_supabase_client(create_client) {
+  const shared_music_config = get_shared_music_supabase_config();
+  const shared_music_url = normalize_supabase_project_url(
+    shared_music_config.url,
+  );
+  const shared_music_key =
+    shared_music_config.anon_key || shared_music_config.publishable_key || "";
+
+  if (!shared_music_url || !shared_music_key) {
+    return;
+  }
+
+  shared_music_supabase_client = create_client(
+    shared_music_url,
+    shared_music_key,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    },
+  );
 }
 
 function normalize_supabase_project_url(raw_url) {
@@ -2686,6 +2719,32 @@ function normalize_supabase_project_url(raw_url) {
 
 function is_supabase_enabled() {
   return Boolean(supabase_client);
+}
+
+function get_shared_music_supabase_config() {
+  return (
+    (window.supabase_public_config &&
+      window.supabase_public_config.shared_music) ||
+    {}
+  );
+}
+
+function is_shared_music_supabase_enabled() {
+  return Boolean(shared_music_supabase_client);
+}
+
+function get_shared_music_supabase_client() {
+  return shared_music_supabase_client || supabase_client;
+}
+
+function get_shared_music_bucket_name() {
+  const shared_music_config = get_shared_music_supabase_config();
+  return shared_music_config.bucket || shared_music_bucket_name_default;
+}
+
+function get_shared_music_table_name() {
+  const shared_music_config = get_shared_music_supabase_config();
+  return shared_music_config.table || shared_music_table_name_default;
 }
 
 function can_use_local_api() {
@@ -2964,6 +3023,24 @@ async function configure_background_message_sync(enabled = true) {
       lastMessageCreatedAt: latest_message?.created_at || "",
       cycleData: native_cycle_data ? JSON.stringify(native_cycle_data) : "",
     });
+
+    if (
+      enabled &&
+      current_user_profile &&
+      typeof background_sync_plugin.requestBatteryOptimizationBypass ===
+        "function"
+    ) {
+      const battery_prompt_key = `sveta_battery_optimization_prompt_${current_room_slug}_${current_user_profile.user_key}`;
+
+      if (!localStorage.getItem(battery_prompt_key)) {
+        try {
+          await background_sync_plugin.requestBatteryOptimizationBypass();
+          localStorage.setItem(battery_prompt_key, "1");
+        } catch (error) {
+          log_app_error("background_sync_battery_prompt_failed", error);
+        }
+      }
+    }
   } catch (error) {
     log_app_error("background_sync_configure_failed", error);
   }
@@ -9904,18 +9981,45 @@ function save_shared_music_tracks_locally() {
   }
 }
 
+function is_new_shared_music_storage_track(track) {
+  return (
+    track?.storage_mode === "shared_music_supabase" ||
+    String(track?.bucket || "") === get_shared_music_bucket_name()
+  );
+}
+
+function get_shared_music_track_storage_url(track) {
+  if (!track?.storage_path) {
+    return "";
+  }
+
+  if (is_new_shared_music_storage_track(track)) {
+    return get_shared_music_public_url(
+      track.storage_path,
+      track.bucket || get_shared_music_bucket_name(),
+    );
+  }
+
+  return get_supabase_media_public_url(
+    track.storage_path,
+    track.bucket || supabase_media_bucket_name,
+  );
+}
+
+function get_shared_music_track_source(track) {
+  return (
+    track?.src ||
+    track?.public_url ||
+    track?.data_url ||
+    get_shared_music_track_storage_url(track)
+  );
+}
+
 async function hydrate_shared_music_track_sources() {
   shared_music_tracks = shared_music_tracks
     .map((track) => ({
       ...track,
-      src:
-        track.src ||
-        track.public_url ||
-        track.data_url ||
-        get_supabase_media_public_url(
-          track.storage_path,
-          track.bucket || supabase_media_bucket_name,
-        ),
+      src: get_shared_music_track_source(track),
     }))
     .filter((track) => track.src);
   save_shared_music_tracks_locally();
@@ -9950,7 +10054,37 @@ async function load_shared_music_tracks() {
     shared_music_tracks = [];
   }
 
-  if (is_supabase_enabled() && current_auth_user_id) {
+  let shared_music_table_loaded = false;
+
+  if (is_shared_music_supabase_enabled()) {
+    try {
+      const { data, error } = await shared_music_supabase_client
+        .from(get_shared_music_table_name())
+        .select("*")
+        .eq("room_slug", current_room_slug)
+        .order("created_at", { ascending: true });
+
+      if (!error && Array.isArray(data)) {
+        shared_music_tracks = data.map((row) => ({
+          id: String(row.id),
+          name: String(row.name || "music"),
+          type: String(row.mime_type || "audio/*"),
+          size: Number(row.size_bytes || 0),
+          bucket: String(row.storage_bucket || get_shared_music_bucket_name()),
+          storage_path: String(row.storage_path || ""),
+          public_url: String(row.public_url || ""),
+          owner_key: String(row.owner_key || ""),
+          storage_mode: "shared_music_supabase",
+          is_shared: true,
+        }));
+        shared_music_table_loaded = true;
+      }
+    } catch (error) {
+      log_app_error("shared_music_table_load_failed", error);
+    }
+  }
+
+  if (!shared_music_table_loaded && is_supabase_enabled() && current_auth_user_id) {
     try {
       const { data, error } = await supabase_client
         .from(supabase_table_names.media_files)
@@ -9969,13 +10103,16 @@ async function load_shared_music_tracks() {
           storage_path: String(row.storage_path || ""),
           public_url: String(row.public_url || ""),
           owner_key: String(row.owner_key || ""),
+          storage_mode: "legacy_app_media",
           is_shared: true,
         }));
       }
     } catch (error) {
       // The live-message manifest below covers older Supabase setups.
     }
+  }
 
+  if (is_supabase_enabled() && current_auth_user_id) {
     try {
       const { data, error } = await supabase_client
         .from(supabase_table_names.live_messages)
@@ -9990,7 +10127,22 @@ async function load_shared_music_tracks() {
         );
 
         if (Array.isArray(attachment?.tracks) && attachment.tracks.length > 0) {
-          shared_music_tracks = attachment.tracks;
+          if (shared_music_table_loaded) {
+            const merged_tracks = new Map(
+              shared_music_tracks.map((track) => [track.id, track]),
+            );
+            attachment.tracks
+              .filter((track) => track.storage_mode === "inline_manifest")
+              .forEach((track) => {
+                merged_tracks.set(track.id, {
+                  ...track,
+                  is_shared: true,
+                });
+              });
+            shared_music_tracks = Array.from(merged_tracks.values());
+          } else {
+            shared_music_tracks = attachment.tracks;
+          }
         }
       }
     } catch (error) {
@@ -10146,6 +10298,24 @@ function get_supabase_media_public_url(
   }
 }
 
+function get_shared_music_public_url(storage_path, bucket_name = "") {
+  const music_client = get_shared_music_supabase_client();
+  const safe_bucket = bucket_name || get_shared_music_bucket_name();
+
+  if (!music_client || !storage_path) {
+    return "";
+  }
+
+  try {
+    const { data } = music_client.storage
+      .from(safe_bucket)
+      .getPublicUrl(storage_path);
+    return data?.publicUrl || "";
+  } catch (error) {
+    return "";
+  }
+}
+
 async function upload_file_to_supabase_media(
   file_item,
   category,
@@ -10206,6 +10376,66 @@ async function upload_file_to_supabase_media(
   }
 }
 
+async function upload_file_to_shared_music_storage(file_item, preferred_id = "") {
+  const music_client = get_shared_music_supabase_client();
+
+  if (!music_client || !file_item) {
+    return null;
+  }
+
+  const id = preferred_id || create_item_id();
+  const safe_filename = sanitize_storage_filename(file_item.name, "mp3");
+  const bucket_name = get_shared_music_bucket_name();
+  const table_name = get_shared_music_table_name();
+  const storage_path = `${current_room_slug}/music/${id}-${safe_filename}`;
+
+  try {
+    const { error } = await music_client.storage
+      .from(bucket_name)
+      .upload(storage_path, file_item, {
+        upsert: true,
+        contentType: file_item.type || "audio/mpeg",
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const public_url = get_shared_music_public_url(storage_path, bucket_name);
+
+    try {
+      await music_client.from(table_name).upsert(
+        {
+          id,
+          room_slug: current_room_slug,
+          name: file_item.name || safe_filename,
+          mime_type: file_item.type || "audio/*",
+          size_bytes: file_item.size || 0,
+          storage_bucket: bucket_name,
+          storage_path,
+          public_url,
+          owner_key: current_user_profile?.user_key || "",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" },
+      );
+    } catch (error) {
+      log_app_error("shared_music_metadata_sync_failed", error);
+    }
+
+    return {
+      id,
+      bucket: bucket_name,
+      storage_path,
+      public_url,
+      storage_mode: "shared_music_supabase",
+    };
+  } catch (error) {
+    log_app_error("shared_music_upload_failed", error);
+    return null;
+  }
+}
+
 async function create_local_music_track(file_item) {
   const id = create_item_id();
   const data_url = await read_file_as_data_url(file_item);
@@ -10256,9 +10486,8 @@ async function create_local_music_track(file_item) {
 
 async function create_shared_music_track(file_item) {
   const id = create_item_id();
-  const uploaded_file = await upload_file_to_supabase_media(
+  const uploaded_file = await upload_file_to_shared_music_storage(
     file_item,
-    "music",
     id,
   );
 
@@ -10276,6 +10505,7 @@ async function create_shared_music_track(file_item) {
     public_url: uploaded_file.public_url,
     src: uploaded_file.public_url,
     owner_key: current_user_profile?.user_key || "",
+    storage_mode: uploaded_file.storage_mode || "shared_music_supabase",
     is_shared: true,
   };
 }
@@ -10400,14 +10630,7 @@ function get_shared_music_tracks() {
   return shared_music_tracks
     .map((track) => ({
       ...track,
-      src:
-        track.src ||
-        track.public_url ||
-        track.data_url ||
-        get_supabase_media_public_url(
-          track.storage_path,
-          track.bucket || supabase_media_bucket_name,
-        ),
+      src: get_shared_music_track_source(track),
       is_default: false,
       is_shared: true,
     }))
@@ -10564,15 +10787,35 @@ async function handle_music_library_action(event) {
     track.is_shared ||
     shared_music_tracks.some((item) => item.id === track_id)
   ) {
-    if (is_supabase_enabled() && track.storage_path) {
+    const delete_from_shared_music_project =
+      is_new_shared_music_storage_track(track) && shared_music_supabase_client;
+
+    if (track.storage_path) {
+      const storage_client = delete_from_shared_music_project
+        ? shared_music_supabase_client
+        : supabase_client;
+      const bucket_name = delete_from_shared_music_project
+        ? track.bucket || get_shared_music_bucket_name()
+        : track.bucket || supabase_media_bucket_name;
+
       try {
-        await supabase_client.storage
-          .from(track.bucket || supabase_media_bucket_name)
-          .remove([track.storage_path]);
+        await storage_client?.storage.from(bucket_name).remove([track.storage_path]);
       } catch (error) {
         log_app_error("shared_music_delete_failed", error);
       }
+    }
 
+    if (delete_from_shared_music_project) {
+      try {
+        await shared_music_supabase_client
+          .from(get_shared_music_table_name())
+          .delete()
+          .eq("id", track_id)
+          .eq("room_slug", current_room_slug);
+      } catch (error) {
+        log_app_error("shared_music_metadata_delete_failed", error);
+      }
+    } else if (is_supabase_enabled() && track.storage_path) {
       try {
         await supabase_client
           .from(supabase_table_names.media_files)
