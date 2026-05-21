@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Svetlana & Diab</title>
+  <title>Our Universe</title>
   <link rel="icon" href="favicon.png?v=20260517f" type="image/png">
   <link rel="apple-touch-icon" href="favicon.png?v=20260517f">
   <script>
@@ -24,10 +24,10 @@
       }
     }());
   </script>
-  <link rel="stylesheet" href="styles.css?v=20260517e">
+  <link rel="stylesheet" href="styles.css?v=20260521b">
 </head>
 
-<body>
+<body class="auth_restoring">
   <div class="background_glow" aria-hidden="true"></div>
   <button id="app_nav_toggle_button" class="app_nav_toggle_button" type="button" aria-label="Open navigation"
     title="Open navigation">
@@ -430,6 +430,15 @@
                   </svg>
                 </label>
                 <input id="live_message_files_input" name="live_message_files_input" type="file" multiple>
+                <button id="voice_message_button" class="composer_icon_button voice_message_button" type="button"
+                  aria-label="Record voice message" title="Record voice message">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z"></path>
+                    <path d="M6 11a6 6 0 0 0 12 0"></path>
+                    <path d="M12 17v3"></path>
+                    <path d="M8 20h8"></path>
+                  </svg>
+                </button>
                 <button id="send_live_message_button" class="composer_icon_button send_message_button" type="submit"
                   aria-label="Send now" title="Send now">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -596,8 +605,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=20260517e"></script>
-  <script src="script.js?v=20260517e"></script>
+  <script src="supabase-config.js?v=20260521b"></script>
+  <script src="script.js?v=20260521b"></script>
 </body>
 
 </html>

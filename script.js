@@ -27,7 +27,8 @@ const cycle_panel_open_storage_key = "svetlana_diab_cycle_panel_open";
 const presence_visibility_storage_prefix = "svetlana_diab_presence_visible";
 const presence_seen_storage_prefix = "svetlana_diab_presence_seen";
 const presence_state_storage_prefix = "svetlana_diab_presence_state";
-const daily_content_history_storage_prefix = "svetlana_diab_daily_content_history";
+const daily_content_history_storage_prefix =
+  "svetlana_diab_daily_content_history";
 const biometric_last_password_key = "svetlana_diab_biometric_last_password_at";
 const biometric_opt_in_storage_key = "svetlana_diab_biometric_opt_in";
 const background_sync_server_key = "svetlana-diab-happiness-space";
@@ -83,24 +84,70 @@ const cycle_support_messages = [
   "Tell me whether you need quiet, sweetness, ridiculous jokes, or a dramatic partner in crime. I can do all four.",
 ];
 const cycle_music_window_days = 2;
+const cycle_party_pre_start_days = 2;
 const cycle_support_burst_emojis = ["😜", "😋", "😄", "😂", "🥳", "😇"];
-const hero_firework_emojis = [
-  "🧡",
-  "🩷",
-  "🥰",
-  "😘",
-  "💕",
-  "💗",
-  "💖",
-  "❤️",
-];
+const cycle_mood_music_tracks_fallback = Object.freeze([
+  "assets/cycle_mood_music/1.mp3",
+  "assets/cycle_mood_music/2.mp3",
+  "assets/cycle_mood_music/3.mp3",
+  "assets/cycle_mood_music/4.mp3",
+  "assets/cycle_mood_music/5.mp3",
+  "assets/cycle_mood_music/6.mp3",
+  "assets/cycle_mood_music/7.mp3",
+  "assets/cycle_mood_music/8.mp3",
+  "assets/cycle_mood_music/9.mp3",
+  "assets/cycle_mood_music/10.mp3",
+  "assets/cycle_mood_music/11.mp3",
+  "assets/cycle_mood_music/12.mp3",
+  "assets/cycle_mood_music/13.mp3",
+  "assets/cycle_mood_music/14.mp3",
+  "assets/cycle_mood_music/15.wav",
+  "assets/cycle_mood_music/16.wav",
+  "assets/cycle_mood_music/17.mp3",
+  "assets/cycle_mood_music/18.mp3",
+  "assets/cycle_mood_music/19.mp3",
+  "assets/cycle_mood_music/20.mp3",
+  "assets/cycle_mood_music/21.wav",
+  "assets/cycle_mood_music/22.mp3",
+  "assets/cycle_mood_music/23.mp3",
+  "assets/cycle_mood_music/24.mp3",
+  "assets/cycle_mood_music/25.wav",
+  "assets/cycle_mood_music/26.wav",
+  "assets/cycle_mood_music/27.wav",
+  "assets/cycle_mood_music/28.wav",
+  "assets/cycle_mood_music/29.mp3",
+  "assets/cycle_mood_music/30.wav",
+  "assets/cycle_mood_music/31.wav",
+  "assets/cycle_mood_music/32.mp3",
+  "assets/cycle_mood_music/33.mp3",
+  "assets/cycle_mood_music/34.mp3",
+  "assets/cycle_mood_music/35.mp3",
+  "assets/cycle_mood_music/36.mp3",
+  "assets/cycle_mood_music/37.wav",
+  "assets/cycle_mood_music/38.mp3",
+  "assets/cycle_mood_music/39.mp3",
+  "assets/cycle_mood_music/40.mp3",
+  "assets/cycle_mood_music/41.mp3",
+  "assets/cycle_mood_music/42.mp3",
+  "assets/cycle_mood_music/43.mp3",
+  "assets/cycle_mood_music/44.mp3",
+]);
+const cycle_party_badge_messages = Object.freeze({
+  default: "I love you",
+  very_low: "Let's cry together!",
+  low: "Giiirrl, Smile It's an order from your Wolf!!",
+  soft: "Okaay i think we need to find someone to bury together 😁",
+  good: "My heart! don't stay backing the whole day 🙄😏",
+  bright: "Want to eat a meal from another universe?! 😁😉 let's do it!! 😂",
+});
+const hero_firework_emojis = ["🧡", "🩷", "🥰", "😘", "💕", "💗", "💖", "❤️"];
 const night_tale_magic_emojis = ["✨", "🪄", "💫"];
 const empty_sound_manifest = Object.freeze({
   background_music: [],
   welcome: [],
   logout: [],
-  message_send: [],
-  message_receive: [],
+  message_send: ["assets/sending.wav"],
+  message_receive: ["assets/getting_message.wav"],
 });
 const local_sound_manifest_fallback = Object.freeze({
   background_music: [
@@ -1008,11 +1055,20 @@ Object.assign(translations.en, {
   music_personal_tracks: "Your uploads",
   music_shared_upload_failed:
     "The track stayed only on this device because shared storage is not ready yet.",
+  music_shared_inline_fallback:
+    "Shared storage was not ready, so I saved the track into the shared app list instead.",
   music_play_track: "Play track",
   music_pause_track: "Pause track",
   music_added: (count) => `${count} track${count === 1 ? "" : "s"} added.`,
   music_play: "Play music",
   music_pause: "Pause music",
+  voice_message_start: "Record voice message",
+  voice_message_stop: "Stop and send voice message",
+  voice_message_recording: "Recording voice...",
+  voice_message_not_supported:
+    "Voice recording is not available on this device.",
+  voice_message_permission_error:
+    "Microphone permission is needed to send a voice message.",
   messages_short_heading: "Messages",
   messages_search: "Search messages",
   messages_search_placeholder: "Search messages",
@@ -1048,7 +1104,8 @@ Object.assign(translations.en, {
   hide_password: "Hide password",
   biometric_login: "Use fingerprint",
   biometric_setup_saved: "Fingerprint sign-in is ready for the next 30 days.",
-  biometric_unavailable: "Fingerprint sign-in is not available on this device yet.",
+  biometric_unavailable:
+    "Fingerprint sign-in is not available on this device yet.",
   biometric_expired: "Please sign in with the secret word again.",
   biometric_opt_in_label: "Use fingerprint next time",
   notification_reply: "Reply",
@@ -1098,11 +1155,20 @@ Object.assign(translations.de, {
   music_personal_tracks: "Deine Uploads",
   music_shared_upload_failed:
     "Der Titel blieb nur auf diesem Gerät, weil der gemeinsame Speicher noch nicht bereit ist.",
+  music_shared_inline_fallback:
+    "Der gemeinsame Speicher war nicht bereit, deshalb habe ich den Titel in der gemeinsamen App-Liste gespeichert.",
   music_play_track: "Titel abspielen",
   music_pause_track: "Titel pausieren",
   music_added: (count) => `${count} Titel hinzugefügt.`,
   music_play: "Musik abspielen",
   music_pause: "Musik pausieren",
+  voice_message_start: "Sprachnachricht aufnehmen",
+  voice_message_stop: "Sprachnachricht stoppen und senden",
+  voice_message_recording: "Sprachnachricht wird aufgenommen...",
+  voice_message_not_supported:
+    "Sprachnachrichten sind auf diesem Gerät nicht verfügbar.",
+  voice_message_permission_error:
+    "Mikrofonzugriff wird benötigt, um eine Sprachnachricht zu senden.",
   messages_short_heading: "Nachrichten",
   messages_search: "Nachrichten suchen",
   messages_search_placeholder: "Nachrichten suchen",
@@ -1190,11 +1256,20 @@ Object.assign(translations.ar, {
   music_personal_tracks: "مقاطعك",
   music_shared_upload_failed:
     "بقي المقطع على هذا الجهاز فقط لأن التخزين المشترك غير جاهز بعد.",
+  music_shared_inline_fallback:
+    "التخزين المشترك غير جاهز، لذلك حفظت المقطع في قائمة التطبيق المشتركة.",
   music_play_track: "تشغيل المقطع",
   music_pause_track: "إيقاف المقطع",
   music_added: (count) => `تمت إضافة ${count} مقطع.`,
   music_play: "تشغيل الموسيقى",
   music_pause: "إيقاف الموسيقى مؤقتاً",
+  voice_message_start: "تسجيل رسالة صوتية",
+  voice_message_stop: "إيقاف وإرسال الرسالة الصوتية",
+  voice_message_recording: "جار تسجيل الصوت...",
+  voice_message_not_supported:
+    "التسجيل الصوتي غير متاح على هذا الجهاز.",
+  voice_message_permission_error:
+    "يجب السماح بالميكروفون لإرسال رسالة صوتية.",
   messages_short_heading: "الرسائل",
   messages_search: "البحث في الرسائل",
   messages_search_placeholder: "ابحثي في الرسائل",
@@ -1450,6 +1525,7 @@ let last_background_music_url = "";
 let background_music_needs_unlock = false;
 let background_music_paused_by_user = false;
 let background_music_paused_by_lifecycle = false;
+let background_music_paused_by_cycle_mood = false;
 let music_enabled = true;
 let local_music_tracks = [];
 let shared_music_tracks = [];
@@ -1485,6 +1561,15 @@ let last_exit_sound_time = 0;
 let active_overlay_name = "";
 let live_message_swipe_state = null;
 let cycle_ambient_nodes = null;
+let cycle_mood_audio = null;
+let last_cycle_mood_music_url = "";
+let last_cycle_party_mood_key = "";
+let voice_message_media_recorder = null;
+let voice_message_stream = null;
+let voice_message_chunks = [];
+let voice_message_started_at = 0;
+let voice_message_stop_timeout_id = null;
+let voice_message_should_send = false;
 let cycle_message_rotation_id = null;
 let cycle_feeling_prompt_key = "";
 let current_cycle_text_dialog_mode = "checkin";
@@ -1592,6 +1677,8 @@ function set_cycle_mood_for_date(date_text, mood_key) {
       ? date_text
       : format_date_input_value(date_text);
   const normalized_mood = String(mood_key || "").trim();
+  const mood_is_inside_party_window =
+    is_date_in_cycle_party_window(normalized_date);
 
   current_cycle_data.moods_by_date ||= {};
 
@@ -1605,8 +1692,83 @@ function set_cycle_mood_for_date(date_text, mood_key) {
   }
 
   current_selected_cycle_date = normalized_date;
+  if (mood_is_inside_party_window && normalized_mood) {
+    last_cycle_party_mood_key = normalized_mood;
+    play_cycle_mood_music();
+    launch_cycle_party_burst();
+  }
   pending_cycle_change_type = "mood";
   on_cycle_change();
+}
+
+function get_cycle_party_windows(runtime = get_cycle_runtime_state()) {
+  const windows = [];
+  const add_window = (start_date, end_date) => {
+    if (!start_date || !end_date) {
+      return;
+    }
+
+    windows.push({
+      start_date: add_days(start_date, -cycle_party_pre_start_days),
+      end_date,
+    });
+  };
+
+  runtime.confirmed_windows.forEach((window_item) => {
+    add_window(window_item.start_date, window_item.end_date);
+  });
+  runtime.predicted_windows.forEach((window_item) => {
+    add_window(window_item.predicted_start, window_item.predicted_end);
+  });
+
+  return windows;
+}
+
+function is_date_in_cycle_party_window(
+  date_text,
+  runtime = get_cycle_runtime_state(),
+) {
+  if (!date_text) {
+    return false;
+  }
+
+  const target_date = parse_local_date(date_text);
+
+  return get_cycle_party_windows(runtime).some(
+    (window_item) =>
+      target_date >= window_item.start_date &&
+      target_date <= window_item.end_date,
+  );
+}
+
+function is_cycle_party_window_active(runtime = get_cycle_runtime_state()) {
+  return is_date_in_cycle_party_window(runtime.today_text, runtime);
+}
+
+function get_cycle_party_mood_class(mood_key) {
+  if (mood_key === "very_low" || mood_key === "low") {
+    return "cycle_party_mood_bad";
+  }
+
+  if (mood_key === "bright") {
+    return "cycle_party_mood_excited";
+  }
+
+  if (mood_key === "soft" || mood_key === "good") {
+    return "cycle_party_mood_balanced";
+  }
+
+  return "";
+}
+
+function get_cycle_party_active_mood_key(runtime = get_cycle_runtime_state()) {
+  const selected_date = get_cycle_selected_date_or_today();
+  const selected_mood = is_date_in_cycle_party_window(selected_date, runtime)
+    ? get_cycle_mood_value(selected_date)
+    : "";
+  const today_mood = get_cycle_mood_value(runtime.today_text);
+
+  return last_cycle_party_mood_key || selected_mood || today_mood || "";
 }
 
 function get_active_cycle_checkin_context() {
@@ -1708,38 +1870,41 @@ let current_cycle_dialog_guard = {
 let current_app_notice_request = null;
 const flow_animation_state = {};
 const quick_emoji_source = `Smileys & Emotion
-😀 😃 😄 😁 😆 😅 😂 🤣 🥲 🥹 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 😎 🤓 🧐 🤩 🥳 🙂‍↔️ 🙂‍↕️ 😏 😒 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😮‍💨 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🫣 🤗 🫡 🤔 🫢 🤭 🤫 🤥 😶 😶‍🌫️ 😐 😑 😬 🫨 🫠 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 😵‍💫 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 👺 🤡 💩 👻 💀 ☠️ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾 ❤️ 🧡 💛 💚 💙 🩵 💜 🖤 🩶 🤍 🤎 💔 ❤️‍🔥 ❤️‍🩹 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟
+😀 😃 😄 😁 😆 😅 😂 🤣 🥲 🥹 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 😎 🤓 🧐 🤩 🥳 🙂‍↔️ 🙂‍↕️ 😏 😒 😞 😔 😟 😕 🙁 ☹️ 🫩 😣 😖 😫 😩 🥺 😢 😭 😮‍💨 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🫣 🤗 🫡 🤔 🫢 🤭 🤫 🤥 😶 😶‍🌫️ 😐 😑 😬 🫨 🫠 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 😵‍💫 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 👺 🤡 💩 👻 💀 ☠️ 👽 👾 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾 💋 💌 💘 💝 💖 💗 💓 💞 💕 💟 ❣️ 💔 ❤️‍🔥 ❤️‍🩹 ❤️ 🩷 🧡 💛 💚 💙 🩵 💜 🤎 🖤 🩶 🤍 💯 💢 💥 💫 💦 💨 🕳️ 💬 👁️‍🗨️ 🗨️ 🗯️ 💭 💤
 
 People & Body
-👋 🤚 🖐️ ✋ 🖖 🫱 🫲 🫳 🫴 🫷 🫸 👌 🤌 🤏 ✌️ 🤞 🫰 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 🫵 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 🫶 👐 🤲 🤝 🙏 ✍️ 💅 🤳 💪 🦾 🦵 🦿 🦶 👂 🦻 👃 🧠 🫀 🫁 🦷 🦴 👀 👁️ 👅 👄 🫦 💋 🩸 👶 🧒 👦 👧 🧑 👱 👨 🧔 🧔‍♂️ 🧔‍♀️ 👨‍🦰 👨‍🦱 👨‍🦳 👨‍🦲 👩 👩‍🦰 🧑‍🦰 👩‍🦱 🧑‍🦱 👩‍🦳 🧑‍🦳 👩‍🦲 🧑‍🦲 👱‍♀️ 👱‍♂️ 🧓 👴 👵 🙍 🙍‍♂️ 🙍‍♀️ 🙎 🙎‍♂️ 🙎‍♀️ 🙅 🙅‍♂️ 🙅‍♀️ 🙆 🙆‍♂️ 🙆‍♀️ 💁 💁‍♂️ 💁‍♀️ 🙋 🙋‍♂️ 🙋‍♀️ 🧏 🧏‍♂️ 🧏‍♀️ 🙇 🙇‍♂️ 🙇‍♀️ 🤦 🤦‍♂️ 🤦‍♀️ 🤷 🤷‍♂️ 🤷‍♀️ 🧑‍⚕️ 👨‍⚕️ 👩‍⚕️ 🧑‍🎓 👨‍🎓 👩‍🎓 🧑‍🏫 👨‍🏫 👩‍🏫 🧑‍⚖️ 👨‍⚖️ 👩‍⚖️ 🧑‍🌾 👨‍🌾 👩‍🌾 🧑‍🍳 👨‍🍳 👩‍🍳 🧑‍🔧 👨‍🔧 👩‍🔧 🧑‍🏭 👨‍🏭 👩‍🏭 🧑‍💼 👨‍💼 👩‍💼 🧑‍🔬 👨‍🔬 👩‍🔬 🧑‍💻 👨‍💻 👩‍💻 🧑‍🎤 👨‍🎤 👩‍🎤 🧑‍🎨 👨‍🎨 👩‍🎨 🧑‍✈️ 👨‍✈️ 👩‍✈️ 🧑‍🚀 👨‍🚀 👩‍🚀 🧑‍🚒 👨‍🚒 👩‍🚒 👮 👮‍♂️ 👮‍♀️ 🕵️ 🕵️‍♂️ 🕵️‍♀️ 💂 💂‍♂️ 💂‍♀️ 🥷 👷 👷‍♂️ 👷‍♀️ 🫅 🤴 👸 👳 👳‍♂️ 👳‍♀️ 👲 🧕 🤵 🤵‍♂️ 🤵‍♀️ 👰 👰‍♂️ 👰‍♀️ 🤰 🫃 🫄 🤱 👩‍🍼 👨‍🍼 🧑‍🍼 👼 🎅 🤶 🧑‍🎄 🦸 🦸‍♂️ 🦸‍♀️ 🦹 🦹‍♂️ 🦹‍♀️ 🧙 🧙‍♂️ 🧙‍♀️ 🧚 🧚‍♂️ 🧚‍♀️ 🧛 🧛‍♂️ 🧛‍♀️ 🧜 🧜‍♂️ 🧜‍♀️ 🧝 🧝‍♂️ 🧝‍♀️ 🧞 🧞‍♂️ 🧞‍♀️ 🧟 🧟‍♂️ 🧟‍♀️ 🧌 💆 💆‍♂️ 💆‍♀️ 💇 💇‍♂️ 💇‍♀️ 🚶 🚶‍♂️ 🚶‍♀️ 🧍 🧍‍♂️ 🧍‍♀️ 🧎 🧎‍♂️ 🧎‍♀️ 🧑‍🦯 👨‍🦯 👩‍🦯 🧑‍🦼 👨‍🦼 👩‍🦼 🧑‍🦽 👨‍🦽 👩‍🦽 🏃 🏃‍♂️ 🏃‍♀️ 💃 🕺 🕴️ 👯 👯‍♂️ 👯‍♀️ 🧖 🧖‍♂️ 🧖‍♀️ 🧗 🧗‍♂️ 🧗‍♀️
+👋 🤚 🖐️ ✋ 🖖 🫱 🫲 🫳 🫴 🫷 🫸 👌 🤌 🤏 ✌️ 🤞 🫰 🤟 🤘 🤙 👈 👉 👆 🖕 👇 ☝️ 🫵 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 🫶 👐 🤲 🤝 🙏 ✍️ 🫆 💅 🤳 💪 🦾 🦵 🦿 🦶 👂 🦻 👃 🧠 🫀 🫁 🦷 🦴 👀 👁️ 👅 👄 🫦 👶 🧒 👦 👧 🧑 👱 👨 🧔 🧔‍♂️ 🧔‍♀️ 👨‍🦰 👨‍🦱 👨‍🦳 👨‍🦲 👩 👩‍🦰 🧑‍🦰 👩‍🦱 🧑‍🦱 👩‍🦳 🧑‍🦳 👩‍🦲 🧑‍🦲 👱‍♀️ 👱‍♂️ 🧓 👴 👵 🙍 🙍‍♂️ 🙍‍♀️ 🙎 🙎‍♂️ 🙎‍♀️ 🙅 🙅‍♂️ 🙅‍♀️ 🙆 🙆‍♂️ 🙆‍♀️ 💁 💁‍♂️ 💁‍♀️ 🙋 🙋‍♂️ 🙋‍♀️ 🧏 🧏‍♂️ 🧏‍♀️ 🙇 🙇‍♂️ 🙇‍♀️ 🤦 🤦‍♂️ 🤦‍♀️ 🤷 🤷‍♂️ 🤷‍♀️ 🧑‍⚕️ 👨‍⚕️ 👩‍⚕️ 🧑‍🎓 👨‍🎓 👩‍🎓 🧑‍🏫 👨‍🏫 👩‍🏫 🧑‍⚖️ 👨‍⚖️ 👩‍⚖️ 🧑‍🌾 👨‍🌾 👩‍🌾 🧑‍🍳 👨‍🍳 👩‍🍳 🧑‍🔧 👨‍🔧 👩‍🔧 🧑‍🏭 👨‍🏭 👩‍🏭 🧑‍💼 👨‍💼 👩‍💼 🧑‍🔬 👨‍🔬 👩‍🔬 🧑‍💻 👨‍💻 👩‍💻 🧑‍🎤 👨‍🎤 👩‍🎤 🧑‍🎨 👨‍🎨 👩‍🎨 🧑‍✈️ 👨‍✈️ 👩‍✈️ 🧑‍🚀 👨‍🚀 👩‍🚀 🧑‍🚒 👨‍🚒 👩‍🚒 👮 👮‍♂️ 👮‍♀️ 🕵️ 🕵️‍♂️ 🕵️‍♀️ 💂 💂‍♂️ 💂‍♀️ 🥷 👷 👷‍♂️ 👷‍♀️ 🫅 🤴 👸 👳 👳‍♂️ 👳‍♀️ 👲 🧕 🤵 🤵‍♂️ 🤵‍♀️ 👰 👰‍♂️ 👰‍♀️ 🤰 🫃 🫄 🤱 👩‍🍼 👨‍🍼 🧑‍🍼 👼 🎅 🤶 🧑‍🎄 🦸 🦸‍♂️ 🦸‍♀️ 🦹 🦹‍♂️ 🦹‍♀️ 🧙 🧙‍♂️ 🧙‍♀️ 🧚 🧚‍♂️ 🧚‍♀️ 🧛 🧛‍♂️ 🧛‍♀️ 🧜 🧜‍♂️ 🧜‍♀️ 🧝 🧝‍♂️ 🧝‍♀️ 🧞 🧞‍♂️ 🧞‍♀️ 🧟 🧟‍♂️ 🧟‍♀️ 🧌 💆 💆‍♂️ 💆‍♀️ 💇 💇‍♂️ 💇‍♀️ 🚶 🚶‍♂️ 🚶‍♀️ 🧍 🧍‍♂️ 🧍‍♀️ 🧎 🧎‍♂️ 🧎‍♀️ 🧑‍🦯 👨‍🦯 👩‍🦯 🧑‍🦼 👨‍🦼 👩‍🦼 🧑‍🦽 👨‍🦽 👩‍🦽 🏃 🏃‍♂️ 🏃‍♀️ 💃 🕺 🕴️ 👯 👯‍♂️ 👯‍♀️ 🧖 🧖‍♂️ 🧖‍♀️ 🧗 🧗‍♂️ 🧗‍♀️ 🧘 🧘‍♂️ 🧘‍♀️ 🛀 🛌 🧑‍🤝‍🧑 👭 👫 👬 💏 👩‍❤️‍💋‍👨 👨‍❤️‍💋‍👨 👩‍❤️‍💋‍👩 💑 👩‍❤️‍👨 👨‍❤️‍👨 👩‍❤️‍👩 👪 🗣️ 👤 👥 🫂
 
 Animals & Nature
-🐵 🐒 🦍 🦧 🐶 🐕 🦮 🐕‍🦺 🐩 🐺 🦊 🦝 🐱 🐈 🐈‍⬛ 🦁 🐯 🐅 🐆 🐴 🫎 🫏 🐎 🦄 🦓 🦌 🦬 🐮 🐂 🐃 🐄 🐷 🐖 🐗 🐽 🐏 🐑 🐐 🐪 🐫 🦙 🦒 🐘 🦣 🦏 🦛 🐭 🐁 🐀 🐹 🐰 🐇 🐿️ 🦫 🦔 🦇 🐻 🐻‍❄️ 🐨 🐼 🦥 🦦 🦨 🦘 🦡 🐾 🦃 🐔 🐓 🐣 🐤 🐥 🐦 🐧 🕊️ 🦅 🦆 🦢 🦉 🦤 🪶 🦩 🦚 🦜 🪽 🐦‍⬛ 🪿 🐸 🐊 🐢 🦎 🐍 🐲 🐉 🦕 🦖 🐳 🐋 🐬 🦭 🐟 🐠 🐡 🦈 🐙 🐚 🪸 🪼 🐌 🦋 🐛 🐜 🐝 🪲 🐞 🦗 🪳 🕷️ 🕸️ 🦂 🦟 🪰 🪱 🦠 💐 🌸 💮 🪷 🏵️ 🌹 🥀 🌺 🌻 🌼 🌷 🪻 🌱 🪴 🌲 🌳 🌴 🌵 🌾 🌿 ☘️ 🍀 🍁 🍂 🍃 🪹 🪺 🍄 🪨 🪵 🌰 🦀 🦞 🦐 🦑
+🐵 🙈 🙉 🙊 🐒 🦍 🦧 🐶 🐕 🦮 🐕‍🦺 🐩 🐺 🦊 🦝 🐱 🐈 🐈‍⬛ 🦁 🐯 🐅 🐆 🐴 🫎 🫏 🐎 🦄 🦓 🦌 🦬 🐮 🐂 🐃 🐄 🐷 🐖 🐗 🐽 🐏 🐑 🐐 🐪 🐫 🦙 🦒 🐘 🦣 🦏 🦛 🐭 🐁 🐀 🐹 🐰 🐇 🐿️ 🦫 🦔 🦇 🐻 🐻‍❄️ 🐨 🐼 🦥 🦦 🦨 🦘 🦡 🐾 🦃 🐔 🐓 🐣 🐤 🐥 🐦 🐧 🕊️ 🦅 🦆 🦢 🦉 🦤 🪶 🦩 🦚 🦜 🪽 🐦‍⬛ 🪿 🐸 🐊 🐢 🦎 🐍 🐲 🐉 🦕 🦖 🐳 🐋 🐬 🦭 🐟 🐠 🐡 🦈 🐙 🐚 🪸 🪼 🐌 🦋 🐛 🐜 🐝 🪲 🐞 🦗 🪳 🕷️ 🕸️ 🦂 🦟 🪰 🪱 🦠 💐 🌸 💮 🪷 🏵️ 🌹 🥀 🌺 🌻 🌼 🌷 🪻 🌱 🪴 🌲 🌳 🌴 🌵 🌾 🌿 ☘️ 🍀 🍁 🍂 🍃 🪹 🪺 🍄 🍄‍🟫 🪨 🪵 🌰 🦀 🦞 🦐 🦑 🌍 🌎 🌏 🌐 🪐 🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘 🌙 🌚 🌛 🌜 ☀️ 🌝 🌞 ⭐ 🌟 🌠 🌌 ☁️ ⛅ ⛈️ 🌤️ 🌥️ 🌦️ 🌧️ 🌨️ 🌩️ 🌪️ 🌫️ 🌬️ 🌀 🌈 🌂 ☂️ ☔ ⛱️ ⚡ ❄️ ☃️ ⛄ ☄️ 🔥 💧 🌊
 
 Food & Drink
-🍇 🍈 🍉 🍊 🍋 🍋‍🟩 🍌 🍍 🥭 🍎 🍏 🍐 🍑 🍒 🍓 🫐 🥝 🍅 🫒 🥥 🥑 🍆 🥔 🥕 🌽 🌶️ 🫑 🥒 🥬 🥦 🧄 🧅 🥜 🫘 🌰 🫚 🫛 🍄‍🟫 🍞 🥐 🥖 🫓 🥨 🥯 🥞 🧇 🧀 🍖 🍗 🥩 🥓 🍔 🍟 🍕 🌭 🥪 🌮 🌯 🫔 🥙 🧆 🥚 🍳 🥘 🍲 🫕 🥣 🥗 🍿 🧈 🧂 🥫 🍱 🍘 🍙 🍚 🍛 🍜 🍝 🍠 🍢 🍣 🍤 🍥 🥮 🍡 🥟 🥠 🥡 🦪 🍦 🍧 🍨 🍩 🍪 🎂 🍰 🧁 🥧 🍫 🍬 🍭 🍮 🍯 🍼 🥛 ☕ 🫖 🍵 🍶 🍾 🍷 🍸 🍹 🍺 🍻 🥂 🥃 🫗 🥤 🧋 🧃 🧉 🧊 🥢 🍽️ 🍴 🥄 🔪 🫙 🏺
+🍇 🍈 🍉 🍊 🍋 🍋‍🟩 🍌 🍍 🥭 🫜 🍎 🍏 🍐 🍑 🍒 🍓 🫐 🥝 🍅 🫒 🥥 🥑 🍆 🥔 🥕 🌽 🌶️ 🫑 🥒 🥬 🥦 🧄 🧅 🥜 🫘 🌰 🪾 🫚 🫛 🍞 🥐 🥖 🫓 🥨 🥯 🥞 🧇 🧀 🍖 🍗 🥩 🥓 🍔 🍟 🍕 🌭 🥪 🌮 🌯 🫔 🥙 🧆 🥚 🍳 🥘 🍲 🫕 🥣 🥗 🍿 🧈 🧂 🥫 🍱 🍘 🍙 🍚 🍛 🍜 🍝 🍠 🍢 🍣 🍤 🍥 🥮 🍡 🥟 🥠 🥡 🦪 🍦 🍧 🍨 🍩 🍪 🎂 🍰 🧁 🥧 🍫 🍬 🍭 🍮 🍯 🍼 🥛 ☕ 🫖 🍵 🍶 🍾 🍷 🍸 🍹 🍺 🍻 🥂 🥃 🫗 🥤 🧋 🧃 🧉 🧊 🥢 🍽️ 🍴 🥄 🔪 🫙 🏺
 
 Travel & Places
-🌍 🌎 🌏 🌐 🗺️ 🗾 🧭 🏔️ ⛰️ 🌋 🗻 🏕️ 🏖️ 🏜️ 🏝️ 🏞️ 🏟️ 🏛️ 🏗️ 🧱 🪨 🪵 🛖 🏘️ 🏚️ 🏠 🏡 🏢 🏣 🏤 🏥 🏦 🏨 🏩 🏪 🏫 🏬 🏭 🏯 🏰 💒 🗼 🗽 ⛪ 🕌 🛕 🕍 ⛩️ 🕋 ⛲ ⛺ 🌁 🌃 🏙️ 🌄 🌅 🌆 🌇 🌉 ♨️ 🎠 🛝 🎡 🎢 💈 🎪 🚂 🚃 🚄 🚅 🚆 🚇 🚈 🚉 🚊 🚝 🚞 🚋 🚌 🚍 🚎 🚐 🚑 🚒 🚓 🚔 🚕 🚖 🚗 🚘 🚙 🛻 🚚 🚛 🚜 🏎️ 🏍️ 🛵 🦽 🦼 🛺 🚲 🛴 🛹 🛼 🚏 🛣️ 🛤️ 🛢️ ⛽ 🛞 🚨 🚥 🚦 🛑 🚧 ⚓ 🛟 ⛵ 🛶 🚤 🛳️ ⛴️ 🛥️ 🚢 ✈️ 🛩️ 🛫 🛬 🪂 💺 🚁 🚟 🚠 🚡 🛰️ 🚀 🛸 🛎️ 🧳 ⌛ ⏳ ⌚ ⏰ ⏱️ ⏲️ 🕰️ 🕛 🕧 🕐 🕜 🕑 🕝 🕒 🕞 🕓 🕟 🕔 🕠 🕕 🕡 🕖 🕢 🕗 🕣 🕘 🕤 🕙 🕥 🕚 🕦 🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘 🌙 🌚 🌛 🌜 🌡️ ☀️ 🌝 🌞 🪐 ⭐ 🌟 🌠 🌌 ☁️ ⛅ ⛈️ 🌤️ 🌥️ 🌦️ 🌧️ 🌨️ 🌩️ 🌪️ 🌫️ 🌬️ 🌀 🌈 🌂 ☂️ ☔ ⛱️ ⚡ ❄️ ☃️ ⛄ ☄️ 🔥 💧 🌊
+🗺️ 🗾 🧭 🏔️ ⛰️ 🌋 🗻 🏕️ 🏖️ 🏜️ 🏝️ 🏞️ 🏟️ 🏛️ 🏗️ 🧱 🛖 🏘️ 🏚️ 🏠 🏡 🏢 🏣 🏤 🏥 🏦 🏨 🏩 🏪 🏫 🏬 🏭 🏯 🏰 💒 🗼 🗽 ⛪ 🕌 🛕 🕍 ⛩️ 🕋 ⛲ ⛺ 🌁 🌃 🏙️ 🌄 🌅 🌆 🌇 🌉 ♨️ 🎠 🛝 🎡 🎢 💈 🎪 🚂 🚃 🚄 🚅 🚆 🚇 🚈 🚉 🚊 🚝 🚞 🚋 🚌 🚍 🚎 🚐 🚑 🚒 🚓 🚔 🚕 🚖 🚗 🚘 🚙 🛻 🚚 🚛 🚜 🏎️ 🏍️ 🛵 🦽 🦼 🛺 🚲 🛴 🛹 🛼 🚏 🛣️ 🛤️ 🛢️ ⛽ 🛞 🚨 🚥 🚦 🛑 🚧 ⚓ 🛟 ⛵ 🛶 🚤 🛳️ ⛴️ 🛥️ 🚢 ✈️ 🛩️ 🛫 🛬 🪂 💺 🚁 🚟 🚠 🚡 🛰️ 🚀 🛸 🛎️ 🧳 ⌛ ⏳ ⌚ ⏰ ⏱️ ⏲️ 🕰️ 🕛 🕧 🕐 🕜 🕑 🕝 🕒 🕞 🕓 🕟 🕔 🕠 🕕 🕡 🕖 🕢 🕗 🕣 🕘 🕤 🕙 🕥 🕚 🕦
 
 Activities
-🎃 🎄 🎆 🎇 🧨 ✨ 🎈 🎉 🎊 🎋 🎍 🎎 🎏 🎐 🎑 🧧 🎀 🎁 🎗️ 🎟️ 🎫 🎖️ 🏆 🏅 🥇 🥈 🥉 ⚽ ⚾ 🥎 🏀 🏐 🏈 🏉 🎾 🥏 🎳 🏏 🏑 🏒 🥍 🏓 🏸 🥊 🥋 🥅 ⛳ ⛸️ 🎣 🤿 🎽 🎿 🛷 🥌 🎯 🪀 🪁 🔫 🎱 🔮 🪄 🎮 🕹️ 🎰 🎲 🧩 🧸 🪅 🪩 🪆 ♠️ ♥️ ♦️ ♣️ ♟️ 🃏 🀄 🎴 🎭 🖼️ 🎨 🧵 🪡 🧶 🪢
+🎃 🎄 🎆 🎇 🧨 ✨ 🎈 🎉 🎊 🎋 🎍 🎎 🫟 🎏 🎐 🎑 🧧 🎀 🎁 🎗️ 🎟️ 🎫 🎖️ 🏆 🏅 🥇 🥈 🥉 ⚽ ⚾ 🥎 🏀 🏐 🏈 🏉 🎾 🥏 🎳 🏏 🏑 🏒 🥍 🏓 🏸 🥊 🥋 🥅 ⛳ ⛸️ 🎣 🤿 🎽 🎿 🛷 🥌 🎯 🪀 🪁 🔫 🎱 🔮 🪄 🎮 🕹️ 🎰 🎲 🧩 🧸 🪅 🪩 🪆 ♠️ ♥️ ♦️ ♣️ ♟️ 🃏 🀄 🎴 🎭 🖼️ 🎨 🧵 🪡 🧶 🪢
 
 Objects
-👓 🕶️ 🥽 🥼 🦺 👔 👕 👖 🧣 🧤 🧥 🧦 👗 👘 🥻 🩱 🩲 🩳 👙 👚 🪭 👛 👜 👝 🛍️ 🎒 🩴 👞 👟 🥾 🥿 👠 👡 🩰 👢 🪮 👑 👒 🎩 🎓 🧢 🪖 ⛑️ 📿 💄 💍 💎 🔇 🔈 🔉 🔊 📢 📣 📯 🔔 🔕 🎼 🎵 🎶 🎙️ 🎚️ 🎛️ 🎤 🎧 📻 🎷 🪗 🎸 🎹 🎺 🎻 🪕 🥁 🪘 🪇 🪈 📱 📲 ☎️ 📞 📟 📠 🔋 🪫 🔌 💻 🖥️ 🖨️ ⌨️ 🖱️ 🖲️ 💽 💾 💿 📀 🧮 🎥 🎞️ 📽️ 🎬 📺 📷 📸 📹 📼 🔍 🔎 🕯️ 💡 🔦 🏮 🪔 📔 📕 📖 📗 📘 📙 📚 📓 📒 📃 📜 📄 📰 🗞️ 📑 🔖 🏷️ 💰 🪙 💴 💵 💶 💷 💸 💳 🧾 💹 ✉️ 📧 📨 📩 📤 📥 📦 📫 📪 📬 📭 📮 🗳️ ✏️ ✒️ 🖋️ 🖊️ 🖌️ 🖍️ 📝 💼 📁 📂 🗂️ 📅 📆 🗒️ 🗓️ 📇 📈 📉 📊 📋 📌 📍 📎 🖇️ 📏 📐 ✂️ 🗃️ 🗄️ 🗑️ 🔒 🔓 🔏 🔐 🔑 🗝️ 🔨 🪓 ⛏️ ⚒️ 🛠️ 🗡️ ⚔️ 💣 🪃 🏹 🛡️ 🪚 🔧 🪛 🔩 ⚙️ 🗜️ ⚖️ 🦯 🔗 ⛓️‍💥 ⛓️ 🪝 🧰 🧲 🪜 ⚗️ 🧪 🧫 🧬 🔬 🔭 📡 💉 🩸 💊 🩹 🩼 🩺 🩻 🚪 🛗 🪞 🪟 🛏️ 🛋️ 🪑 🚽 🪠 🚿 🛁 🪤 🪒 🧴 🧷 🧹 🧺 🧻 🪣 🧼 🫧 🪥 🧽 🧯 🛒 🚬 ⚰️ 🪦 ⚱️ 🧿 🪬 🗿 🪧 🪪
+👓 🕶️ 🥽 🪏 🥼 🦺 👔 👕 👖 🧣 🧤 🧥 🧦 🪉 👗 👘 🥻 🩱 🩲 🩳 👙 👚 🪭 👛 👜 👝 🛍️ 🎒 🩴 👞 👟 🥾 🥿 👠 👡 🩰 👢 🪮 👑 👒 🎩 🎓 🧢 🪖 ⛑️ 📿 💄 💍 💎 🔇 🔈 🔉 🔊 📢 📣 📯 🔔 🔕 🎼 🎵 🎶 🎙️ 🎚️ 🎛️ 🎤 🎧 📻 🎷 🪗 🎸 🎹 🎺 🎻 🪕 🥁 🪘 🪇 🪈 📱 📲 ☎️ 📞 📟 📠 🔋 🪫 🔌 💻 🖥️ 🖨️ ⌨️ 🖱️ 🖲️ 💽 💾 💿 📀 🧮 🎥 🎞️ 📽️ 🎬 📺 📷 📸 📹 📼 🔍 🔎 🕯️ 💡 🔦 🏮 🪔 📔 📕 📖 📗 📘 📙 📚 📓 📒 📃 📜 📄 📰 🗞️ 📑 🔖 🏷️ 💰 🪙 💴 💵 💶 💷 💸 💳 🧾 💹 ✉️ 📧 📨 📩 📤 📥 📦 📫 📪 📬 📭 📮 🗳️ ✏️ ✒️ 🖋️ 🖊️ 🖌️ 🖍️ 📝 💼 📁 📂 🗂️ 📅 📆 🗒️ 🗓️ 📇 📈 📉 📊 📋 📌 📍 📎 🖇️ 📏 📐 ✂️ 🗃️ 🗄️ 🗑️ 🔒 🔓 🔏 🔐 🔑 🗝️ 🔨 🪓 ⛏️ ⚒️ 🛠️ 🗡️ ⚔️ 💣 🪃 🏹 🛡️ 🪚 🔧 🪛 🔩 ⚙️ 🗜️ ⚖️ 🦯 🔗 ⛓️‍💥 ⛓️ 🪝 🧰 🧲 🪜 ⚗️ 🧪 🧫 🧬 🔬 🔭 📡 💉 🩸 💊 🩹 🩼 🩺 🩻 🚪 🛗 🪞 🪟 🛏️ 🛋️ 🪑 🚽 🪠 🚿 🛁 🪤 🪒 🧴 🧷 🧹 🧺 🧻 🪣 🧼 🫧 🪥 🧽 🧯 🛒 🚬 ⚰️ 🪦 ⚱️ 🧿 🪬 🗿 🪧 🪪
 
 Symbols
 🏧 🚮 🚰 ♿ 🚹 🚺 🚻 🚼 🚾 🛂 🛃 🛄 🛅 ⚠️ 🚸 ⛔ 🚫 🚳 🚭 🚯 🚱 🚷 📵 🔞 ☢️ ☣️ ⬆️ ↗️ ➡️ ↘️ ⬇️ ↙️ ⬅️ ↖️ ↕️ ↔️ ↩️ ↪️ ⤴️ ⤵️ 🔃 🔄 🔙 🔚 🔛 🔜 🔝 🛐 ⚛️ 🕉️ ✡️ ☸️ ☯️ ✝️ ☦️ ☪️ ☮️ 🕎 🔯 🪯 ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ ⛎ 🔀 🔁 🔂 ▶️ ⏩ ⏭️ ⏯️ ◀️ ⏪ ⏮️ 🔼 ⏫ 🔽 ⏬ ⏸️ ⏹️ ⏺️ ⏏️ 🎦 🔅 🔆 📶 🛜 📳 📴 ♀️ ♂️ ⚧️ ✖️ ➕ ➖ ➗ 🟰 ♾️ ‼️ ⁉️ ❓ ❔ ❕ ❗ 〰️ 💱 💲 ⚕️ ♻️ ⚜️ 🔱 📛 🔰 ⭕ ✅ ☑️ ✔️ ❌ ❎ ➰ ➿ 〽️ ✳️ ✴️ ❇️ ©️ ®️ ™️ #️⃣ *️⃣ 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 🔠 🔡 🔢 🔣 🔤 🅰️ 🆎 🅱️ 🆑 🆒 🆓 ℹ️ 🆔 Ⓜ️ 🆕 🆖 🅾️ 🆗 🅿️ 🆘 🆙 🆚 🈁 🈂️ 🈷️ 🈶 🈯 🉐 🈹 🈚 🈲 🉑 🈸 🈴 🈳 ㊗️ ㊙️ 🈺 🈵 🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ ⚪ 🟥 🟧 🟨 🟩 🟦 🟪 🟫 ⬛ ⬜ ◼️ ◻️ ◾ ◽ ▪️ ▫️ 🔶 🔷 🔸 🔹 🔺 🔻 💠 🔘 🔳 🔲
 
 Flags
-🏁 🚩 🎌 🏴 🏳️ 🏳️‍🌈 🏳️‍⚧️ 🏴‍☠️ AC 🇦🇩 🇦🇪 🇦🇫 🇦🇬 🇦🇮 🇦🇱 🇦🇲 🇦🇴 🇦🇶 🇦🇷 🇦🇸 🇦🇹 🇦🇺 🇦🇼 🇦🇽 🇦🇿 🇧🇦 🇧🇧 🇧🇩 🇧🇪 🇧🇫 🇧🇬 🇧🇭 🇧🇮 🇧🇯 🇧🇱 🇧🇲 🇧🇳 🇧🇴 🇧🇶 🇧🇷 🇧🇸 🇧🇹 🇧🇻 🇧🇼 🇧🇾 🇧🇿 🇨🇦 🇨🇨 🇨🇩 🇨🇫 🇨🇬 🇨🇭 🇨🇮 🇨🇰 🇨🇱 🇨🇲 🇨🇳 🇨🇴 🇨🇵 🇨🇷 🇨🇺 🔜 🔝 ⛐ ⚛️ ⛩️ ⛲ ⛺ ⛱️ ⚡ ❄️ ☃️ ⛄ ☄️ 🔥 💧 💨
-`;
+🏁 🚩 🎌 🏴 🏳️ 🏳️‍🌈 🏳️‍⚧️ 🏴‍☠️ 🇦🇨 🇦🇩 🇦🇪 🇦🇫 🇦🇬 🇦🇮 🇦🇱 🇦🇲 🇦🇴 🇦🇶 🇦🇷 🇦🇸 🇦🇹 🇦🇺 🇦🇼 🇦🇽 🇦🇿 🇧🇦 🇧🇧 🇧🇩 🇧🇪 🇧🇫 🇧🇬 🇧🇭 🇧🇮 🇧🇯 🇧🇱 🇧🇲 🇧🇳 🇧🇴 🇧🇶 🇧🇷 🇧🇸 🇧🇹 🇧🇻 🇧🇼 🇧🇾 🇧🇿 🇨🇦 🇨🇨 🇨🇩 🇨🇫 🇨🇬 🇨🇭 🇨🇮 🇨🇰 🇨🇱 🇨🇲 🇨🇳 🇨🇴 🇨🇵 🇨🇷 🇨🇺 🇨🇻 🇨🇼 🇨🇽 🇨🇾 🇨🇿 🇩🇪 🇩🇬 🇩🇯 🇩🇰 🇩🇲 🇩🇴 🇩🇿 🇪🇦 🇪🇨 🇪🇪 🇪🇬 🇪🇭 🇪🇷 🇪🇸 🇪🇹 🇪🇺 🇫🇮 🇫🇯 🇫🇰 🇫🇲 🇫🇴 🇫🇷 🇬🇦 🇬🇧 🇬🇩 🇬🇪 🇬🇫 🇬🇬 🇬🇭 🇬🇮 🇬🇱 🇬🇲 🇬🇳 🇬🇵 🇬🇶 🇬🇷 🇬🇸 🇬🇹 🇬🇺 🇬🇼 🇬🇾 🇭🇰 🇭🇲 🇭🇳 🇭🇷 🇭🇹 🇭🇺 🇮🇨 🇮🇩 🇮🇪 🇮🇱 🇮🇲 🇮🇳 🇮🇴 🇮🇶 🇮🇷 🇮🇸 🇮🇹 🇯🇪 🇯🇲 🇯🇴 🇯🇵 🇰🇪 🇰🇬 🇰🇭 🇰🇮 🇰🇲 🇰🇳 🇰🇵 🇰🇷 🇰🇼 🇰🇾 🇰🇿 🇱🇦 🇱🇧 🇱🇨 🇱🇮 🇱🇰 🇱🇷 🇱🇸 🇱🇹 🇱🇺 🇱🇻 🇱🇾 🇲🇦 🇲🇨 🇲🇩 🇲🇪 🇲🇫 🇲🇬 🇲🇭 🇲🇰 🇲🇱 🇲🇲 🇲🇳 🇲🇴 🇲🇵 🇲🇶 🇲🇷 🇲🇸 🇲🇹 🇲🇺 🇲🇻 🇲🇼 🇲🇽 🇲🇾 🇲🇿 🇳🇦 🇳🇨 🇳🇪 🇳🇫 🇳🇬 🇳🇮 🇳🇱 🇳🇴 🇳🇵 🇳🇷 🇳🇺 🇳🇿 🇴🇲 🇵🇦 🇵🇪 🇵🇫 🇵🇬 🇵🇭 🇵🇰 🇵🇱 🇵🇲 🇵🇳 🇵🇷 🇵🇸 🇵🇹 🇵🇼 🇵🇾 🇶🇦 🇷🇪 🇷🇴 🇷🇸 🇷🇺 🇷🇼 🇸🇦 🇸🇧 🇸🇨 🇸🇩 🇸🇪 🇸🇬 🇸🇭 🇸🇮 🇸🇯 🇸🇰 🇸🇱 🇸🇲 🇸🇳 🇸🇴 🇸🇷 🇸🇸 🇸🇹 🇸🇻 🇸🇽 🇸🇾 🇸🇿 🇹🇦 🇹🇨 🇹🇩 🇹🇫 🇹🇬 🇹🇭 🇹🇯 🇹🇰 🇹🇱 🇹🇲 🇹🇳 🇹🇴 🇹🇷 🇹🇹 🇹🇻 🇹🇼 🇹🇿 🇺🇦 🇺🇬 🇺🇲 🇺🇳 🇺🇸 🇺🇾 🇺🇿 🇻🇦 🇻🇨 🇻🇪 🇻🇬 🇻🇮 🇻🇳 🇻🇺 🇼🇫 🇼🇸 🇽🇰 🇾🇪 🇾🇹 🇿🇦 🇿🇲 🇿🇼
+
+Skin Tone Modifiers
+🏻 🏼 🏽 🏾 🏿`;
 const emoji_categories = parse_emoji_categories(quick_emoji_source);
 const quick_emojis = emoji_categories.flatMap((category) => category.emojis);
 
 document.addEventListener("DOMContentLoaded", initialize_application);
 
 async function initialize_application() {
+  document.body.classList.add("auth_restoring");
   collect_dom_references();
   lift_emoji_picker_panel();
   initialize_supabase_client();
@@ -1756,7 +1921,14 @@ async function initialize_application() {
   sync_fullscreen_panel_state();
   update_music_control_buttons();
   sync_biometric_opt_in_checkbox();
-  const restored_session = await restore_existing_session();
+  let restored_session = false;
+
+  try {
+    restored_session = await restore_existing_session();
+  } finally {
+    document.body.classList.remove("auth_restoring");
+  }
+
   sync_authenticated_chrome();
   void update_biometric_login_button();
 
@@ -1860,8 +2032,7 @@ function collect_dom_references() {
   dom_references.music_library_button = document.getElementById(
     "music_library_button",
   );
-  dom_references.music_file_input =
-    document.getElementById("music_file_input");
+  dom_references.music_file_input = document.getElementById("music_file_input");
   dom_references.music_library_panel = document.getElementById(
     "music_library_panel",
   );
@@ -1991,8 +2162,9 @@ function collect_dom_references() {
   dom_references.open_cycle_settings_button = document.getElementById(
     "open_cycle_settings_button",
   );
-  dom_references.cycle_expand_button =
-    document.getElementById("cycle_expand_button");
+  dom_references.cycle_expand_button = document.getElementById(
+    "cycle_expand_button",
+  );
   dom_references.cycle_compact_summary = document.getElementById(
     "cycle_compact_summary",
   );
@@ -2162,6 +2334,9 @@ function collect_dom_references() {
   dom_references.live_message_files_preview = document.getElementById(
     "live_message_files_preview",
   );
+  dom_references.voice_message_button = document.getElementById(
+    "voice_message_button",
+  );
   dom_references.send_live_message_button = document.getElementById(
     "send_live_message_button",
   );
@@ -2318,8 +2493,7 @@ function collect_dom_references() {
   dom_references.app_notice_dialog =
     document.getElementById("app_notice_dialog");
   dom_references.app_notice_form = document.getElementById("app_notice_form");
-  dom_references.app_notice_title =
-    document.getElementById("app_notice_title");
+  dom_references.app_notice_title = document.getElementById("app_notice_title");
   dom_references.app_notice_body = document.getElementById("app_notice_body");
   dom_references.close_app_notice_button = document.getElementById(
     "close_app_notice_button",
@@ -2637,15 +2811,15 @@ async function restore_existing_session() {
       if (!error && data.session?.user) {
         const restored_profile = get_profile_from_supabase_user(
           data.session.user,
-          );
+        );
 
-          if (restored_profile) {
-            current_auth_user_id = data.session.user.id;
-            current_auth_access_token = String(data.session.access_token || "");
-            current_auth_refresh_token = String(
-              data.session.refresh_token || current_auth_refresh_token || "",
-            );
-            current_user_profile = restored_profile;
+        if (restored_profile) {
+          current_auth_user_id = data.session.user.id;
+          current_auth_access_token = String(data.session.access_token || "");
+          current_auth_refresh_token = String(
+            data.session.refresh_token || current_auth_refresh_token || "",
+          );
+          current_user_profile = restored_profile;
           load_local_music_tracks();
           await load_shared_music_tracks();
           load_hidden_deleted_messages();
@@ -2886,7 +3060,7 @@ async function schedule_activity_notification(title, body, seed_text) {
           id: build_notification_id(520000, seed_text),
           title: String(title || translate("shared_activity_generic")),
           body: String(body || ""),
-          schedule: { at: new Date(Date.now() + 1000) },
+          schedule: { at: new Date(Date.now() + 20), allowWhileIdle: true },
           channelId: "activity",
           smallIcon: "ic_stat_notification",
           extra: {
@@ -2903,7 +3077,11 @@ async function schedule_activity_notification(title, body, seed_text) {
 async function schedule_message_notification(message_item) {
   const local_notifications = get_capacitor_plugin("LocalNotifications");
 
-  if (!local_notifications || !message_item || is_deleted_live_message(message_item)) {
+  if (
+    !local_notifications ||
+    !message_item ||
+    is_deleted_live_message(message_item)
+  ) {
     return;
   }
 
@@ -2917,7 +3095,9 @@ async function schedule_message_notification(message_item) {
       notifications: [
         {
           id: build_notification_id(410000, message_item.id),
-          title: message_item.sender_name || get_message_sender_label(message_item, false),
+          title:
+            message_item.sender_name ||
+            get_message_sender_label(message_item, false),
           body: body_text || translate("live_messages_heading"),
           largeBody: body_text,
           channelId: "messages",
@@ -2926,7 +3106,7 @@ async function schedule_message_notification(message_item) {
             kind: "message",
             messageId: message_item.id,
           },
-          schedule: { at: new Date(Date.now() + 200) },
+          schedule: { at: new Date(Date.now() + 20), allowWhileIdle: true },
         },
       ],
     });
@@ -2960,8 +3140,10 @@ async function schedule_cycle_notifications() {
   }
 
   const period_length =
-    calculate_days_between(window_item.predicted_start, window_item.predicted_end) +
-    1;
+    calculate_days_between(
+      window_item.predicted_start,
+      window_item.predicted_end,
+    ) + 1;
   const schedule_items = [
     {
       offset: -2,
@@ -2987,7 +3169,10 @@ async function schedule_cycle_notifications() {
       offset: 0,
       id: 520100,
       title: translate("cycle_notification_today"),
-      body: get_cycle_notification_body(window_item.predicted_start_text, "period"),
+      body: get_cycle_notification_body(
+        window_item.predicted_start_text,
+        "period",
+      ),
       actionTypeId: "CYCLE_CONFIRM",
       action: "start",
       badge: 1,
@@ -3310,6 +3495,10 @@ function bind_event_handlers() {
     handle_cycle_calendar_touch_cancel,
     { passive: true },
   );
+  dom_references.cycle_tracker_section?.addEventListener(
+    "pointerdown",
+    handle_cycle_party_pointer_down,
+  );
   dom_references.today_prank_card.addEventListener("click", (event) =>
     burst_reaction(event.currentTarget, "spark", 10),
   );
@@ -3529,6 +3718,13 @@ function bind_event_handlers() {
     "change",
     handle_live_message_files_selected,
   );
+  dom_references.voice_message_button?.addEventListener("pointerdown", (event) =>
+    event.preventDefault(),
+  );
+  dom_references.voice_message_button?.addEventListener(
+    "click",
+    handle_voice_message_button_click,
+  );
   dom_references.live_message_input.addEventListener(
     "input",
     auto_grow_live_message_input,
@@ -3553,9 +3749,8 @@ function bind_event_handlers() {
     "paste",
     handle_message_input_paste,
   );
-  dom_references.emoji_toggle_button.addEventListener(
-    "pointerdown",
-    (event) => event.preventDefault(),
+  dom_references.emoji_toggle_button.addEventListener("pointerdown", (event) =>
+    event.preventDefault(),
   );
   dom_references.emoji_toggle_button.addEventListener(
     "click",
@@ -3592,8 +3787,14 @@ function bind_event_handlers() {
   });
   window.addEventListener("pageshow", resume_background_music_from_lifecycle);
   window.addEventListener("resize", handle_visual_viewport_change);
-  window.visualViewport?.addEventListener("resize", handle_visual_viewport_change);
-  window.visualViewport?.addEventListener("scroll", handle_visual_viewport_change);
+  window.visualViewport?.addEventListener(
+    "resize",
+    handle_visual_viewport_change,
+  );
+  window.visualViewport?.addEventListener(
+    "scroll",
+    handle_visual_viewport_change,
+  );
   window.addEventListener("popstate", handle_global_popstate);
   window.addEventListener("svetaNativeOpen", handle_native_open_request);
   bind_capacitor_app_lifecycle();
@@ -3682,7 +3883,8 @@ function biometric_opt_in_is_enabled() {
 
 function sync_biometric_opt_in_checkbox() {
   if (dom_references.biometric_opt_in_checkbox) {
-    dom_references.biometric_opt_in_checkbox.checked = biometric_opt_in_is_enabled();
+    dom_references.biometric_opt_in_checkbox.checked =
+      biometric_opt_in_is_enabled();
   }
 }
 
@@ -3817,7 +4019,9 @@ async function handle_biometric_login({ is_auto_prompt = false } = {}) {
     const credentials = await biometric_plugin.getCredentials({
       server: background_sync_server_key,
     });
-    const username = String(credentials?.username || "").trim().toLowerCase();
+    const username = String(credentials?.username || "")
+      .trim()
+      .toLowerCase();
     const password = String(credentials?.password || "");
     const user_profile = await authenticate_user(username, password);
 
@@ -4079,7 +4283,8 @@ function handle_emoji_edge_swipe_start(event) {
 
   const edge_size = 34;
   const from_edge =
-    touch.clientX <= edge_size || touch.clientX >= window.innerWidth - edge_size;
+    touch.clientX <= edge_size ||
+    touch.clientX >= window.innerWidth - edge_size;
   emoji_swipe_state = from_edge
     ? {
         start_x: touch.clientX,
@@ -4259,7 +4464,12 @@ function close_app_navigation() {
   dom_references.app_nav_overlay.setAttribute("aria-hidden", "true");
 }
 
-function set_panel_expand_button_state(button, is_open, open_label, close_label) {
+function set_panel_expand_button_state(
+  button,
+  is_open,
+  open_label,
+  close_label,
+) {
   if (!button) {
     return;
   }
@@ -4282,13 +4492,12 @@ function sync_fullscreen_panel_state() {
     "is_panel_expanded",
     cycle_open,
   );
-  document.body.classList.toggle(
-    "panel_fullscreen_open",
-    messages_open,
-  );
+  document.body.classList.toggle("panel_fullscreen_open", messages_open);
   set_text(
     dom_references.live_messages_heading,
-    translate(messages_open ? "messages_short_heading" : "live_messages_heading"),
+    translate(
+      messages_open ? "messages_short_heading" : "live_messages_heading",
+    ),
   );
   set_panel_expand_button_state(
     dom_references.messages_expand_button,
@@ -4372,8 +4581,7 @@ function toggle_fullscreen_panel(panel_name, force_open = false) {
 
 function should_auto_expand_cycle_panel(today_context, cycle_message_event) {
   return Boolean(
-    cycle_message_event &&
-      today_context?.today_status?.state === "period",
+    cycle_message_event && today_context?.today_status?.state === "period",
   );
 }
 
@@ -4504,6 +4712,7 @@ function handle_message_input_change() {
 
 function handle_live_message_input_focus() {
   save_message_selection_range();
+  nudge_live_messages_above_keyboard();
 
   if (
     dom_references.emoji_picker_panel &&
@@ -4514,6 +4723,8 @@ function handle_live_message_input_focus() {
 }
 
 function handle_live_message_input_click() {
+  nudge_live_messages_above_keyboard();
+
   if (
     dom_references.emoji_picker_panel &&
     !dom_references.emoji_picker_panel.classList.contains("hidden")
@@ -4522,6 +4733,22 @@ function handle_live_message_input_click() {
   }
 
   handle_message_input_change();
+}
+
+function nudge_live_messages_above_keyboard() {
+  const should_follow_bottom = is_live_messages_list_near_bottom(180);
+
+  [0, 80, 180, 360, 640].forEach((delay) => {
+    window.setTimeout(() => {
+      update_emoji_picker_position();
+
+      if (should_follow_bottom) {
+        scroll_live_messages_to_bottom("auto");
+      } else {
+        preserve_live_messages_viewport_after_layout();
+      }
+    }, delay);
+  });
 }
 
 function handle_live_message_input_blur() {
@@ -5266,6 +5493,15 @@ function apply_language() {
   dom_references.live_message_files_label.title = translate(
     "live_message_add_files",
   );
+  dom_references.voice_message_button?.setAttribute(
+    "aria-label",
+    translate("voice_message_start"),
+  );
+  if (dom_references.voice_message_button) {
+    dom_references.voice_message_button.title = translate(
+      "voice_message_start",
+    );
+  }
   update_live_message_action_labels();
   set_text(dom_references.footer_text, translate("made_with_love"));
   set_text(dom_references.daily_love_heading, get_active_love_heading());
@@ -5348,22 +5584,13 @@ function apply_language() {
     dom_references.cancel_cycle_discard_button,
     translate("cancel_action"),
   );
-  set_text(
-    dom_references.app_notice_title,
-    translate("app_notice_title"),
-  );
+  set_text(dom_references.app_notice_title, translate("app_notice_title"));
   set_text(
     dom_references.app_notice_body,
     translate("app_notice_default_body"),
   );
-  set_text(
-    dom_references.cancel_app_notice_button,
-    translate("cancel_action"),
-  );
-  set_text(
-    dom_references.confirm_app_notice_button,
-    translate("ok_action"),
-  );
+  set_text(dom_references.cancel_app_notice_button, translate("cancel_action"));
+  set_text(dom_references.confirm_app_notice_button, translate("ok_action"));
   dom_references.close_memory_dialog_button.setAttribute(
     "aria-label",
     translate("close_dialog_label"),
@@ -5458,11 +5685,18 @@ function update_live_message_action_labels() {
   const send_label = editing_live_message_id
     ? translate("live_message_update")
     : translate("live_message_send");
+  const voice_label = voice_message_media_recorder
+    ? translate("voice_message_stop")
+    : translate("voice_message_start");
   dom_references.send_live_message_button.setAttribute(
     "aria-label",
     send_label,
   );
   dom_references.send_live_message_button.title = send_label;
+  dom_references.voice_message_button?.setAttribute("aria-label", voice_label);
+  if (dom_references.voice_message_button) {
+    dom_references.voice_message_button.title = voice_label;
+  }
 }
 
 function refresh_cycle_text_dialog_copy() {
@@ -6087,9 +6321,7 @@ async function load_message_list(message_name, fallback_messages) {
 
 function get_daily_message_from_list(message_list, fallback_list, seed_key) {
   const source_list =
-    Array.isArray(message_list) && message_list.length > 0
-      ? message_list
-      : [];
+    Array.isArray(message_list) && message_list.length > 0 ? message_list : [];
   const fallback_source = Array.isArray(fallback_list) ? fallback_list : [];
   const safe_list = build_fresh_message_pool(source_list, fallback_source);
   if (safe_list.length === 0) {
@@ -6100,7 +6332,9 @@ function get_daily_message_from_list(message_list, fallback_list, seed_key) {
   const storage_key = `${daily_content_history_storage_prefix}_${seed_key}`;
 
   try {
-    const stored_value = JSON.parse(localStorage.getItem(storage_key) || "null");
+    const stored_value = JSON.parse(
+      localStorage.getItem(storage_key) || "null",
+    );
 
     if (stored_value?.date === today_key && stored_value?.message) {
       return stored_value.message;
@@ -6143,7 +6377,9 @@ function get_daily_message_from_list(message_list, fallback_list, seed_key) {
 
 function get_recent_daily_content_history(storage_key) {
   try {
-    const stored_value = JSON.parse(localStorage.getItem(storage_key) || "null");
+    const stored_value = JSON.parse(
+      localStorage.getItem(storage_key) || "null",
+    );
     return Array.isArray(stored_value?.history) ? stored_value.history : [];
   } catch (error) {
     return [];
@@ -6160,7 +6396,9 @@ function get_daily_content_index(seed_key, list_length) {
   const storage_key = `${daily_content_history_storage_prefix}_${seed_key}_index`;
 
   try {
-    const stored_value = JSON.parse(localStorage.getItem(storage_key) || "null");
+    const stored_value = JSON.parse(
+      localStorage.getItem(storage_key) || "null",
+    );
 
     if (
       stored_value?.date === today_key &&
@@ -6193,7 +6431,11 @@ function get_daily_content_index(seed_key, list_length) {
   return index % list_length;
 }
 
-function get_indexed_daily_message(list_by_language, fallback_by_language, seed_key) {
+function get_indexed_daily_message(
+  list_by_language,
+  fallback_by_language,
+  seed_key,
+) {
   const anchor_list = build_fresh_message_pool(
     list_by_language.en || [],
     fallback_by_language.en || [],
@@ -6637,9 +6879,17 @@ function calculate_days_from_nearest_birthday(birthdate_string) {
   const birthdate = parse_local_date(birthdate_string);
   const today = get_today_at_midnight();
   const birthdays = [
-    new Date(today.getFullYear() - 1, birthdate.getMonth(), birthdate.getDate()),
+    new Date(
+      today.getFullYear() - 1,
+      birthdate.getMonth(),
+      birthdate.getDate(),
+    ),
     new Date(today.getFullYear(), birthdate.getMonth(), birthdate.getDate()),
-    new Date(today.getFullYear() + 1, birthdate.getMonth(), birthdate.getDate()),
+    new Date(
+      today.getFullYear() + 1,
+      birthdate.getMonth(),
+      birthdate.getDate(),
+    ),
   ];
   const nearest_birthday = birthdays.sort(
     (left_date, right_date) =>
@@ -6698,7 +6948,7 @@ function get_rotating_copy(copy_list, seed_text) {
 }
 
 function render_birthday_celebration_block(person_key, birthday_offset_days) {
-  const is_visible = Math.abs(birthday_offset_days) <= 7;
+  const is_visible = Math.abs(birthday_offset_days) <= 15;
   const celebration_element =
     person_key === "svetlana"
       ? dom_references.svetlana_birthday_celebration
@@ -6734,7 +6984,7 @@ function render_birthday_celebration_block(person_key, birthday_offset_days) {
 
 function render_birthday_page_effects(birthday_items) {
   const active_birthdays = birthday_items.filter(
-    (item) => Math.abs(item.offset) <= 7,
+    (item) => Math.abs(item.offset) <= 15,
   );
   const effect_key = active_birthdays
     .map((item) => `${item.key}:${item.offset}`)
@@ -6786,7 +7036,11 @@ function render_birthday_celebrations(
   render_birthday_celebration_block("svetlana", svetlana_birthday_offset_days);
   render_birthday_page_effects([
     { key: "diab", offset: diab_birthday_offset_days, name: "Diab" },
-    { key: "svetlana", offset: svetlana_birthday_offset_days, name: "Svetlana" },
+    {
+      key: "svetlana",
+      offset: svetlana_birthday_offset_days,
+      name: "Svetlana",
+    },
   ]);
 }
 
@@ -6909,8 +7163,7 @@ function get_cycle_state_attachment(message_item) {
     ? message_item.attachments
     : [];
   return (
-    attachments.find((attachment) => attachment?.kind === "cycle_state") ||
-    null
+    attachments.find((attachment) => attachment?.kind === "cycle_state") || null
   );
 }
 
@@ -6951,7 +7204,8 @@ async function api_get_cycle_data() {
         if (attachment?.cycle_data) {
           return normalize_cycle_data_store({
             ...attachment.cycle_data,
-            updated_at: attachment.updated_at || attachment.cycle_data.updated_at || "",
+            updated_at:
+              attachment.updated_at || attachment.cycle_data.updated_at || "",
           });
         }
       }
@@ -7035,10 +7289,11 @@ async function sync_cycle_data_to_remote(immediate = false) {
     }
 
     try {
-      await supabase_client.from(supabase_table_names.live_messages).upsert(
-        build_cycle_state_live_message(cycle_data, change_type),
-        { onConflict: "id" },
-      );
+      await supabase_client
+        .from(supabase_table_names.live_messages)
+        .upsert(build_cycle_state_live_message(cycle_data, change_type), {
+          onConflict: "id",
+        });
       return;
     } catch (error) {
       log_app_error("supabase_cycle_state_sync_failed", error);
@@ -7133,7 +7388,11 @@ function get_shared_activity_attachment(message_item) {
 }
 
 async function announce_shared_activity(activity_type, title = "", body = "") {
-  if (!current_user_profile || !is_supabase_enabled() || !current_auth_user_id) {
+  if (
+    !current_user_profile ||
+    !is_supabase_enabled() ||
+    !current_auth_user_id
+  ) {
     return;
   }
 
@@ -7159,7 +7418,9 @@ async function announce_shared_activity(activity_type, title = "", body = "") {
   };
 
   try {
-    await supabase_client.from(supabase_table_names.live_messages).insert(message_item);
+    await supabase_client
+      .from(supabase_table_names.live_messages)
+      .insert(message_item);
   } catch (error) {
     log_app_error("shared_activity_announce_failed", error);
   }
@@ -7187,7 +7448,10 @@ function apply_shared_activity_from_message(message_item) {
     return;
   }
 
-  if (attachment.activity_type === "memory" || attachment.activity_type === "event") {
+  if (
+    attachment.activity_type === "memory" ||
+    attachment.activity_type === "event"
+  ) {
     void load_saved_content();
   }
 
@@ -7195,8 +7459,10 @@ function apply_shared_activity_from_message(message_item) {
     return;
   }
 
-  const title = attachment.title || get_shared_activity_title(attachment.activity_type);
-  const body = attachment.body || get_shared_activity_title(attachment.activity_type);
+  const title =
+    attachment.title || get_shared_activity_title(attachment.activity_type);
+  const body =
+    attachment.body || get_shared_activity_title(attachment.activity_type);
   show_in_app_notification({
     title,
     body,
@@ -8480,7 +8746,9 @@ function build_mention_context(item_type, item_id) {
     reference_id: item_id,
     title: event_item.title,
     subtitle: get_item_display_date(event_item, "fallback_event_date"),
-    text: get_preview_snippet(get_item_thought_preview(event_item, "description")),
+    text: get_preview_snippet(
+      get_item_thought_preview(event_item, "description"),
+    ),
     preview_label: translate("mentioning_day"),
     preview_body: event_item.title,
   };
@@ -8686,10 +8954,7 @@ async function download_data_url(data_url, filename) {
     return;
   }
 
-  const saved_natively = await save_data_url_with_capacitor(
-    data_url,
-    filename,
-  );
+  const saved_natively = await save_data_url_with_capacitor(data_url, filename);
 
   if (saved_natively) {
     return;
@@ -8832,7 +9097,7 @@ function render_item_thoughts(item, field_name, item_type = "memory") {
   );
   const has_current_thought = Boolean(
     current_user_profile?.user_key &&
-      String(thoughts[current_user_profile.user_key] || "").trim(),
+    String(thoughts[current_user_profile.user_key] || "").trim(),
   );
 
   if (thought_entries.length === 0) {
@@ -8857,10 +9122,7 @@ function render_item_thoughts(item, field_name, item_type = "memory") {
     const text = document.createElement("span");
     text.className = "item_thought_text";
     text.textContent = ` ${String(thought_text).trim()}`;
-    line.append(
-      author,
-      text,
-    );
+    line.append(author, text);
 
     wrap.appendChild(line);
 
@@ -9322,23 +9584,63 @@ function start_heart_shower_cycle() {
 function normalize_sound_manifest(manifest_value = {}) {
   return {
     background_music: Array.isArray(manifest_value.background_music)
-      ? manifest_value.background_music
+      ? [...manifest_value.background_music]
       : [],
     welcome: Array.isArray(manifest_value.welcome)
-      ? manifest_value.welcome
+      ? [...manifest_value.welcome]
       : [],
-    logout: Array.isArray(manifest_value.logout) ? manifest_value.logout : [],
+    logout: Array.isArray(manifest_value.logout)
+      ? [...manifest_value.logout]
+      : [],
     message_send: Array.isArray(manifest_value.message_send)
-      ? manifest_value.message_send
+      ? [...manifest_value.message_send]
       : [],
     message_receive: Array.isArray(manifest_value.message_receive)
-      ? manifest_value.message_receive
+      ? [...manifest_value.message_receive]
       : [],
   };
 }
 
+function merge_sound_manifests(...manifest_values) {
+  const merged_manifest = normalize_sound_manifest(empty_sound_manifest);
+
+  manifest_values.forEach((manifest_value) => {
+    const normalized_manifest = normalize_sound_manifest(manifest_value);
+    Object.keys(merged_manifest).forEach((key) => {
+      merged_manifest[key].push(...normalized_manifest[key]);
+    });
+  });
+
+  Object.keys(merged_manifest).forEach((key) => {
+    merged_manifest[key] = [...new Set(merged_manifest[key].filter(Boolean))];
+  });
+
+  return merged_manifest;
+}
+
 async function load_sound_manifest() {
-  current_sound_manifest = normalize_sound_manifest(local_sound_manifest_fallback);
+  current_sound_manifest = normalize_sound_manifest(
+    local_sound_manifest_fallback,
+  );
+
+  for (const endpoint of ["/api/sound_manifest.json", "/api/sound_manifest"]) {
+    try {
+      const response = await fetch(endpoint, { cache: "no-store" });
+
+      if (!response.ok) {
+        continue;
+      }
+
+      const remote_manifest = await response.json();
+      current_sound_manifest = merge_sound_manifests(
+        local_sound_manifest_fallback,
+        remote_manifest,
+      );
+      return;
+    } catch (error) {
+      // The bundled fallback keeps sounds available offline and in Capacitor.
+    }
+  }
 }
 
 function apply_saved_music_setting() {
@@ -9375,9 +9677,14 @@ function update_music_button() {
   update_music_control_buttons();
 }
 
-function play_existing_background_music() {
+function play_existing_background_music(options = {}) {
   if (!background_music_audio) {
     return;
+  }
+
+  if (options.stop_support !== false) {
+    stop_cycle_mood_music(false);
+    background_music_paused_by_cycle_mood = false;
   }
 
   background_music_audio.muted = !music_enabled;
@@ -9406,6 +9713,7 @@ function toggle_music() {
   update_music_button();
 
   if (!music_enabled) {
+    stop_cycle_mood_music(false);
     return;
   }
 
@@ -9572,7 +9880,9 @@ function load_local_music_tracks() {
 }
 
 function save_local_music_tracks() {
-  const serialized_tracks = local_music_tracks.map(({ src, ...track }) => track);
+  const serialized_tracks = local_music_tracks.map(
+    ({ src, ...track }) => track,
+  );
   localStorage.setItem(
     get_local_music_storage_key(),
     JSON.stringify(serialized_tracks),
@@ -9580,8 +9890,18 @@ function save_local_music_tracks() {
 }
 
 function save_shared_music_tracks_locally() {
-  const serialized_tracks = shared_music_tracks.map(({ src, ...track }) => track);
-  localStorage.setItem(shared_music_storage_key, JSON.stringify(serialized_tracks));
+  const serialized_tracks = shared_music_tracks.map(
+    ({ src, ...track }) => track,
+  );
+
+  try {
+    localStorage.setItem(
+      shared_music_storage_key,
+      JSON.stringify(serialized_tracks),
+    );
+  } catch (error) {
+    log_app_error("shared_music_local_cache_failed", error);
+  }
 }
 
 async function hydrate_shared_music_track_sources() {
@@ -9591,6 +9911,7 @@ async function hydrate_shared_music_track_sources() {
       src:
         track.src ||
         track.public_url ||
+        track.data_url ||
         get_supabase_media_public_url(
           track.storage_path,
           track.bucket || supabase_media_bucket_name,
@@ -9789,7 +10110,9 @@ async function hydrate_local_music_track_sources() {
 }
 
 function get_file_extension(filename) {
-  const extension = String(filename || "").split(".").pop();
+  const extension = String(filename || "")
+    .split(".")
+    .pop();
   return extension && extension !== filename ? extension.toLowerCase() : "mp3";
 }
 
@@ -9805,7 +10128,10 @@ function sanitize_storage_filename(filename, fallback_extension = "bin") {
   return `${safe_base || "file"}.${safe_extension}`;
 }
 
-function get_supabase_media_public_url(storage_path, bucket_name = supabase_media_bucket_name) {
+function get_supabase_media_public_url(
+  storage_path,
+  bucket_name = supabase_media_bucket_name,
+) {
   if (!is_supabase_enabled() || !storage_path) {
     return "";
   }
@@ -9820,7 +10146,11 @@ function get_supabase_media_public_url(storage_path, bucket_name = supabase_medi
   }
 }
 
-async function upload_file_to_supabase_media(file_item, category, preferred_id = "") {
+async function upload_file_to_supabase_media(
+  file_item,
+  category,
+  preferred_id = "",
+) {
   if (!is_supabase_enabled() || !current_auth_user_id || !file_item) {
     return null;
   }
@@ -9926,7 +10256,11 @@ async function create_local_music_track(file_item) {
 
 async function create_shared_music_track(file_item) {
   const id = create_item_id();
-  const uploaded_file = await upload_file_to_supabase_media(file_item, "music", id);
+  const uploaded_file = await upload_file_to_supabase_media(
+    file_item,
+    "music",
+    id,
+  );
 
   if (!uploaded_file?.public_url) {
     return null;
@@ -9946,9 +10280,26 @@ async function create_shared_music_track(file_item) {
   };
 }
 
+async function create_inline_shared_music_track(file_item) {
+  const id = create_item_id();
+  const data_url = await read_file_as_data_url(file_item);
+
+  return {
+    id,
+    name: file_item.name || "music",
+    type: file_item.type || "audio/*",
+    size: file_item.size || 0,
+    data_url,
+    src: data_url,
+    owner_key: current_user_profile?.user_key || "",
+    is_shared: true,
+    storage_mode: "inline_manifest",
+  };
+}
+
 async function handle_music_files_selected(event) {
-  const files = Array.from(event.currentTarget.files || []).filter((file_item) =>
-    String(file_item.type || "").startsWith("audio/"),
+  const files = Array.from(event.currentTarget.files || []).filter(
+    (file_item) => String(file_item.type || "").startsWith("audio/"),
   );
 
   if (files.length === 0) {
@@ -9971,13 +10322,12 @@ async function handle_music_files_selected(event) {
       const fallback_files = shared_results
         .filter((result) => !result.track)
         .map((result) => result.file_item);
-      const local_tracks = await Promise.all(
-        fallback_files.map(create_local_music_track),
+      const inline_shared_tracks = await Promise.all(
+        fallback_files.map(create_inline_shared_music_track),
       );
-      local_music_tracks = [...local_music_tracks, ...local_tracks];
-      save_local_music_tracks();
-      tracks = [...shared_tracks, ...local_tracks];
-      void show_app_alert(translate("music_shared_upload_failed"), {
+      shared_tracks.push(...inline_shared_tracks);
+      tracks = [...shared_tracks];
+      void show_app_alert(translate("music_shared_inline_fallback"), {
         title: translate("music_library"),
       });
     }
@@ -10012,7 +10362,9 @@ function toggle_music_library_panel(event = null) {
 }
 
 function get_track_name_from_url(track_url) {
-  const clean_url = String(track_url || "").split("?")[0].split("#")[0];
+  const clean_url = String(track_url || "")
+    .split("?")[0]
+    .split("#")[0];
   const filename = clean_url.split("/").pop() || "music";
 
   try {
@@ -10051,6 +10403,7 @@ function get_shared_music_tracks() {
       src:
         track.src ||
         track.public_url ||
+        track.data_url ||
         get_supabase_media_public_url(
           track.storage_path,
           track.bucket || supabase_media_bucket_name,
@@ -10126,20 +10479,26 @@ function render_music_library_panel() {
   const personal_tracks = get_personal_music_tracks();
 
   if (default_tracks.length > 0) {
-    panel.appendChild(create_music_library_heading(translate("music_default_tracks")));
+    panel.appendChild(
+      create_music_library_heading(translate("music_default_tracks")),
+    );
     default_tracks.forEach((track) =>
       panel.appendChild(render_music_library_track(track)),
     );
   }
 
   if (shared_tracks.length > 0) {
-    panel.appendChild(create_music_library_heading(translate("music_shared_tracks")));
+    panel.appendChild(
+      create_music_library_heading(translate("music_shared_tracks")),
+    );
     shared_tracks.forEach((track) =>
       panel.appendChild(render_music_library_track(track)),
     );
   }
 
-  panel.appendChild(create_music_library_heading(translate("music_personal_tracks")));
+  panel.appendChild(
+    create_music_library_heading(translate("music_personal_tracks")),
+  );
 
   if (personal_tracks.length === 0) {
     const empty_state = document.createElement("p");
@@ -10201,7 +10560,10 @@ async function handle_music_library_action(event) {
     return;
   }
 
-  if (track.is_shared || shared_music_tracks.some((item) => item.id === track_id)) {
+  if (
+    track.is_shared ||
+    shared_music_tracks.some((item) => item.id === track_id)
+  ) {
     if (is_supabase_enabled() && track.storage_path) {
       try {
         await supabase_client.storage
@@ -10223,11 +10585,16 @@ async function handle_music_library_action(event) {
     }
 
     const track_sources = [track.src, track.public_url].filter(Boolean);
-    shared_music_tracks = shared_music_tracks.filter((item) => item.id !== track_id);
+    shared_music_tracks = shared_music_tracks.filter(
+      (item) => item.id !== track_id,
+    );
     save_shared_music_tracks_locally();
     void sync_shared_music_tracks_to_remote();
 
-    if (background_music_audio && track_sources.includes(last_background_music_url)) {
+    if (
+      background_music_audio &&
+      track_sources.includes(last_background_music_url)
+    ) {
       stop_background_music();
       ensure_background_music(true);
     }
@@ -10251,10 +10618,15 @@ async function handle_music_library_action(event) {
   }
 
   const track_sources = [track.src, track.data_url].filter(Boolean);
-  local_music_tracks = local_music_tracks.filter((item) => item.id !== track_id);
+  local_music_tracks = local_music_tracks.filter(
+    (item) => item.id !== track_id,
+  );
   save_local_music_tracks();
 
-  if (background_music_audio && track_sources.includes(last_background_music_url)) {
+  if (
+    background_music_audio &&
+    track_sources.includes(last_background_music_url)
+  ) {
     stop_background_music();
     ensure_background_music(true);
   }
@@ -10287,7 +10659,10 @@ function update_music_control_buttons() {
     "has_no_tracks",
     !has_tracks,
   );
-  dom_references.music_previous_button?.toggleAttribute("disabled", !has_tracks);
+  dom_references.music_previous_button?.toggleAttribute(
+    "disabled",
+    !has_tracks,
+  );
   dom_references.music_next_button?.toggleAttribute("disabled", !has_tracks);
   play_pause_button?.toggleAttribute("disabled", !has_tracks);
 
@@ -10318,6 +10693,8 @@ function should_play_background_music() {
 }
 
 function stop_background_music() {
+  stop_cycle_mood_music(false);
+  background_music_paused_by_cycle_mood = false;
   background_music_needs_unlock = false;
   background_music_paused_by_user = false;
   background_music_paused_by_lifecycle = false;
@@ -10334,9 +10711,18 @@ function stop_background_music() {
   update_music_control_buttons();
 }
 
-function start_background_music_track(selected_url, force_restart = true) {
+function start_background_music_track(
+  selected_url,
+  force_restart = true,
+  options = {},
+) {
   if (!selected_url) {
     return;
+  }
+
+  if (options.stop_support !== false) {
+    stop_cycle_mood_music(false);
+    background_music_paused_by_cycle_mood = false;
   }
 
   background_music_paused_by_lifecycle = false;
@@ -10478,6 +10864,7 @@ function toggle_background_music_playback() {
 
   if (background_music_audio && !background_music_audio.paused) {
     background_music_paused_by_user = true;
+    background_music_paused_by_cycle_mood = false;
     background_music_audio.pause();
     update_music_control_buttons();
     return;
@@ -10485,6 +10872,8 @@ function toggle_background_music_playback() {
 
   background_music_paused_by_user = false;
   background_music_paused_by_lifecycle = false;
+  background_music_paused_by_cycle_mood = false;
+  stop_cycle_mood_music(false);
 
   if (background_music_audio) {
     play_existing_background_music();
@@ -10551,6 +10940,94 @@ function play_receive_message_sound() {
   play_send_click_fallback(620, 860, 0.055);
 }
 
+function resume_background_after_cycle_mood() {
+  if (!background_music_paused_by_cycle_mood) {
+    return;
+  }
+
+  background_music_paused_by_cycle_mood = false;
+
+  if (!music_enabled || background_music_paused_by_user || document.hidden) {
+    update_music_control_buttons();
+    return;
+  }
+
+  if (background_music_audio) {
+    play_existing_background_music({ stop_support: false });
+    return;
+  }
+
+  ensure_background_music();
+}
+
+function stop_cycle_mood_music(resume_background = false) {
+  const active_audio = cycle_mood_audio;
+
+  if (active_audio) {
+    active_audio.pause();
+    active_audio.removeAttribute("src");
+    active_audio.load();
+    cycle_mood_audio = null;
+  }
+
+  if (resume_background) {
+    resume_background_after_cycle_mood();
+  }
+}
+
+function play_cycle_mood_music() {
+  if (!music_enabled) {
+    return;
+  }
+
+  const selected_url = select_random_sound_url(
+    cycle_mood_music_tracks_fallback,
+    last_cycle_mood_music_url,
+  );
+
+  if (!selected_url) {
+    return;
+  }
+
+  stop_cycle_mood_music(false);
+
+  if (background_music_audio && !background_music_audio.paused) {
+    background_music_paused_by_cycle_mood = true;
+    background_music_audio.pause();
+  }
+
+  last_cycle_mood_music_url = selected_url;
+  cycle_mood_audio = create_effect_audio(selected_url, 0.5);
+  cycle_mood_audio.loop = false;
+  const active_audio = cycle_mood_audio;
+  active_audio.addEventListener("ended", () => {
+    if (cycle_mood_audio !== active_audio) {
+      return;
+    }
+
+    cycle_mood_audio = null;
+    resume_background_after_cycle_mood();
+  });
+  active_audio.addEventListener("error", () => {
+    if (cycle_mood_audio !== active_audio) {
+      return;
+    }
+
+    cycle_mood_audio = null;
+    resume_background_after_cycle_mood();
+  });
+  const play_result = cycle_mood_audio.play();
+
+  if (play_result?.catch) {
+    play_result.catch(() => {
+      if (cycle_mood_audio === active_audio) {
+        cycle_mood_audio = null;
+      }
+      resume_background_after_cycle_mood();
+    });
+  }
+}
+
 function ensure_in_app_notification_layer() {
   if (in_app_notification_layer) {
     return in_app_notification_layer;
@@ -10572,7 +11049,12 @@ function dismiss_in_app_notification(notification_element) {
   window.setTimeout(() => notification_element.remove(), 220);
 }
 
-function show_in_app_notification({ title, body, reference_id = "", kind = "message" }) {
+function show_in_app_notification({
+  title,
+  body,
+  reference_id = "",
+  kind = "message",
+}) {
   const layer = ensure_in_app_notification_layer();
   const notification = document.createElement("div");
   notification.className = "in_app_notification";
@@ -10702,7 +11184,9 @@ function handle_memory_action(event) {
   }
 
   if (action_button.dataset.action === "download_memory") {
-    const memory_item = current_memory_items.find((item) => item.id === item_id);
+    const memory_item = current_memory_items.find(
+      (item) => item.id === item_id,
+    );
 
     if (memory_item?.image_data) {
       void download_data_url(
@@ -10770,7 +11254,9 @@ function edit_memory(item_id) {
 }
 
 async function delete_memory(item_id) {
-  const deleted_memory = current_memory_items.find((item) => item.id === item_id);
+  const deleted_memory = current_memory_items.find(
+    (item) => item.id === item_id,
+  );
   const should_delete = await show_app_confirm(
     translate("delete_memory_confirm"),
     {
@@ -11742,11 +12228,170 @@ function save_cycle_feeling(event) {
   current_cycle_dialog_guard.closing_via_save = false;
   on_cycle_change();
 }
+
+function ensure_cycle_party_layer() {
+  if (!dom_references.cycle_shell) {
+    return null;
+  }
+
+  let layer = dom_references.cycle_shell.querySelector(".cycle_party_layer");
+
+  if (!layer) {
+    layer = document.createElement("div");
+    layer.className = "cycle_party_layer";
+    layer.setAttribute("aria-hidden", "true");
+    dom_references.cycle_shell.prepend(layer);
+  }
+
+  return layer;
+}
+
+function render_cycle_party_layer(
+  is_active,
+  runtime = get_cycle_runtime_state(),
+) {
+  const layer = ensure_cycle_party_layer();
+
+  if (!layer) {
+    return;
+  }
+
+  if (!is_active) {
+    layer.remove();
+    return;
+  }
+
+  const mood_key = get_cycle_party_active_mood_key(runtime);
+  const seed = `${runtime.today_text}_${mood_key}_${current_language}`;
+
+  if (layer.dataset.seed === seed && layer.childElementCount > 0) {
+    return;
+  }
+
+  layer.dataset.seed = seed;
+  layer.innerHTML = "";
+
+  const cry_banner = document.createElement("span");
+  cry_banner.className = "cycle_party_cry_banner";
+  cry_banner.textContent =
+    cycle_party_badge_messages[mood_key] || cycle_party_badge_messages.default;
+  layer.appendChild(cry_banner);
+
+  const decoration_kinds = [
+    ["cycle_party_balloon", "🎈"],
+    ["cycle_party_balloon", "🎈"],
+    ["cycle_party_tape", ""],
+    ["cycle_party_firework", "🎆"],
+    ["cycle_party_face", "😂"],
+    ["cycle_party_face", "😄"],
+    ["cycle_party_blink", "✨"],
+    ["cycle_party_kiss", "😘"],
+    ["cycle_party_heart", "❤"],
+  ];
+
+  for (let index = 0; index < 34; index += 1) {
+    const [class_name, label] =
+      decoration_kinds[index % decoration_kinds.length];
+    const decoration = document.createElement("span");
+    decoration.className = `cycle_party_decoration ${class_name}`;
+    decoration.textContent = label;
+    decoration.style.setProperty("--party_x", `${Math.random() * 100}%`);
+    decoration.style.setProperty(
+      "--party_delay",
+      `${(Math.random() * -18).toFixed(2)}s`,
+    );
+    decoration.style.setProperty(
+      "--party_duration",
+      `${12 + Math.random() * 10}s`,
+    );
+    decoration.style.setProperty(
+      "--party_drift",
+      `${(Math.random() - 0.5) * 140}px`,
+    );
+    decoration.style.setProperty(
+      "--party_scale",
+      `${0.72 + Math.random() * 0.62}`,
+    );
+    layer.appendChild(decoration);
+  }
+}
+
+function sync_cycle_party_state(runtime = get_cycle_runtime_state()) {
+  const is_active = is_cycle_party_window_active(runtime);
+  const mood_class = get_cycle_party_mood_class(
+    get_cycle_party_active_mood_key(runtime),
+  );
+  const mood_classes = [
+    "cycle_party_mood_bad",
+    "cycle_party_mood_balanced",
+    "cycle_party_mood_excited",
+  ];
+  const targets = [
+    dom_references.cycle_tracker_section,
+    dom_references.cycle_shell,
+  ].filter(Boolean);
+
+  targets.forEach((target) => {
+    target.classList.toggle("cycle_party_window", is_active);
+    target.classList.remove(...mood_classes);
+
+    if (is_active && mood_class) {
+      target.classList.add(mood_class);
+    }
+  });
+
+  render_cycle_party_layer(is_active, runtime);
+}
+
+function create_cycle_touch_wave(client_x, client_y) {
+  if (!dom_references.cycle_shell) {
+    return;
+  }
+
+  const shell_bounds = dom_references.cycle_shell.getBoundingClientRect();
+  const wave = document.createElement("span");
+  wave.className = "cycle_touch_wave";
+  wave.style.left = `${client_x - shell_bounds.left}px`;
+  wave.style.top = `${client_y - shell_bounds.top}px`;
+  dom_references.cycle_shell.appendChild(wave);
+  window.setTimeout(() => wave.remove(), 1050);
+}
+
+function handle_cycle_party_pointer_down(event) {
+  if (!is_cycle_party_window_active()) {
+    return;
+  }
+
+  create_cycle_touch_wave(event.clientX, event.clientY);
+}
+
+function launch_cycle_party_burst() {
+  if (!is_cycle_party_window_active()) {
+    return;
+  }
+
+  for (let index = 0; index < 7; index += 1) {
+    window.setTimeout(() => {
+      const shell_bounds = dom_references.cycle_shell?.getBoundingClientRect();
+
+      if (!shell_bounds) {
+        return;
+      }
+
+      create_cycle_touch_wave(
+        shell_bounds.left + shell_bounds.width * (0.18 + Math.random() * 0.64),
+        shell_bounds.top + shell_bounds.height * (0.18 + Math.random() * 0.62),
+      );
+    }, index * 90);
+  }
+}
+
 function render_cycle_calendar() {
   if (!dom_references.cycle_calendar_grid) {
     return;
   }
   const runtime = get_cycle_runtime_state();
+  sync_cycle_party_state(runtime);
   render_cycle_weekdays();
   build_cycle_calendar_month();
   apply_cycle_calendar_states(runtime);
@@ -12709,7 +13354,8 @@ function set_presence_state(user_key, next_state, should_save = true) {
 
   const normalized_state = normalize_presence_state(
     {
-      ...(presence_state_by_user[user_key] || read_local_presence_state(user_key)),
+      ...(presence_state_by_user[user_key] ||
+        read_local_presence_state(user_key)),
       ...next_state,
       user_key,
     },
@@ -12753,7 +13399,9 @@ function apply_presence_state_from_message(message_item) {
 function split_visible_live_messages(message_items) {
   const mapped_items = Array.isArray(message_items)
     ? message_items.map((item) =>
-        item?.room_slug !== undefined ? item : map_live_message_row_to_item(item),
+        item?.room_slug !== undefined
+          ? item
+          : map_live_message_row_to_item(item),
       )
     : [];
 
@@ -12761,7 +13409,9 @@ function split_visible_live_messages(message_items) {
     .filter(is_system_live_message)
     .forEach(apply_system_live_message);
 
-  return mapped_items.filter((message_item) => !is_system_live_message(message_item));
+  return mapped_items.filter(
+    (message_item) => !is_system_live_message(message_item),
+  );
 }
 
 function get_hidden_deleted_message_storage_key() {
@@ -13025,18 +13675,14 @@ function apply_message_search_highlights(message_node, query) {
 
   const matcher = new RegExp(escape_reg_exp(query), "gi");
   let has_match = false;
-  const walker = document.createTreeWalker(
-    body,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode(node) {
-        matcher.lastIndex = 0;
-        return node.textContent && matcher.test(node.textContent)
-          ? NodeFilter.FILTER_ACCEPT
-          : NodeFilter.FILTER_REJECT;
-      },
+  const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      matcher.lastIndex = 0;
+      return node.textContent && matcher.test(node.textContent)
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
     },
-  );
+  });
   const text_nodes = [];
 
   while (walker.nextNode()) {
@@ -13067,7 +13713,9 @@ function apply_message_search_highlights(message_node, query) {
     });
 
     if (last_index < text_value.length) {
-      fragment.appendChild(document.createTextNode(text_value.slice(last_index)));
+      fragment.appendChild(
+        document.createTextNode(text_value.slice(last_index)),
+      );
     }
 
     text_node.replaceWith(fragment);
@@ -13132,14 +13780,14 @@ function move_message_search_match(direction) {
   });
 }
 
-function is_live_messages_list_near_bottom() {
+function is_live_messages_list_near_bottom(threshold = 120) {
   const list = dom_references.live_messages_list;
 
   if (!list) {
     return true;
   }
 
-  return list.scrollHeight - list.scrollTop - list.clientHeight < 120;
+  return list.scrollHeight - list.scrollTop - list.clientHeight < threshold;
 }
 
 function get_live_messages_scroll_anchor() {
@@ -13150,12 +13798,12 @@ function get_live_messages_scroll_anchor() {
   }
 
   const list_bounds = list.getBoundingClientRect();
-  const visible_message = [
-    ...list.querySelectorAll(".live_message_item"),
-  ].find((message_node) => {
-    const bounds = message_node.getBoundingClientRect();
-    return bounds.bottom > list_bounds.top && bounds.top < list_bounds.bottom;
-  });
+  const visible_message = [...list.querySelectorAll(".live_message_item")].find(
+    (message_node) => {
+      const bounds = message_node.getBoundingClientRect();
+      return bounds.bottom > list_bounds.top && bounds.top < list_bounds.bottom;
+    },
+  );
 
   return {
     near_bottom: is_live_messages_list_near_bottom(),
@@ -13198,7 +13846,9 @@ function restore_live_messages_scroll_anchor(anchor) {
 function preserve_live_messages_viewport_after_layout() {
   const anchor = get_live_messages_scroll_anchor();
   window.requestAnimationFrame(() =>
-    window.requestAnimationFrame(() => restore_live_messages_scroll_anchor(anchor)),
+    window.requestAnimationFrame(() =>
+      restore_live_messages_scroll_anchor(anchor),
+    ),
   );
   window.setTimeout(() => restore_live_messages_scroll_anchor(anchor), 120);
 }
@@ -13213,12 +13863,14 @@ function update_emoji_picker_position() {
     dom_references.emoji_picker_panel &&
     !dom_references.emoji_picker_panel.classList.contains("hidden");
   const emoji_picker_height = picker_is_open
-    ? Math.ceil(dom_references.emoji_picker_panel.getBoundingClientRect().height)
+    ? Math.ceil(
+        dom_references.emoji_picker_panel.getBoundingClientRect().height,
+      )
     : 0;
   const messages_bottom_lift = picker_is_open
     ? emoji_picker_height + 24
     : keyboard_offset > 80
-      ? 84
+      ? keyboard_offset + 24
       : 18;
 
   document.documentElement.style.setProperty(
@@ -13261,7 +13913,9 @@ function scroll_live_messages_to_bottom(behavior = "smooth") {
   window.setTimeout(update_messages_scroll_button, 260);
 }
 
-function get_presence_visibility_key(user_key = current_user_profile?.user_key) {
+function get_presence_visibility_key(
+  user_key = current_user_profile?.user_key,
+) {
   return `${presence_visibility_storage_prefix}_${current_room_slug}_${user_key || "guest"}`;
 }
 
@@ -13296,7 +13950,10 @@ function get_current_presence_state_patch(is_active = !document.hidden) {
   };
 }
 
-function mark_current_user_seen(is_active = !document.hidden, sync_remote = false) {
+function mark_current_user_seen(
+  is_active = !document.hidden,
+  sync_remote = false,
+) {
   if (!current_user_profile) {
     return;
   }
@@ -13318,9 +13975,7 @@ function mark_current_user_typing(is_typing) {
   }
 
   const now_ms = Date.now();
-  const typing_until = is_typing
-    ? new Date(now_ms + 4500).toISOString()
-    : "";
+  const typing_until = is_typing ? new Date(now_ms + 4500).toISOString() : "";
   const current_state = get_current_presence_state_for_remote();
   const current_until = current_state?.typing_until
     ? new Date(current_state.typing_until).getTime()
@@ -13444,10 +14099,9 @@ async function sync_presence_state_to_remote(immediate = false) {
   }
 
   try {
-    await supabase_client.from(supabase_table_names.live_messages).upsert(
-      presence_message,
-      { onConflict: "id" },
-    );
+    await supabase_client
+      .from(supabase_table_names.live_messages)
+      .upsert(presence_message, { onConflict: "id" });
   } catch (error) {
     // Presence still works locally when the network is unavailable.
   }
@@ -13493,11 +14147,13 @@ function format_presence_date(date_value) {
 }
 
 function is_presence_typing(state) {
-  const typing_until = state?.typing_until ? new Date(state.typing_until) : null;
+  const typing_until = state?.typing_until
+    ? new Date(state.typing_until)
+    : null;
   return Boolean(
     typing_until &&
-      !Number.isNaN(typing_until.getTime()) &&
-      typing_until.getTime() > Date.now(),
+    !Number.isNaN(typing_until.getTime()) &&
+    typing_until.getTime() > Date.now(),
   );
 }
 
@@ -13556,7 +14212,10 @@ function get_presence_status_text() {
     return translate("presence_last_seen_minutes", diff_minutes, time_text);
   }
 
-  if (diff_hours < 24 && last_seen_day.getTime() === start_of_today().getTime()) {
+  if (
+    diff_hours < 24 &&
+    last_seen_day.getTime() === start_of_today().getTime()
+  ) {
     return translate("presence_last_seen_hours", diff_hours, time_text);
   }
 
@@ -13587,15 +14246,16 @@ function update_presence_status_text() {
       "is_hidden",
       !current_user_presence_visible,
     );
-    dom_references.message_visibility_button.innerHTML = current_user_presence_visible
-      ? `
+    dom_references.message_visibility_button.innerHTML =
+      current_user_presence_visible
+        ? `
       <svg class="presence_toggle_icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M2.5 12s3.4-6 9.5-6 9.5 6 9.5 6-3.4 6-9.5 6-9.5-6-9.5-6Z"></path>
         <circle cx="12" cy="12" r="2.6"></circle>
       </svg>
       <span class="presence_toggle_text">${visible_text}</span>
     `
-      : `
+        : `
       <svg class="presence_toggle_icon" viewBox="0 0 24 24" aria-hidden="true">
         <path d="M3 3l18 18"></path>
         <path d="M2.5 12s3.4-6 9.5-6c2 0 3.7.6 5.1 1.4M21.5 12s-3.4 6-9.5 6c-2 0-3.8-.6-5.2-1.5"></path>
@@ -13611,7 +14271,10 @@ function toggle_presence_visibility() {
     get_presence_visibility_key(),
     current_user_presence_visible ? "on" : "off",
   );
-  mark_current_user_seen(current_user_presence_visible && !document.hidden, true);
+  mark_current_user_seen(
+    current_user_presence_visible && !document.hidden,
+    true,
+  );
   update_presence_status_text();
 }
 
@@ -14043,6 +14706,182 @@ function handle_live_message_files_selected() {
   update_live_message_file_preview();
 }
 
+function get_voice_recording_mime_type() {
+  if (typeof MediaRecorder === "undefined") {
+    return "";
+  }
+
+  return (
+    [
+      "audio/webm;codecs=opus",
+      "audio/ogg;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
+    ].find((mime_type) => MediaRecorder.isTypeSupported(mime_type)) || ""
+  );
+}
+
+function get_voice_recording_extension(mime_type) {
+  if (mime_type.includes("ogg")) {
+    return "ogg";
+  }
+
+  if (mime_type.includes("mp4")) {
+    return "m4a";
+  }
+
+  return "webm";
+}
+
+function reset_voice_message_recorder() {
+  if (voice_message_stop_timeout_id) {
+    window.clearTimeout(voice_message_stop_timeout_id);
+    voice_message_stop_timeout_id = null;
+  }
+
+  if (voice_message_stream) {
+    voice_message_stream.getTracks().forEach((track) => track.stop());
+  }
+
+  voice_message_stream = null;
+  voice_message_media_recorder = null;
+  voice_message_chunks = [];
+  voice_message_started_at = 0;
+  voice_message_should_send = false;
+  dom_references.voice_message_button?.classList.remove("is_recording");
+  dom_references.live_message_composer?.classList.remove("is_voice_recording");
+  update_live_message_action_labels();
+}
+
+async function finish_voice_message_recording(mime_type) {
+  const should_send = voice_message_should_send;
+  const chunks = [...voice_message_chunks];
+  const duration_ms = Math.max(0, Date.now() - voice_message_started_at);
+
+  reset_voice_message_recorder();
+
+  if (!should_send || chunks.length === 0) {
+    return;
+  }
+
+  const safe_mime_type = mime_type || chunks[0]?.type || "audio/webm";
+  const blob = new Blob(chunks, { type: safe_mime_type });
+
+  if (blob.size === 0) {
+    return;
+  }
+
+  const extension = get_voice_recording_extension(safe_mime_type);
+  const voice_file = new File(
+    [blob],
+    `voice-message-${Date.now()}.${extension}`,
+    {
+      type: safe_mime_type,
+      lastModified: Date.now(),
+    },
+  );
+
+  voice_file.voice_duration_ms = duration_ms;
+  selected_live_message_files = [voice_file];
+  update_live_message_file_preview();
+  dom_references.live_message_form.requestSubmit();
+}
+
+async function start_voice_message_recording() {
+  if (editing_live_message_id) {
+    return;
+  }
+
+  if (
+    !navigator.mediaDevices?.getUserMedia ||
+    typeof MediaRecorder === "undefined"
+  ) {
+    void show_app_alert(translate("voice_message_not_supported"), {
+      title: translate("voice_message_start"),
+    });
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+        sampleRate: 24000,
+      },
+    });
+    const mime_type = get_voice_recording_mime_type();
+    const recorder_options = {
+      audioBitsPerSecond: 24000,
+    };
+
+    if (mime_type) {
+      recorder_options.mimeType = mime_type;
+    }
+
+    voice_message_stream = stream;
+    voice_message_chunks = [];
+    voice_message_should_send = false;
+    voice_message_started_at = Date.now();
+    voice_message_media_recorder = new MediaRecorder(
+      stream,
+      recorder_options,
+    );
+    voice_message_media_recorder.addEventListener("dataavailable", (event) => {
+      if (event.data?.size > 0) {
+        voice_message_chunks.push(event.data);
+      }
+    });
+    voice_message_media_recorder.addEventListener("stop", () => {
+      void finish_voice_message_recording(
+        voice_message_media_recorder?.mimeType || mime_type,
+      );
+    });
+    voice_message_media_recorder.start(1000);
+    dom_references.voice_message_button?.classList.add("is_recording");
+    dom_references.live_message_composer?.classList.add("is_voice_recording");
+    update_live_message_action_labels();
+    voice_message_stop_timeout_id = window.setTimeout(
+      () => stop_voice_message_recording(true),
+      120000,
+    );
+  } catch (error) {
+    reset_voice_message_recorder();
+    log_app_error("voice_message_recording_failed", error);
+    void show_app_alert(translate("voice_message_permission_error"), {
+      title: translate("voice_message_start"),
+    });
+  }
+}
+
+function stop_voice_message_recording(should_send = true) {
+  if (!voice_message_media_recorder) {
+    return;
+  }
+
+  voice_message_should_send = should_send;
+
+  if (voice_message_media_recorder.state !== "inactive") {
+    voice_message_media_recorder.stop();
+  } else {
+    void finish_voice_message_recording(voice_message_media_recorder.mimeType);
+  }
+}
+
+function handle_voice_message_button_click(event) {
+  event?.preventDefault?.();
+  event?.stopPropagation?.();
+
+  if (voice_message_media_recorder) {
+    stop_voice_message_recording(true);
+    return;
+  }
+
+  void start_voice_message_recording();
+}
+
 function update_live_message_file_preview() {
   dom_references.live_message_files_preview.innerHTML = "";
 
@@ -14059,6 +14898,10 @@ function update_live_message_file_preview() {
 }
 
 function clear_live_message_composer() {
+  if (voice_message_media_recorder) {
+    stop_voice_message_recording(false);
+  }
+
   mark_current_user_typing(false);
   editing_live_message_id = null;
   editing_live_message_has_attachments = false;
@@ -14291,6 +15134,11 @@ async function send_live_message(event) {
     return;
   }
 
+  if (voice_message_media_recorder) {
+    stop_voice_message_recording(true);
+    return;
+  }
+
   const message_segments = extract_message_segments_from_composer();
   const message_text = get_message_text_from_segments(message_segments).trim();
   const files = [...selected_live_message_files];
@@ -14496,6 +15344,7 @@ async function read_file_as_attachment(file_item) {
       name: file_item.name,
       type: file_item.type || "application/octet-stream",
       size: file_item.size || 0,
+      duration_ms: Number(file_item.voice_duration_ms || 0),
       bucket: uploaded_file.bucket,
       storage_path: uploaded_file.storage_path,
       public_url: uploaded_file.public_url,
@@ -14508,6 +15357,7 @@ async function read_file_as_attachment(file_item) {
     name: file_item.name,
     type: file_item.type || "application/octet-stream",
     size: file_item.size || 0,
+    duration_ms: Number(file_item.voice_duration_ms || 0),
     data_url: await read_file_as_data_url(file_item),
   };
 }

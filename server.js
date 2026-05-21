@@ -116,6 +116,7 @@ async function read_sound_manifest() {
     const background_paths = [
       ...(await list_audio_files(path.join(base_directory, "music"))),
       ...(await list_audio_files(path.join(base_directory, "background"))),
+      ...(await list_audio_files(path.join(base_directory, "shared"))),
       ...(await list_audio_files(base_directory))
     ];
 
