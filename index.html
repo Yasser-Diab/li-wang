@@ -24,7 +24,7 @@
       }
     }());
   </script>
-  <link rel="stylesheet" href="styles.css?v=20260521c">
+  <link rel="stylesheet" href="styles.css?v=20260522c">
 </head>
 
 <body class="auth_restoring">
@@ -66,6 +66,18 @@
   </button>
 
   <main id="app_root">
+    <section id="auth_restore_screen" class="auth_restore_screen" aria-live="polite" aria-label="Loading">
+      <div class="auth_restore_panel">
+        <p id="auth_restore_kicker" class="eyebrow_text">Our Universe</p>
+        <h1 id="auth_restore_message">Loading...</h1>
+        <div class="auth_restore_dots" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </section>
+
     <section id="login_screen" class="login_screen" aria-labelledby="login_heading">
       <div class="login_panel">
         <p class="eyebrow_text">our private place</p>
@@ -605,8 +617,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=20260521c"></script>
-  <script src="script.js?v=20260521c"></script>
+  <script src="supabase-config.js?v=20260522c"></script>
+  <script src="script.js?v=20260522c"></script>
 </body>
 
 </html>

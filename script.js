@@ -902,6 +902,9 @@ Object.assign(translations.en, {
   app_notice_default_body: "Something gentle needs your attention.",
   ok_action: "Okay",
   confirm_action: "Confirm",
+  loading: "Loading...",
+  app_loading: "Loading",
+  welcome_back_svetlana: "Welcome back, Svetlana my angel 😘",
   replying_to_self: "Replying to yourself",
   cycle_jump_to_month: "Jump to month",
   mentioning_cycle_note: "Mentioning cycle note",
@@ -947,6 +950,9 @@ Object.assign(translations.de, {
   app_notice_default_body: "Etwas Kleines braucht gerade deine Aufmerksamkeit.",
   ok_action: "Okay",
   confirm_action: "Bestätigen",
+  loading: "Wird geladen...",
+  app_loading: "Lädt",
+  welcome_back_svetlana: "Willkommen zurück, Svetlana, mein Engel 😘",
   replying_to_self: "Antwort an dich selbst",
   cycle_jump_to_month: "Zum Monat springen",
   mentioning_cycle_note: "Zyklusnotiz wird erwähnt",
@@ -995,6 +1001,9 @@ Object.assign(translations.ar, {
   app_notice_default_body: "هناك شيء لطيف يحتاج إلى انتباهك الآن.",
   ok_action: "حسنًا",
   confirm_action: "تأكيد",
+  loading: "جار التحميل...",
+  app_loading: "تحميل",
+  welcome_back_svetlana: "أهلًا بعودتك يا سفيتلانا يا ملاكي 😘",
   replying_to_self: "الرد على نفسك",
   cycle_jump_to_month: "الانتقال إلى شهر محدد",
   mentioning_cycle_note: "الإشارة إلى ملاحظة الدورة",
@@ -1064,6 +1073,8 @@ Object.assign(translations.en, {
   music_added: (count) => `${count} track${count === 1 ? "" : "s"} added.`,
   music_play: "Play music",
   music_pause: "Pause music",
+  message_reaction_add: "Add or change reaction",
+  message_reaction_remove: "Remove your reaction",
   voice_message_start: "Record voice message",
   voice_message_stop: "Stop and send voice message",
   voice_message_recording: "Recording voice...",
@@ -1090,18 +1101,26 @@ Object.assign(translations.en, {
   presence_hidden: "Last seen hidden",
   presence_show_setting: "Show online status",
   presence_hide_setting: "Hide online status",
-  presence_seen_toggle: "Seen",
-  presence_hidden_toggle: "Hidden",
+  presence_seen_toggle: "Gesehen",
+  presence_hidden_toggle: "Verborgen",
   presence_waiting: "Status will appear soon",
   presence_typing: "Typing...",
   incoming_message_title: (name) => `New message from ${name}`,
   incoming_message_close: "Close notification",
+  daily_notification_morning_title: "Good morning, Svetlana my angel",
+  daily_notification_afternoon_title: "Good afternoon, my angel",
+  daily_notification_night_title: "Good night, my beautiful Svetlana",
+  daily_notification_tale_title: "A night tale for you",
   shared_activity_memory: "Memory updated",
   shared_activity_event: "Event updated",
   shared_activity_cycle: "Cycle calendar updated",
   shared_activity_music: "Shared music updated",
   shared_activity_file: "File saved to shared storage",
   shared_activity_generic: "Shared update",
+  message_reaction_notification_title: (name, emoji) =>
+    `${name} reacted with ${emoji}`,
+  message_reaction_notification_body: (message_text) =>
+    `to your message "${message_text}"`,
   show_password: "Show password",
   hide_password: "Hide password",
   biometric_login: "Use fingerprint",
@@ -1164,6 +1183,8 @@ Object.assign(translations.de, {
   music_added: (count) => `${count} Titel hinzugefügt.`,
   music_play: "Musik abspielen",
   music_pause: "Musik pausieren",
+  message_reaction_add: "Reaktion hinzufügen oder ändern",
+  message_reaction_remove: "Deine Reaktion entfernen",
   voice_message_start: "Sprachnachricht aufnehmen",
   voice_message_stop: "Sprachnachricht stoppen und senden",
   voice_message_recording: "Sprachnachricht wird aufgenommen...",
@@ -1190,18 +1211,26 @@ Object.assign(translations.de, {
   presence_hidden: "Zuletzt gesehen verborgen",
   presence_show_setting: "Online-Status zeigen",
   presence_hide_setting: "Online-Status verbergen",
-  presence_seen_toggle: "Seen",
-  presence_hidden_toggle: "Hidden",
+  presence_seen_toggle: "مرئي",
+  presence_hidden_toggle: "مخفي",
   presence_waiting: "Status erscheint gleich",
   presence_typing: "Schreibt...",
   incoming_message_title: (name) => `Neue Nachricht von ${name}`,
   incoming_message_close: "Benachrichtigung schließen",
+  daily_notification_morning_title: "Guten Morgen, Svetlana, mein Engel",
+  daily_notification_afternoon_title: "Guten Tag, mein Engel",
+  daily_notification_night_title: "Gute Nacht, meine schöne Svetlana",
+  daily_notification_tale_title: "Eine Nachtgeschichte für dich",
   shared_activity_memory: "Erinnerung aktualisiert",
   shared_activity_event: "Ereignis aktualisiert",
   shared_activity_cycle: "Zykluskalender aktualisiert",
   shared_activity_music: "Gemeinsame Musik aktualisiert",
   shared_activity_file: "Datei im gemeinsamen Speicher gesichert",
   shared_activity_generic: "Gemeinsame Aktualisierung",
+  message_reaction_notification_title: (name, emoji) =>
+    `${name} hat mit ${emoji} reagiert`,
+  message_reaction_notification_body: (message_text) =>
+    `auf deine Nachricht "${message_text}"`,
   show_password: "Passwort zeigen",
   hide_password: "Passwort verbergen",
   biometric_login: "Fingerabdruck verwenden",
@@ -1265,6 +1294,8 @@ Object.assign(translations.ar, {
   music_added: (count) => `تمت إضافة ${count} مقطع.`,
   music_play: "تشغيل الموسيقى",
   music_pause: "إيقاف الموسيقى مؤقتاً",
+  message_reaction_add: "إضافة أو تغيير التفاعل",
+  message_reaction_remove: "حذف تفاعلك",
   voice_message_start: "تسجيل رسالة صوتية",
   voice_message_stop: "إيقاف وإرسال الرسالة الصوتية",
   voice_message_recording: "جار تسجيل الصوت...",
@@ -1297,12 +1328,20 @@ Object.assign(translations.ar, {
   presence_typing: "يكتب الآن...",
   incoming_message_title: (name) => `رسالة جديدة من ${name}`,
   incoming_message_close: "إغلاق الإشعار",
+  daily_notification_morning_title: "صباح الخير يا سفيتلانا يا ملاكي",
+  daily_notification_afternoon_title: "مساء الخير يا ملاكي",
+  daily_notification_night_title: "تصبحين على خير يا سفيتلانا الجميلة",
+  daily_notification_tale_title: "حكاية ليلية لكِ",
   shared_activity_memory: "تم تحديث ذكرى",
   shared_activity_event: "تم تحديث حدث",
   shared_activity_cycle: "تم تحديث تقويم الدورة",
   shared_activity_music: "تم تحديث الموسيقى المشتركة",
   shared_activity_file: "تم حفظ الملف في التخزين المشترك",
   shared_activity_generic: "تحديث مشترك",
+  message_reaction_notification_title: (name, emoji) =>
+    `${name} تفاعل بـ ${emoji}`,
+  message_reaction_notification_body: (message_text) =>
+    `على رسالتك "${message_text}"`,
   show_password: "إظهار كلمة السر",
   hide_password: "إخفاء كلمة السر",
   biometric_login: "استخدام البصمة",
@@ -1548,6 +1587,8 @@ let live_message_stream = null;
 let live_message_poll_id = null;
 let live_messages_history_loaded = false;
 let shared_data_stream = null;
+let shared_music_stream = null;
+let shared_music_poll_id = null;
 let heart_shower_interval_id = null;
 let heart_shower_timeout_id = null;
 let hero_message_timer_id = null;
@@ -1573,6 +1614,8 @@ let voice_message_chunks = [];
 let voice_message_started_at = 0;
 let voice_message_stop_timeout_id = null;
 let voice_message_should_send = false;
+let emoji_picker_mode = "composer";
+let reaction_picker_message_id = "";
 let cycle_message_rotation_id = null;
 let cycle_feeling_prompt_key = "";
 let current_cycle_text_dialog_mode = "checkin";
@@ -1909,6 +1952,7 @@ document.addEventListener("DOMContentLoaded", initialize_application);
 async function initialize_application() {
   document.body.classList.add("auth_restoring");
   collect_dom_references();
+  update_auth_restore_screen();
   lift_emoji_picker_panel();
   initialize_supabase_client();
   bind_event_handlers();
@@ -1916,6 +1960,7 @@ async function initialize_application() {
   apply_saved_language();
   apply_saved_theme();
   apply_saved_music_setting();
+  initialize_media_session_controls();
   load_local_music_tracks();
   await initialize_native_notifications();
   await load_sound_manifest();
@@ -1972,6 +2017,15 @@ function collect_dom_references() {
     "language_toggle_label",
   );
   dom_references.login_screen = document.getElementById("login_screen");
+  dom_references.auth_restore_screen = document.getElementById(
+    "auth_restore_screen",
+  );
+  dom_references.auth_restore_message = document.getElementById(
+    "auth_restore_message",
+  );
+  dom_references.auth_restore_kicker = document.getElementById(
+    "auth_restore_kicker",
+  );
   dom_references.login_panel_eyebrow = document.querySelector(
     "#login_screen .eyebrow_text",
   );
@@ -2801,6 +2855,23 @@ function is_supabase_recovery_link_present() {
   );
 }
 
+function update_auth_restore_screen(user_profile = null) {
+  if (!dom_references.auth_restore_message) {
+    return;
+  }
+
+  const user_key = user_profile?.user_key || "";
+  dom_references.auth_restore_message.textContent =
+    user_key === "svetlana"
+      ? translate("welcome_back_svetlana")
+      : translate("loading");
+
+  if (dom_references.auth_restore_kicker) {
+    dom_references.auth_restore_kicker.textContent =
+      user_key === "svetlana" ? "Our Universe" : translate("app_loading");
+  }
+}
+
 function clear_supabase_recovery_url_state() {
   if (typeof window.history.replaceState !== "function") {
     return;
@@ -2873,6 +2944,7 @@ async function restore_existing_session() {
         );
 
         if (restored_profile) {
+          update_auth_restore_screen(restored_profile);
           current_auth_user_id = data.session.user.id;
           current_auth_access_token = String(data.session.access_token || "");
           current_auth_refresh_token = String(
@@ -2881,8 +2953,13 @@ async function restore_existing_session() {
           current_user_profile = restored_profile;
           load_local_music_tracks();
           await load_shared_music_tracks();
+          start_shared_music_sync_watch();
           load_hidden_deleted_messages();
           sessionStorage.setItem(
+            "logged_in_user",
+            JSON.stringify(restored_profile),
+          );
+          localStorage.setItem(
             "logged_in_user",
             JSON.stringify(restored_profile),
           );
@@ -2898,6 +2975,8 @@ async function restore_existing_session() {
           sync_cycle_audio();
           await configure_background_message_sync();
           await schedule_cycle_notifications();
+          await schedule_daily_svetlana_notifications();
+          await schedule_birthday_notifications();
           await initialize_live_messages_for_session();
           return true;
         }
@@ -2909,14 +2988,18 @@ async function restore_existing_session() {
 
   try {
     const saved_profile = JSON.parse(
-      sessionStorage.getItem("logged_in_user") || "null",
+      sessionStorage.getItem("logged_in_user") ||
+        localStorage.getItem("logged_in_user") ||
+        "null",
     );
 
     if (saved_profile && saved_profile.user_key) {
+      update_auth_restore_screen(saved_profile);
       current_user_profile = saved_profile;
       current_auth_user_id = current_auth_user_id || "";
       load_local_music_tracks();
       await load_shared_music_tracks();
+      start_shared_music_sync_watch();
       load_hidden_deleted_messages();
       await load_saved_content();
       update_home_for_user(saved_profile);
@@ -2929,6 +3012,8 @@ async function restore_existing_session() {
       sync_cycle_audio();
       await configure_background_message_sync();
       await schedule_cycle_notifications();
+      await schedule_daily_svetlana_notifications();
+      await schedule_birthday_notifications();
       await initialize_live_messages_for_session();
       return true;
     }
@@ -2988,6 +3073,20 @@ async function get_supabase_access_token() {
   return session_tokens.accessToken;
 }
 
+function get_live_message_activity_timestamp(message_item) {
+  return (
+    [
+      message_item?.created_at,
+      message_item?.edited_at,
+      get_message_reactions_attachment(message_item?.attachments)?.updated_at,
+    ]
+      .map((value) => String(value || ""))
+      .filter(Boolean)
+      .sort()
+      .pop() || new Date(0).toISOString()
+  );
+}
+
 async function configure_background_message_sync(enabled = true) {
   const background_sync_plugin = get_capacitor_plugin("BackgroundSync");
 
@@ -3004,7 +3103,8 @@ async function configure_background_message_sync(enabled = true) {
     )
     .sort(
       (left_item, right_item) =>
-        new Date(right_item.created_at) - new Date(left_item.created_at),
+        new Date(get_live_message_activity_timestamp(right_item)) -
+        new Date(get_live_message_activity_timestamp(left_item)),
     )[0];
   const session_tokens = await get_supabase_session_tokens();
   const native_cycle_data = current_cycle_data
@@ -3020,7 +3120,9 @@ async function configure_background_message_sync(enabled = true) {
       refreshToken: session_tokens.refreshToken,
       roomSlug: current_room_slug,
       userKey: current_user_profile?.user_key || "",
-      lastMessageCreatedAt: latest_message?.created_at || "",
+      lastMessageCreatedAt: latest_message
+        ? get_live_message_activity_timestamp(latest_message)
+        : "",
       cycleData: native_cycle_data ? JSON.stringify(native_cycle_data) : "",
     });
 
@@ -3079,6 +3181,12 @@ async function initialize_native_notifications() {
         importance: 4,
         visibility: 1,
       });
+      await local_notifications.createChannel({
+        id: "daily",
+        name: "Daily love notes",
+        importance: 4,
+        visibility: 1,
+      });
     }
 
     await local_notifications.registerActionTypes({
@@ -3130,13 +3238,17 @@ async function schedule_activity_notification(title, body, seed_text) {
     return;
   }
 
+  const decorated_title = decorate_activity_notification_title(title);
+  const decorated_body = decorate_activity_notification_body(title, body);
+
   try {
     await local_notifications.schedule({
       notifications: [
         {
           id: build_notification_id(520000, seed_text),
-          title: String(title || translate("shared_activity_generic")),
-          body: String(body || ""),
+          title: decorated_title,
+          body: decorated_body,
+          largeBody: decorated_body,
           schedule: { at: new Date(Date.now() + 20), allowWhileIdle: true },
           channelId: "activity",
           smallIcon: "ic_stat_notification",
@@ -3149,6 +3261,28 @@ async function schedule_activity_notification(title, body, seed_text) {
   } catch (error) {
     log_app_error("activity_notification_schedule_failed", error);
   }
+}
+
+function decorate_activity_notification_title(title) {
+  const safe_title = String(title || translate("shared_activity_generic"));
+
+  if (safe_title === translate("shared_activity_memory")) {
+    return `💛 ${safe_title} ✨`;
+  }
+
+  return safe_title;
+}
+
+function decorate_activity_notification_body(title, body) {
+  const safe_body = String(body || "");
+
+  if (String(title || "") === translate("shared_activity_memory")) {
+    return safe_body
+      ? `A memory changed in Our Universe. ${safe_body}`
+      : "A memory changed in Our Universe. Open it with a little golden glow.";
+  }
+
+  return safe_body;
 }
 
 async function schedule_message_notification(message_item) {
@@ -3189,6 +3323,123 @@ async function schedule_message_notification(message_item) {
     });
   } catch (error) {
     log_app_error("message_notification_schedule_failed", error);
+  }
+}
+
+function get_reaction_notification_preview(message_item) {
+  const message_text = get_plain_text_snippet(
+    get_live_message_display_text(message_item).replace(/"/g, "'"),
+    88,
+  );
+
+  return message_text || "a photo or file";
+}
+
+function get_live_message_reaction_notification(previous_message, next_message) {
+  if (
+    !current_user_profile ||
+    !previous_message ||
+    !next_message ||
+    is_deleted_live_message(next_message) ||
+    next_message.sender_key !== current_user_profile.user_key
+  ) {
+    return null;
+  }
+
+  const next_attachment = get_message_reactions_attachment(
+    next_message.attachments,
+  );
+  const previous_attachment = get_message_reactions_attachment(
+    previous_message.attachments,
+  );
+  const reacting_user_key = String(next_attachment?.updated_by || "");
+
+  if (
+    !next_attachment?.updated_at ||
+    !reacting_user_key ||
+    reacting_user_key === current_user_profile.user_key ||
+    String(next_attachment.updated_at) ===
+      String(previous_attachment?.updated_at || "")
+  ) {
+    return null;
+  }
+
+  const emoji = get_message_reactions(next_message)[reacting_user_key] || "";
+
+  if (!emoji) {
+    return null;
+  }
+
+  const reacting_name =
+    allowed_users[reacting_user_key]?.display_name ||
+    get_message_reaction_label(reacting_user_key);
+
+  return {
+    reacting_user_key,
+    reacting_name,
+    emoji,
+    updated_at: String(next_attachment.updated_at),
+    preview: get_reaction_notification_preview(next_message),
+  };
+}
+
+function show_in_app_reaction_notification(message_item, reaction_info) {
+  if (!reaction_info) {
+    return;
+  }
+
+  show_in_app_notification({
+    title: translate(
+      "message_reaction_notification_title",
+      reaction_info.reacting_name,
+      reaction_info.emoji,
+    ),
+    body: translate("message_reaction_notification_body", reaction_info.preview),
+    reference_id: message_item.id,
+    kind: "message",
+  });
+}
+
+async function schedule_reaction_notification(message_item, reaction_info) {
+  const local_notifications = get_capacitor_plugin("LocalNotifications");
+
+  if (!local_notifications || !message_item || !reaction_info) {
+    return;
+  }
+
+  const title = translate(
+    "message_reaction_notification_title",
+    reaction_info.reacting_name,
+    reaction_info.emoji,
+  );
+  const body = translate(
+    "message_reaction_notification_body",
+    reaction_info.preview,
+  );
+
+  try {
+    await local_notifications.schedule({
+      notifications: [
+        {
+          id: build_notification_id(
+            645000,
+            `${message_item.id}_${reaction_info.reacting_user_key}_${reaction_info.updated_at}`,
+          ),
+          title,
+          body,
+          largeBody: body,
+          channelId: "messages",
+          smallIcon: "ic_stat_notification",
+          extra: {
+            kind: "message",
+            messageId: message_item.id,
+          },
+          schedule: { at: new Date(Date.now() + 20), allowWhileIdle: true },
+        },
+      ],
+    });
+  } catch (error) {
+    log_app_error("reaction_notification_schedule_failed", error);
   }
 }
 
@@ -3319,6 +3570,276 @@ async function schedule_cycle_notifications() {
   } catch (error) {
     log_app_error("cycle_notifications_schedule_failed", error);
   }
+}
+
+async function schedule_daily_svetlana_notifications() {
+  const local_notifications = get_capacitor_plugin("LocalNotifications");
+
+  if (!local_notifications || !current_user_profile) {
+    return;
+  }
+
+  const daily_ids = build_daily_notification_ids();
+
+  try {
+    await local_notifications.cancel({
+      notifications: daily_ids.map((id) => ({ id })),
+    });
+
+    if (current_user_profile.user_key !== "svetlana") {
+      return;
+    }
+
+    const notifications = build_daily_love_notifications();
+
+    if (notifications.length > 0) {
+      await local_notifications.schedule({ notifications });
+    }
+  } catch (error) {
+    log_app_error("daily_notifications_schedule_failed", error);
+  }
+}
+
+function build_daily_notification_ids() {
+  const ids = [];
+
+  for (let day_index = 0; day_index < 8; day_index += 1) {
+    for (let slot_index = 0; slot_index < 4; slot_index += 1) {
+      ids.push(540000 + day_index * 10 + slot_index);
+    }
+  }
+
+  return ids;
+}
+
+function build_daily_love_notifications() {
+  const notifications = [];
+  const now = new Date();
+
+  for (let day_index = 0; day_index < 8; day_index += 1) {
+    const target_date = add_days(start_of_today(), day_index);
+    const schedule_items = [
+      {
+        id: 540000 + day_index * 10,
+        hour: 8,
+        minute: 0,
+        title: translate("daily_notification_morning_title"),
+        body: get_morning_message_for_date(target_date),
+        badge: 1,
+        kind: "daily_morning",
+      },
+      {
+        id: 540001 + day_index * 10,
+        hour: 12,
+        minute: 0,
+        title: translate("daily_notification_afternoon_title"),
+        body: get_daily_love_message_for_date(target_date),
+        badge: 2,
+        kind: "daily_afternoon",
+      },
+      {
+        id: 540002 + day_index * 10,
+        hour: 23,
+        minute: 0,
+        title: translate("daily_notification_night_title"),
+        body: get_night_message_for_date(target_date),
+        badge: 3,
+        kind: "daily_night",
+      },
+      {
+        id: 540003 + day_index * 10,
+        hour: 23,
+        minute: 2,
+        title: translate("daily_notification_tale_title"),
+        body: get_night_tale_for_date(target_date),
+        badge: 4,
+        kind: "daily_tale",
+      },
+    ];
+
+    schedule_items.forEach((item) => {
+      const schedule_at = new Date(
+        target_date.getFullYear(),
+        target_date.getMonth(),
+        target_date.getDate(),
+        item.hour,
+        item.minute,
+        0,
+      );
+
+      if (schedule_at <= now || !item.body) {
+        return;
+      }
+
+      notifications.push({
+        id: item.id,
+        title: item.title,
+        body: item.body,
+        largeBody: item.body,
+        badge: item.badge,
+        channelId: "daily",
+        smallIcon: "ic_stat_notification",
+        extra: {
+          kind: item.kind,
+        },
+        schedule: {
+          at: schedule_at,
+          allowWhileIdle: true,
+        },
+      });
+    });
+  }
+
+  return notifications;
+}
+
+async function schedule_birthday_notifications() {
+  const local_notifications = get_capacitor_plugin("LocalNotifications");
+
+  if (!local_notifications || !current_user_profile) {
+    return;
+  }
+
+  const birthday_ids = build_birthday_notification_ids();
+
+  try {
+    await local_notifications.cancel({
+      notifications: birthday_ids.map((id) => ({ id })),
+    });
+
+    const notifications = build_birthday_notifications();
+
+    if (notifications.length > 0) {
+      await local_notifications.schedule({ notifications });
+    }
+  } catch (error) {
+    log_app_error("birthday_notifications_schedule_failed", error);
+  }
+}
+
+function build_birthday_notification_ids() {
+  const ids = [];
+
+  for (let person_index = 0; person_index < 2; person_index += 1) {
+    for (let offset_index = 0; offset_index < 15; offset_index += 1) {
+      ids.push(550000 + person_index * 100 + offset_index);
+    }
+  }
+
+  return ids;
+}
+
+function build_birthday_notifications() {
+  const now = new Date();
+  const horizon = add_days(start_of_today(), 45);
+  const people = [
+    {
+      key: "diab",
+      name: "Diab",
+      birthdate: diab_birthdate,
+      id_offset: 0,
+    },
+    {
+      key: "svetlana",
+      name: "Svetlana",
+      birthdate: svetlana_birthdate,
+      id_offset: 100,
+    },
+  ];
+  const notifications = [];
+
+  people.forEach((person, person_index) => {
+    get_birthday_window_dates(person.birthdate).forEach((item, index) => {
+      const schedule_at = new Date(
+        item.date.getFullYear(),
+        item.date.getMonth(),
+        item.date.getDate(),
+        10,
+        0,
+        0,
+      );
+
+      if (schedule_at <= now || schedule_at > horizon) {
+        return;
+      }
+
+      notifications.push({
+        id: 550000 + person.id_offset + index,
+        title: get_birthday_notification_title(person.name, item.offset),
+        body: get_birthday_notification_body(person.name, item.offset),
+        largeBody: get_birthday_notification_body(person.name, item.offset),
+        badge: Math.max(1, 8 - Math.abs(item.offset)),
+        channelId: "daily",
+        smallIcon: "ic_stat_notification",
+        extra: {
+          kind: "birthday",
+          person: person.key,
+          offset: item.offset,
+        },
+        schedule: {
+          at: schedule_at,
+          allowWhileIdle: true,
+        },
+      });
+    });
+  });
+
+  return notifications;
+}
+
+function get_birthday_window_dates(birthdate_string) {
+  const today = start_of_today();
+  const birthdate = parse_local_date(birthdate_string);
+  const years = [
+    today.getFullYear() - 1,
+    today.getFullYear(),
+    today.getFullYear() + 1,
+  ];
+  const schedule_dates = [];
+
+  years.forEach((year) => {
+    const birthday = new Date(
+      year,
+      birthdate.getMonth(),
+      birthdate.getDate(),
+    );
+
+    for (let offset = -7; offset <= 7; offset += 1) {
+      const date = add_days(birthday, offset);
+
+      if (date >= today) {
+        schedule_dates.push({ date, offset });
+      }
+    }
+  });
+
+  return schedule_dates
+    .sort((left, right) => left.date - right.date)
+    .slice(0, 15);
+}
+
+function get_birthday_notification_title(name, offset) {
+  if (offset === 0) {
+    return `🎈 Happy birthday, ${name} 💛`;
+  }
+
+  if (offset < 0) {
+    return `🎈 ${name}'s birthday in ${Math.abs(offset)} day${Math.abs(offset) === 1 ? "" : "s"} ✨`;
+  }
+
+  return `💛 ${name}'s birthday glow continues ✨`;
+}
+
+function get_birthday_notification_body(name, offset) {
+  if (offset === 0) {
+    return `Golden ribbons, balloons, hearts, and tiny gifts are flying for ${name} today.`;
+  }
+
+  if (offset < 0) {
+    return `The birthday celebration is getting closer. ${name} is already surrounded by balloons and golden light.`;
+  }
+
+  return `The celebration is still floating around ${name}: hearts, balloons, gold, and a little more joy.`;
 }
 
 function handle_local_notification_action(notification_action) {
@@ -4227,14 +4748,30 @@ function build_emoji_picker() {
   const delete_button = document.createElement("button");
   delete_button.className = "emoji_picker_delete_button";
   delete_button.type = "button";
-  delete_button.textContent = "⌫";
-  delete_button.setAttribute("aria-label", "Delete");
+  delete_button.textContent = emoji_picker_mode === "reaction" ? "×" : "⌫";
+  delete_button.setAttribute(
+    "aria-label",
+    emoji_picker_mode === "reaction"
+      ? translate("message_reaction_remove")
+      : "Delete",
+  );
+  delete_button.title =
+    emoji_picker_mode === "reaction"
+      ? translate("message_reaction_remove")
+      : "Delete";
   delete_button.addEventListener("pointerdown", (event) => {
     event.preventDefault();
+    if (emoji_picker_mode === "reaction" && reaction_picker_message_id) {
+      return;
+    }
     delete_last_composer_character();
   });
   delete_button.addEventListener("click", (event) => {
     event.preventDefault();
+    if (emoji_picker_mode === "reaction" && reaction_picker_message_id) {
+      void set_live_message_reaction(reaction_picker_message_id, "");
+      hide_emoji_picker(false, false);
+    }
   });
   topbar.append(tabs, delete_button);
   const body = document.createElement("div");
@@ -4282,8 +4819,7 @@ function build_emoji_picker() {
         event.preventDefault(),
       );
       emoji_button.addEventListener("click", () => {
-        insert_emoji_at_cursor(emoji_character);
-        record_emoji_usage(emoji_character);
+        handle_emoji_picker_selection(emoji_character);
       });
       grid.appendChild(emoji_button);
     });
@@ -4297,6 +4833,8 @@ function build_emoji_picker() {
 
 function toggle_emoji_picker(event) {
   event.stopPropagation();
+  emoji_picker_mode = "composer";
+  reaction_picker_message_id = "";
   save_message_selection_range();
 
   if (dom_references.emoji_picker_panel.classList.contains("hidden")) {
@@ -4324,6 +4862,8 @@ function hide_emoji_picker(from_history = false, restore_keyboard = false) {
 
   dom_references.emoji_picker_panel.classList.add("hidden");
   document.body.classList.remove("emoji_picker_open");
+  emoji_picker_mode = "composer";
+  reaction_picker_message_id = "";
   update_emoji_picker_position();
   close_overlay_layer("emoji_picker", from_history);
   preserve_live_messages_viewport_after_layout();
@@ -4413,11 +4953,15 @@ function handle_document_click(event) {
   const clicked_music_panel =
     dom_references.music_library_panel?.contains(event.target) ||
     dom_references.music_library_button?.contains(event.target);
+  const clicked_reaction_control = Boolean(
+    event.target.closest?.(".live_message_reaction_control"),
+  );
 
   if (
     !clicked_inside_form &&
     !clicked_inside_picker &&
     !clicked_toggle_button &&
+    !clicked_reaction_control &&
     !dom_references.emoji_picker_panel.classList.contains("hidden")
   ) {
     hide_emoji_picker(false, true);
@@ -5301,6 +5845,8 @@ function toggle_language() {
   current_language = language_cycle[next_index];
   localStorage.setItem(language_storage_key, current_language);
   apply_language();
+  void schedule_daily_svetlana_notifications();
+  void schedule_birthday_notifications();
   burst_reaction(dom_references.language_toggle_button, "spark", 8);
 }
 
@@ -5324,6 +5870,7 @@ function apply_language() {
     translate("menu_button_label"),
   );
   dom_references.app_nav_toggle_button.title = translate("menu_button_label");
+  update_auth_restore_screen(current_user_profile);
   dom_references.music_control_pill?.setAttribute(
     "aria-label",
     translate("music_controls_label"),
@@ -5776,6 +6323,18 @@ function update_live_message_action_labels() {
   }
 }
 
+function handle_emoji_picker_selection(emoji_character) {
+  record_emoji_usage(emoji_character);
+
+  if (emoji_picker_mode === "reaction" && reaction_picker_message_id) {
+    void set_live_message_reaction(reaction_picker_message_id, emoji_character);
+    hide_emoji_picker(false, false);
+    return;
+  }
+
+  insert_emoji_at_cursor(emoji_character);
+}
+
 function refresh_cycle_text_dialog_copy() {
   if (!dom_references.cycle_feeling_dialog) {
     return;
@@ -5886,11 +6445,13 @@ async function finish_successful_login(user_profile) {
   password_recovery_mode_active = false;
   load_local_music_tracks();
   await load_shared_music_tracks();
+  start_shared_music_sync_watch();
   load_hidden_deleted_messages();
   sessionStorage.setItem(
     "logged_in_user",
     JSON.stringify(current_user_profile),
   );
+  localStorage.setItem("logged_in_user", JSON.stringify(current_user_profile));
   set_status_text(dom_references.login_error_message, "", "");
   dom_references.username_input.value = "";
   dom_references.password_input.value = "";
@@ -5902,6 +6463,8 @@ async function finish_successful_login(user_profile) {
   start_presence_updates();
   await configure_background_message_sync();
   await schedule_cycle_notifications();
+  await schedule_daily_svetlana_notifications();
+  await schedule_birthday_notifications();
   show_welcome_overlay(current_user_profile);
 }
 
@@ -5974,6 +6537,7 @@ function handle_logout() {
   play_logout_sound();
   stop_presence_updates();
   sessionStorage.removeItem("logged_in_user");
+  localStorage.removeItem("logged_in_user");
   current_user_profile = null;
   current_auth_user_id = "";
   current_auth_access_token = "";
@@ -5992,6 +6556,7 @@ function handle_logout() {
   update_login_email_hint();
   close_live_messages_stream();
   close_shared_data_stream();
+  stop_shared_music_sync_watch();
   clear_live_message_composer();
   close_memory_lightbox(null, true);
   stop_cycle_ambient_audio();
@@ -6122,6 +6687,7 @@ async function handle_forgot_password_request() {
 function open_password_recovery_dialog() {
   password_recovery_mode_active = true;
   sessionStorage.removeItem("logged_in_user");
+  localStorage.removeItem("logged_in_user");
   current_user_profile = null;
   hidden_deleted_message_ids = [];
   set_status_text(dom_references.password_recovery_status, "", "");
@@ -6192,6 +6758,7 @@ async function handle_password_recovery_submit(event) {
       // The password is already updated even if sign-out is delayed.
     }
     sessionStorage.removeItem("logged_in_user");
+    localStorage.removeItem("logged_in_user");
     current_user_profile = null;
     hidden_deleted_message_ids = [];
     dom_references.password_input.value = "";
@@ -6508,6 +7075,69 @@ function get_daily_content_index(seed_key, list_length) {
   return index % list_length;
 }
 
+function get_daily_content_index_for_date(seed_key, list_length, target_date) {
+  if (!list_length) {
+    return 0;
+  }
+
+  const safe_date = target_date instanceof Date ? target_date : new Date();
+  const date_key = `${safe_date.getFullYear()}-${safe_date.getMonth() + 1}-${safe_date.getDate()}`;
+  const seed_text = `${seed_key}_${date_key}`;
+  const index = Array.from(seed_text).reduce(
+    (total, character) => (total * 33 + character.charCodeAt(0)) % 1000003,
+    0,
+  );
+
+  return index % list_length;
+}
+
+function get_daily_message_from_list_for_date(
+  message_list,
+  fallback_list,
+  seed_key,
+  target_date,
+) {
+  const safe_list = build_fresh_message_pool(message_list, fallback_list);
+
+  if (safe_list.length === 0) {
+    return "";
+  }
+
+  const index = get_daily_content_index_for_date(
+    seed_key,
+    safe_list.length,
+    target_date,
+  );
+  return safe_list[index % safe_list.length] || "";
+}
+
+function get_indexed_daily_message_for_date(
+  list_by_language,
+  fallback_by_language,
+  seed_key,
+  target_date,
+) {
+  const anchor_list = build_fresh_message_pool(
+    list_by_language.en || [],
+    fallback_by_language.en || [],
+  );
+  const active_list = build_fresh_message_pool(
+    list_by_language[current_language] || [],
+    fallback_by_language[current_language] || fallback_by_language.en || [],
+  );
+
+  if (active_list.length === 0) {
+    return "";
+  }
+
+  const index = get_daily_content_index_for_date(
+    seed_key,
+    anchor_list.length || active_list.length,
+    target_date,
+  );
+  return active_list[index % active_list.length] || "";
+}
+
 function get_indexed_daily_message(
   list_by_language,
   fallback_by_language,
@@ -6610,11 +7240,53 @@ function get_morning_message() {
   );
 }
 
+function get_morning_message_for_date(target_date) {
+  const fallback_map = {
+    en: fallback_morning_messages,
+    de: fallback_morning_messages_de,
+    ar: fallback_morning_messages_ar,
+  };
+  return get_daily_message_from_list_for_date(
+    morning_messages_by_language[current_language],
+    fallback_map[current_language] || fallback_morning_messages,
+    `morning_${current_language}`,
+    target_date,
+  );
+}
+
 function get_night_message() {
   return get_daily_message_from_list(
     night_messages_by_language[current_language],
     fallback_night_messages,
     `night_${current_language}`,
+  );
+}
+
+function get_night_message_for_date(target_date) {
+  const fallback_map = {
+    en: fallback_night_messages,
+    de: fallback_night_messages_de,
+    ar: fallback_night_messages_ar,
+  };
+  return get_daily_message_from_list_for_date(
+    night_messages_by_language[current_language],
+    fallback_map[current_language] || fallback_night_messages,
+    `night_${current_language}`,
+    target_date,
+  );
+}
+
+function get_daily_love_message_for_date(target_date) {
+  const fallback_map = {
+    en: fallback_daily_love_messages,
+    de: fallback_daily_love_messages_de,
+    ar: fallback_daily_love_messages_ar,
+  };
+  return get_daily_message_from_list_for_date(
+    daily_love_messages_by_language[current_language],
+    fallback_map[current_language] || fallback_daily_love_messages,
+    `love_${current_language}`,
+    target_date,
   );
 }
 
@@ -8725,6 +9397,9 @@ function render_live_message_context_preview() {
     !["reply", "cycle_note"].includes(pending_message_context.kind)
   ) {
     dom_references.live_message_context_preview.classList.add("hidden");
+    dom_references.live_messages_list
+      ?.closest(".live_messages_shell")
+      ?.classList.remove("has_context_preview");
     dom_references.live_message_context_preview.classList.remove(
       "is_reply_preview",
     );
@@ -8734,6 +9409,9 @@ function render_live_message_context_preview() {
   }
 
   dom_references.live_message_context_preview.classList.remove("hidden");
+  dom_references.live_messages_list
+    ?.closest(".live_messages_shell")
+    ?.classList.add("has_context_preview");
   dom_references.live_message_context_preview.classList.add("is_reply_preview");
   dom_references.live_message_context_label.textContent =
     pending_message_context.preview_label || "";
@@ -8859,6 +9537,240 @@ function get_file_attachments(attachment_list) {
   return (attachment_list || []).filter(
     (attachment) => !attachment?.kind || attachment.kind === "file",
   );
+}
+
+function get_night_tale_for_date(target_date) {
+  return get_indexed_daily_message_for_date(
+    night_tales_by_language,
+    {
+      en: fallback_night_tales,
+      de: fallback_night_tales_de,
+      ar: fallback_night_tales_ar,
+    },
+    "night_tale",
+    target_date,
+  );
+}
+
+function get_message_reactions_attachment(attachment_list) {
+  return (
+    (attachment_list || []).find(
+      (attachment) => attachment?.kind === "message_reactions",
+    ) || null
+  );
+}
+
+function get_message_reactions(message_item) {
+  const attachment = get_message_reactions_attachment(message_item?.attachments);
+  const raw_reactions =
+    attachment?.reactions && typeof attachment.reactions === "object"
+      ? attachment.reactions
+      : {};
+  return ["svetlana", "diab"].reduce((reactions, user_key) => {
+    const emoji_value = String(raw_reactions[user_key] || "").trim();
+
+    if (emoji_value) {
+      reactions[user_key] = emoji_value;
+    }
+
+    return reactions;
+  }, {});
+}
+
+function get_message_reaction_count(message_item) {
+  return Object.keys(get_message_reactions(message_item)).length;
+}
+
+function get_message_reaction_label(user_key) {
+  const profile = allowed_users[user_key];
+  return String(profile?.display_name || user_key || "?")
+    .trim()
+    .slice(0, 1)
+    .toUpperCase();
+}
+
+function build_message_reactions_attachment(reactions, updated_at) {
+  return {
+    kind: "message_reactions",
+    reactions,
+    updated_by: current_user_profile?.user_key || "",
+    updated_at,
+  };
+}
+
+function get_attachments_without_message_reactions(attachment_list) {
+  return (attachment_list || []).filter(
+    (attachment) => attachment?.kind !== "message_reactions",
+  );
+}
+
+function render_live_message_reactions(message_item, is_own_message) {
+  const control = document.createElement("button");
+  const reactions = get_message_reactions(message_item);
+  const reaction_entries = ["svetlana", "diab"]
+    .filter((user_key) => reactions[user_key])
+    .map((user_key) => ({
+      user_key,
+      emoji: reactions[user_key],
+    }));
+
+  control.type = "button";
+  control.className = "live_message_reaction_control";
+  control.classList.toggle("has_reactions", reaction_entries.length > 0);
+  control.classList.toggle("own_message_reaction", is_own_message);
+  control.dataset.action = "react_live_message";
+  control.dataset.message_id = message_item.id;
+  control.title = translate("message_reaction_add");
+  control.setAttribute("aria-label", translate("message_reaction_add"));
+
+  if (reaction_entries.length === 0) {
+    control.textContent = "+";
+    return control;
+  }
+
+  reaction_entries.forEach((entry) => {
+    const item = document.createElement("span");
+    const initial = document.createElement("span");
+    const emoji = document.createElement("span");
+
+    item.className = "live_message_reaction_item";
+    initial.className = "live_message_reaction_initial";
+    initial.textContent = get_message_reaction_label(entry.user_key);
+    emoji.className = "live_message_reaction_emoji";
+    emoji.textContent = entry.emoji;
+    item.append(initial, emoji);
+    control.appendChild(item);
+  });
+
+  return control;
+}
+
+async function set_live_message_reaction(message_id, emoji_character) {
+  if (!current_user_profile || !message_id) {
+    return;
+  }
+
+  const local_message = current_live_messages.find(
+    (message_item) => message_item.id === message_id,
+  );
+
+  if (!local_message || is_deleted_live_message(local_message)) {
+    return;
+  }
+
+  const latest_message = await fetch_latest_live_message_for_update(
+    message_id,
+    local_message,
+  );
+  const reactions = get_message_reactions(latest_message);
+  const safe_emoji = String(emoji_character || "").trim();
+  const updated_at = new Date().toISOString();
+  const previous_user_reaction = reactions[current_user_profile.user_key] || "";
+  const previous_reaction_attachment = get_message_reactions_attachment(
+    latest_message.attachments,
+  );
+  const has_legacy_reaction_edit_stamp = Boolean(
+    previous_reaction_attachment?.updated_at &&
+      latest_message.edited_at &&
+      String(previous_reaction_attachment.updated_at) ===
+        String(latest_message.edited_at),
+  );
+
+  if (safe_emoji && previous_user_reaction === safe_emoji) {
+    delete reactions[current_user_profile.user_key];
+  } else if (safe_emoji) {
+    reactions[current_user_profile.user_key] = safe_emoji;
+  } else {
+    delete reactions[current_user_profile.user_key];
+  }
+
+  const base_attachments = get_attachments_without_message_reactions(
+    latest_message.attachments,
+  );
+  const next_attachments =
+    Object.keys(reactions).length > 0
+      ? [
+          ...base_attachments,
+          build_message_reactions_attachment(reactions, updated_at),
+        ]
+      : base_attachments;
+  const next_message = {
+    ...latest_message,
+    attachments: next_attachments,
+    ...(has_legacy_reaction_edit_stamp ? { edited_at: "" } : {}),
+  };
+
+  upsert_live_message(next_message, false);
+
+  try {
+    if (is_supabase_enabled() && current_auth_user_id) {
+      const update_payload = {
+        attachments: next_attachments,
+        ...(has_legacy_reaction_edit_stamp ? { edited_at: null } : {}),
+      };
+      const { data, error } = await supabase_client
+        .from(supabase_table_names.live_messages)
+        .update(update_payload)
+        .eq("id", message_id)
+        .eq("room_slug", current_room_slug)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      upsert_live_message(map_live_message_row_to_item(data), false);
+      return;
+    }
+
+    const response = await fetch(
+      `/api/live_messages/${encodeURIComponent(message_id)}/reactions`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_key: current_user_profile.user_key,
+          emoji: safe_emoji,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("reaction_update_failed");
+    }
+
+    const result = await response.json();
+    upsert_live_message(result.message || next_message, false);
+  } catch (error) {
+    log_app_error("message_reaction_update_failed", error);
+    upsert_live_message(local_message, false);
+  }
+}
+
+async function fetch_latest_live_message_for_update(message_id, fallback_message) {
+  if (!is_supabase_enabled() || !current_auth_user_id) {
+    return fallback_message;
+  }
+
+  try {
+    const { data, error } = await supabase_client
+      .from(supabase_table_names.live_messages)
+      .select("*")
+      .eq("id", message_id)
+      .eq("room_slug", current_room_slug)
+      .maybeSingle();
+
+    if (!error && data) {
+      return map_live_message_row_to_item(data);
+    }
+  } catch (error) {
+    log_app_error("message_reaction_fetch_latest_failed", error);
+  }
+
+  return fallback_message;
 }
 
 async function hydrate_live_message_storage_sources(message_or_messages) {
@@ -9812,12 +10724,21 @@ function toggle_music() {
 }
 
 function pause_background_music_for_lifecycle() {
-  if (!background_music_audio || background_music_audio.paused) {
+  const should_resume_after_lifecycle = Boolean(
+    (background_music_audio && !background_music_audio.paused) ||
+      background_music_paused_by_cycle_mood,
+  );
+
+  stop_cycle_mood_music(false);
+  background_music_paused_by_cycle_mood = false;
+
+  if (!should_resume_after_lifecycle) {
+    update_music_control_buttons();
     return;
   }
 
   background_music_paused_by_lifecycle = true;
-  background_music_audio.pause();
+  background_music_audio?.pause();
   update_music_control_buttons();
 }
 
@@ -10153,6 +11074,85 @@ async function load_shared_music_tracks() {
   await hydrate_shared_music_track_sources();
 }
 
+function start_shared_music_sync_watch() {
+  stop_shared_music_sync_watch();
+
+  if (!current_user_profile) {
+    return;
+  }
+
+  if (is_shared_music_supabase_enabled()) {
+    try {
+      shared_music_stream = shared_music_supabase_client
+        .channel(`shared-music-${current_room_slug}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: get_shared_music_table_name(),
+            filter: `room_slug=eq.${current_room_slug}`,
+          },
+          () => {
+            void refresh_shared_music_from_remote();
+          },
+        )
+        .subscribe();
+    } catch (error) {
+      log_app_error("shared_music_realtime_subscribe_failed", error);
+    }
+  }
+
+  shared_music_poll_id = window.setInterval(
+    () => refresh_shared_music_from_remote(),
+    7000,
+  );
+}
+
+function stop_shared_music_sync_watch() {
+  if (shared_music_stream && is_shared_music_supabase_enabled()) {
+    try {
+      shared_music_supabase_client.removeChannel(shared_music_stream);
+    } catch (error) {
+      log_app_error("shared_music_realtime_remove_failed", error);
+    }
+  }
+
+  shared_music_stream = null;
+
+  if (shared_music_poll_id) {
+    window.clearInterval(shared_music_poll_id);
+    shared_music_poll_id = null;
+  }
+}
+
+async function refresh_shared_music_from_remote() {
+  if (!current_user_profile) {
+    return;
+  }
+
+  const before_signature = get_shared_music_signature();
+  await load_shared_music_tracks();
+
+  if (get_shared_music_signature() !== before_signature) {
+    render_music_library_panel();
+    update_music_control_buttons();
+    update_media_session_metadata();
+  }
+}
+
+function get_shared_music_signature() {
+  return JSON.stringify(
+    shared_music_tracks.map((track) => [
+      track.id,
+      track.name,
+      track.storage_path,
+      track.public_url,
+      track.data_url ? "inline" : "",
+    ]),
+  );
+}
+
 async function sync_shared_music_tracks_to_remote(immediate = false) {
   if (!current_user_profile) {
     return;
@@ -10215,6 +11215,7 @@ function apply_shared_music_state_from_message(message_item) {
     is_shared: true,
   }));
   void hydrate_shared_music_track_sources();
+  void refresh_shared_music_from_remote();
 
   if (
     live_messages_history_loaded &&
@@ -10565,7 +11566,7 @@ async function handle_music_files_selected(event) {
     if (shared_tracks.length > 0) {
       shared_music_tracks = [...shared_music_tracks, ...shared_tracks];
       save_shared_music_tracks_locally();
-      void sync_shared_music_tracks_to_remote();
+      void sync_shared_music_tracks_to_remote(true);
       void announce_shared_activity(
         "music",
         translate("shared_activity_music"),
@@ -10926,6 +11927,79 @@ function update_music_control_buttons() {
   ) {
     render_music_library_panel();
   }
+
+  update_media_session_metadata();
+}
+
+function get_current_background_track() {
+  return get_all_music_tracks().find(
+    (track) => track.src === last_background_music_url,
+  );
+}
+
+function initialize_media_session_controls() {
+  if (!("mediaSession" in navigator)) {
+    return;
+  }
+
+  try {
+    navigator.mediaSession.setActionHandler("play", () => {
+      if (document.hidden || background_music_paused_by_lifecycle) {
+        update_media_session_metadata();
+        return;
+      }
+
+      background_music_paused_by_user = false;
+      background_music_paused_by_lifecycle = false;
+
+      if (background_music_audio) {
+        play_existing_background_music();
+      } else {
+        ensure_background_music(true);
+      }
+    });
+    navigator.mediaSession.setActionHandler("pause", () => {
+      background_music_paused_by_user = true;
+      background_music_audio?.pause();
+      update_music_control_buttons();
+    });
+    navigator.mediaSession.setActionHandler("previoustrack", () => {
+      if (!document.hidden && !background_music_paused_by_lifecycle) {
+        change_background_track(-1);
+      }
+    });
+    navigator.mediaSession.setActionHandler("nexttrack", () => {
+      if (!document.hidden && !background_music_paused_by_lifecycle) {
+        change_background_track(1);
+      }
+    });
+  } catch (error) {
+    log_app_error("media_session_controls_failed", error);
+  }
+}
+
+function update_media_session_metadata() {
+  if (!("mediaSession" in navigator)) {
+    return;
+  }
+
+  const current_track = get_current_background_track();
+
+  try {
+    navigator.mediaSession.metadata = current_track
+      ? new MediaMetadata({
+          title: current_track.name || "Our Universe music",
+          artist: "Wolf & Luna",
+          album: "Our Universe",
+        })
+      : null;
+    navigator.mediaSession.playbackState =
+      background_music_audio && !background_music_audio.paused
+        ? "playing"
+        : "paused";
+  } catch (error) {
+    log_app_error("media_session_metadata_failed", error);
+  }
 }
 
 function should_play_background_music() {
@@ -11036,11 +12110,6 @@ function ensure_background_music(force_restart = false) {
   }
 
   if (!music_enabled && !background_music_audio) {
-    update_music_control_buttons();
-    return;
-  }
-
-  if (document.hidden) {
     update_music_control_buttons();
     return;
   }
@@ -13405,7 +14474,13 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
   const existing_index = current_live_messages.findIndex(
     (item) => item.id === message_item.id,
   );
+  const previous_message =
+    existing_index >= 0 ? current_live_messages[existing_index] : null;
   const is_new_message = existing_index < 0;
+  const reaction_notification = get_live_message_reaction_notification(
+    previous_message,
+    message_item,
+  );
 
   if (existing_index >= 0) {
     current_live_messages[existing_index] = message_item;
@@ -13447,6 +14522,14 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
     show_in_app_message_notification(message_item);
     if (document.hidden || !document.hasFocus()) {
       void schedule_message_notification(message_item);
+    }
+  }
+
+  if (reaction_notification && live_messages_history_loaded) {
+    if (document.hidden || !document.hasFocus()) {
+      void schedule_reaction_notification(message_item, reaction_notification);
+    } else {
+      show_in_app_reaction_notification(message_item, reaction_notification);
     }
   }
 
@@ -13839,6 +14922,12 @@ function render_live_messages(scroll_to_bottom = false) {
 
     if (edit_note) {
       message_element.appendChild(edit_note);
+    }
+
+    if (!is_deleted_message) {
+      message_element.appendChild(
+        render_live_message_reactions(message_item, is_own_message),
+      );
     }
 
     if (is_deleted_message) {
@@ -14600,6 +15689,23 @@ function create_deleted_message_tools(message_id) {
   return tool_wrap;
 }
 
+function open_live_message_reaction_picker(event, message_id) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (!message_id || !current_user_profile) {
+    return;
+  }
+
+  emoji_picker_mode = "reaction";
+  reaction_picker_message_id = message_id;
+  build_emoji_picker();
+  dom_references.emoji_picker_panel.classList.remove("hidden");
+  document.body.classList.add("emoji_picker_open");
+  update_emoji_picker_position();
+  open_overlay_layer("emoji_picker");
+}
+
 function handle_live_message_action(event) {
   const action_button = event.target.closest("button[data-action]");
 
@@ -14607,7 +15713,13 @@ function handle_live_message_action(event) {
     return;
   }
 
+  event.stopPropagation();
   const message_id = action_button.dataset.message_id;
+
+  if (action_button.dataset.action === "react_live_message") {
+    open_live_message_reaction_picker(event, message_id);
+    return;
+  }
 
   if (action_button.dataset.action === "edit_live_message") {
     edit_live_message(message_id);
@@ -14625,7 +15737,10 @@ function handle_live_message_action(event) {
 function handle_live_message_pointer_down(event) {
   const message_element = event.target.closest(".live_message_item");
 
-  if (!message_element || event.target.closest("button, a, video, audio")) {
+  if (
+    !message_element ||
+    event.target.closest("button, a, video, audio, .live_message_reaction_control")
+  ) {
     return;
   }
 
@@ -14717,6 +15832,15 @@ function get_message_sender_label(message_item, is_own_message) {
 
 function render_live_message_edit_note(message_item) {
   if (!message_item.edited_at || is_deleted_live_message(message_item)) {
+    return null;
+  }
+
+  const reactions = get_message_reactions_attachment(message_item.attachments);
+
+  if (
+    reactions?.updated_at &&
+    String(reactions.updated_at) === String(message_item.edited_at)
+  ) {
     return null;
   }
 
@@ -15167,8 +16291,7 @@ function start_live_message_edit(message_item) {
   clear_live_message_composer();
   editing_live_message_id = message_item.id;
   editing_live_message_has_attachments =
-    Array.isArray(message_item.attachments) &&
-    message_item.attachments.length > 0;
+    get_file_attachments(message_item.attachments).length > 0;
   dom_references.live_message_composer.classList.add("is_editing");
   dom_references.live_message_files_input.disabled = true;
   dom_references.live_message_files_label.classList.add("is_disabled");
@@ -15418,6 +16541,11 @@ async function send_live_message(event) {
           segments: message_segments,
         },
         ...get_file_attachments(message_item.attachments),
+        ...(
+          get_message_reactions_attachment(message_item.attachments)
+            ? [get_message_reactions_attachment(message_item.attachments)]
+            : []
+        ),
       ],
       edited_at: new Date().toISOString(),
     };

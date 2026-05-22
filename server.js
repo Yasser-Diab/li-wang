@@ -303,6 +303,23 @@ function sanitize_live_message_attachment(attachment) {
       .filter((track) => track.id);
   }
 
+  if (attachment.reactions && typeof attachment.reactions === "object") {
+    safe_attachment.reactions = ["svetlana", "diab"].reduce(
+      (reactions, user_key) => {
+        const emoji_value = String(
+          attachment.reactions[user_key] || ""
+        ).trim();
+
+        if (emoji_value) {
+          reactions[user_key] = emoji_value;
+        }
+
+        return reactions;
+      },
+      {}
+    );
+  }
+
   return safe_attachment;
 }
 
@@ -331,6 +348,7 @@ function sanitize_live_message_item(message_item, existing_message = null) {
 
 async function handle_api_request(request, response) {
   const live_message_item_match = request.url.match(/^\/api\/live_messages\/([^/?#]+)$/);
+  const live_message_reaction_match = request.url.match(/^\/api\/live_messages\/([^/?#]+)\/reactions$/);
 
   if (request.method === "POST" && request.url === "/api/login") {
     const body_text = await read_request_body(request);
@@ -565,6 +583,75 @@ async function handle_api_request(request, response) {
     send_json(response, 200, {
       ok: true,
       message: safe_message
+    });
+    return true;
+  }
+
+  if (live_message_reaction_match && request.method === "PATCH") {
+    const message_id = decodeURIComponent(live_message_reaction_match[1]);
+    const body_text = await read_request_body(request);
+    const body = JSON.parse(body_text || "{}");
+    const user_key = String(body.user_key || "");
+    const emoji = String(body.emoji || "").trim();
+    const app_data = await read_app_data();
+    const existing_message = app_data.live_messages.find((message_item) => message_item.id === message_id);
+
+    if (!existing_message || !["svetlana", "diab"].includes(user_key)) {
+      send_json(response, 404, { ok: false });
+      return true;
+    }
+
+    const updated_at = new Date().toISOString();
+    const base_attachments = Array.isArray(existing_message.attachments)
+      ? existing_message.attachments.filter((attachment) => attachment?.kind !== "message_reactions")
+      : [];
+    const existing_reactions_attachment = Array.isArray(existing_message.attachments)
+      ? existing_message.attachments.find((attachment) => attachment?.kind === "message_reactions")
+      : null;
+    const has_legacy_reaction_edit_stamp = Boolean(
+      existing_reactions_attachment?.updated_at &&
+        existing_message.edited_at &&
+        String(existing_reactions_attachment.updated_at) === String(existing_message.edited_at)
+    );
+    const reactions =
+      existing_reactions_attachment?.reactions &&
+      typeof existing_reactions_attachment.reactions === "object"
+        ? { ...existing_reactions_attachment.reactions }
+        : {};
+
+    if (emoji && reactions[user_key] === emoji) {
+      delete reactions[user_key];
+    } else if (emoji) {
+      reactions[user_key] = emoji;
+    } else {
+      delete reactions[user_key];
+    }
+
+    const next_attachments = Object.keys(reactions).length > 0
+      ? [
+          ...base_attachments,
+          {
+            kind: "message_reactions",
+            reactions,
+            updated_by: user_key,
+            updated_at
+          }
+        ]
+      : base_attachments;
+    const updated_message = sanitize_live_message_item({
+      ...existing_message,
+      attachments: next_attachments,
+      ...(has_legacy_reaction_edit_stamp ? { edited_at: "" } : {})
+    }, has_legacy_reaction_edit_stamp ? null : existing_message);
+
+    app_data.live_messages = app_data.live_messages.map((message_item) =>
+      message_item.id === message_id ? updated_message : message_item
+    );
+    await write_app_data(app_data);
+    broadcast_live_message_updated(updated_message);
+    send_json(response, 200, {
+      ok: true,
+      message: updated_message
     });
     return true;
   }
