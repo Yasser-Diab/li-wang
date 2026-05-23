@@ -48,6 +48,13 @@ const supabase_table_names = {
 const supabase_media_bucket_name = "app-media";
 const shared_music_bucket_name_default = "shared-music";
 const shared_music_table_name_default = "shared_music_files";
+const app_version_name = "2.064";
+const app_version_code = 2064;
+const app_update_notified_version_key = "sveta_app_update_notified_version";
+const app_update_github_repo = "Yasser-Diab/li-wang2";
+const app_update_releases_url = `https://api.github.com/repos/${app_update_github_repo}/releases?per_page=20`;
+const app_update_latest_release_url = `https://api.github.com/repos/${app_update_github_repo}/releases/latest`;
+const native_message_notification_channel = "messages-live";
 
 const language_cycle = ["en", "de", "ar"];
 const language_config = {
@@ -904,6 +911,21 @@ Object.assign(translations.en, {
   app_notice_default_body: "Something gentle needs your attention.",
   ok_action: "Okay",
   confirm_action: "Confirm",
+  app_update_action: "Update",
+  app_update_downloading: "Downloading....",
+  app_update_install: (version) => `Install V${version}`,
+  app_current_version: (version) => `Current version: ${version}`,
+  app_update_available_title: "Update available",
+  app_update_available_body:
+    "New app version available open the app to download and install",
+  app_update_ready_body: (version) =>
+    `The new version ${version} is downloaded and ready for installation`,
+  app_update_latest_body: (version) =>
+    `The version ${version} is the latest version, you are updated!`,
+  app_update_checking: "Checking for updates...",
+  app_update_updating: "Updating...",
+  app_update_failed:
+    "The update could not be checked right now. Please try again soon.",
   loading: "Loading...",
   app_loading: "Loading",
   welcome_back_svetlana: "Welcome back, Svetlana my angel 😘",
@@ -952,6 +974,21 @@ Object.assign(translations.de, {
   app_notice_default_body: "Etwas Kleines braucht gerade deine Aufmerksamkeit.",
   ok_action: "Okay",
   confirm_action: "Bestätigen",
+  app_update_action: "Update",
+  app_update_downloading: "Downloading....",
+  app_update_install: (version) => `Install V${version}`,
+  app_current_version: (version) => `Current version: ${version}`,
+  app_update_available_title: "Update available",
+  app_update_available_body:
+    "New app version available open the app to download and install",
+  app_update_ready_body: (version) =>
+    `The new version ${version} is downloaded and ready for installation`,
+  app_update_latest_body: (version) =>
+    `The version ${version} is the latest version, you are updated!`,
+  app_update_checking: "Checking for updates...",
+  app_update_updating: "Updating...",
+  app_update_failed:
+    "The update could not be checked right now. Please try again soon.",
   loading: "Wird geladen...",
   app_loading: "Lädt",
   welcome_back_svetlana: "Willkommen zurück, Svetlana, mein Engel 😘",
@@ -1003,6 +1040,21 @@ Object.assign(translations.ar, {
   app_notice_default_body: "هناك شيء لطيف يحتاج إلى انتباهك الآن.",
   ok_action: "حسنًا",
   confirm_action: "تأكيد",
+  app_update_action: "Update",
+  app_update_downloading: "Downloading....",
+  app_update_install: (version) => `Install V${version}`,
+  app_current_version: (version) => `Current version: ${version}`,
+  app_update_available_title: "Update available",
+  app_update_available_body:
+    "New app version available open the app to download and install",
+  app_update_ready_body: (version) =>
+    `The new version ${version} is downloaded and ready for installation`,
+  app_update_latest_body: (version) =>
+    `The version ${version} is the latest version, you are updated!`,
+  app_update_checking: "Checking for updates...",
+  app_update_updating: "Updating...",
+  app_update_failed:
+    "The update could not be checked right now. Please try again soon.",
   loading: "جار التحميل...",
   app_loading: "تحميل",
   welcome_back_svetlana: "أهلًا بعودتك يا سفيتلانا يا ملاكي 😘",
@@ -1665,6 +1717,13 @@ let birthday_page_effect_key = "";
 let cycle_calendar_swipe_state = null;
 let suppress_cycle_day_click_until = 0;
 let current_cycle_runtime_state = null;
+let app_update_state = {
+  current_version_name: app_version_name,
+  current_version_code: app_version_code,
+  latest_update: null,
+  downloaded_version: "",
+  status: "idle",
+};
 function add_days(date, amount) {
   const cloned = new Date(date);
   cloned.setDate(cloned.getDate() + amount);
@@ -1981,6 +2040,7 @@ document.addEventListener("DOMContentLoaded", initialize_application);
 async function initialize_application() {
   document.body.classList.add("auth_restoring");
   collect_dom_references();
+  sync_native_platform_class();
   update_auth_restore_screen();
   lift_emoji_picker_panel();
   initialize_supabase_client();
@@ -1992,6 +2052,7 @@ async function initialize_application() {
   initialize_media_session_controls();
   load_local_music_tracks();
   await initialize_native_notifications();
+  await initialize_app_update_menu();
   await load_sound_manifest();
   await load_all_message_lists();
   apply_language();
@@ -2037,6 +2098,13 @@ function collect_dom_references() {
   dom_references.app_nav_links = [
     ...document.querySelectorAll(".app_nav_link"),
   ];
+  dom_references.app_update_panel =
+    document.getElementById("app_update_panel");
+  dom_references.app_update_button =
+    document.getElementById("app_update_button");
+  dom_references.app_current_version_label = document.getElementById(
+    "app_current_version_label",
+  );
   dom_references.language_toggle_button = document.getElementById(
     "language_toggle_button",
   );
@@ -3176,6 +3244,9 @@ async function configure_background_message_sync(enabled = true) {
       refreshToken: session_tokens.refreshToken,
       roomSlug: current_room_slug,
       userKey: current_user_profile?.user_key || "",
+      appUpdateSourceUrl: get_app_update_source_url(),
+      appVersionName: app_update_state.current_version_name || app_version_name,
+      appVersionCode: app_update_state.current_version_code || app_version_code,
       lastMessageCreatedAt: latest_message
         ? get_live_message_activity_timestamp(latest_message)
         : "",
@@ -3220,7 +3291,7 @@ async function initialize_native_notifications() {
 
     if (typeof local_notifications.createChannel === "function") {
       await local_notifications.createChannel({
-        id: "messages",
+        id: native_message_notification_channel,
         name: "Messages",
         importance: 4,
         visibility: 1,
@@ -3544,13 +3615,14 @@ async function schedule_message_notification(message_item) {
             get_message_sender_label(message_item, false),
           body: body_text || translate("live_messages_heading"),
           largeBody: body_text,
-          channelId: "messages",
+          channelId: native_message_notification_channel,
+          smallIcon: "ic_stat_notification",
           actionTypeId: "MESSAGE_REPLY",
           extra: {
             kind: "message",
             messageId: message_item.id,
           },
-          schedule: { at: new Date(Date.now() + 20), allowWhileIdle: true },
+          schedule: { at: new Date(Date.now() + 100), allowWhileIdle: true },
         },
       ],
     });
@@ -3661,7 +3733,7 @@ async function schedule_reaction_notification(message_item, reaction_info) {
           title,
           body,
           largeBody: body,
-          channelId: "messages",
+          channelId: native_message_notification_channel,
           smallIcon: "ic_stat_notification",
           extra: {
             kind: "message",
@@ -4109,6 +4181,12 @@ function open_messages_for_reply(message_id = "") {
 }
 
 function handle_native_open_request(event) {
+  if (event?.detail?.update) {
+    close_app_navigation();
+    void handle_app_update_button_click();
+    return;
+  }
+
   if (event?.detail?.panel === "messages") {
     open_messages_for_reply(event.detail.messageId || "");
     return;
@@ -4173,6 +4251,10 @@ function bind_event_handlers() {
   );
   dom_references.app_nav_links.forEach((nav_button) =>
     nav_button.addEventListener("click", handle_app_navigation_link_click),
+  );
+  dom_references.app_update_button?.addEventListener(
+    "click",
+    handle_app_update_button_click,
   );
   dom_references.language_toggle_button.addEventListener(
     "click",
@@ -4682,6 +4764,464 @@ function set_status_text(element, message_text, status_type = "") {
 
 function get_capacitor_plugin(plugin_name) {
   return window.Capacitor?.Plugins?.[plugin_name] || null;
+}
+
+function get_capacitor_platform() {
+  return String(window.Capacitor?.getPlatform?.() || "").toLowerCase();
+}
+
+function is_android_native_app() {
+  return (
+    get_capacitor_platform() === "android" ||
+    Boolean(get_app_updater_plugin()?.downloadUpdate)
+  );
+}
+
+function sync_native_platform_class() {
+  const is_android_app = is_android_native_app();
+  document.body.classList.toggle("is_android_app", is_android_app);
+  document.body.classList.toggle("is_web_app", !is_android_app);
+}
+
+function get_app_updater_plugin() {
+  return get_capacitor_plugin("AppUpdater");
+}
+
+function get_app_update_source_url() {
+  return app_update_releases_url;
+}
+
+function get_app_update_file_version(file_name) {
+  const match = String(file_name || "").match(/v(\d+(?:\.\d+)*)/i);
+  return match ? match[1] : "";
+}
+
+function normalize_app_update_filename(file_name = "", url = "") {
+  const raw_name = String(file_name || "").trim();
+
+  if (raw_name) {
+    return raw_name;
+  }
+
+  try {
+    return decodeURIComponent(String(url || "").split("/").pop() || "");
+  } catch (error) {
+    return String(url || "").split("/").pop() || "";
+  }
+}
+
+function parse_app_version_parts(version_name) {
+  return String(version_name || "")
+    .replace(/^v/i, "")
+    .split(/[^\d]+/)
+    .filter(Boolean)
+    .map((part) => Number(part));
+}
+
+function compare_app_version_names(left_version, right_version) {
+  const left_parts = parse_app_version_parts(left_version);
+  const right_parts = parse_app_version_parts(right_version);
+  const length = Math.max(left_parts.length, right_parts.length);
+
+  for (let index = 0; index < length; index += 1) {
+    const left_part = left_parts[index] || 0;
+    const right_part = right_parts[index] || 0;
+
+    if (left_part !== right_part) {
+      return left_part - right_part;
+    }
+  }
+
+  return 0;
+}
+
+function normalize_app_update_candidate(raw_candidate) {
+  if (!raw_candidate || typeof raw_candidate !== "object") {
+    return null;
+  }
+
+  const file_name = normalize_app_update_filename(
+    raw_candidate.fileName || raw_candidate.file || raw_candidate.name,
+    raw_candidate.browser_download_url ||
+      raw_candidate.download_url ||
+      raw_candidate.downloadUrl ||
+      raw_candidate.url,
+  );
+  const download_url =
+    raw_candidate.browser_download_url ||
+    raw_candidate.downloadUrl ||
+    raw_candidate.download_url ||
+    raw_candidate.url ||
+    "";
+  const version_name =
+    String(
+      raw_candidate.versionName ||
+        raw_candidate.version ||
+        raw_candidate.tag_name ||
+        raw_candidate.releaseTag ||
+        get_app_update_file_version(file_name),
+    ).replace(/^v/i, "") || "";
+  const version_code = Number(
+    raw_candidate.versionCode || raw_candidate.version_code || 0,
+  );
+
+  if (
+    !file_name ||
+    !download_url ||
+    !version_name ||
+    !/\.apk$/i.test(file_name)
+  ) {
+    return null;
+  }
+
+  return {
+    file_name,
+    download_url,
+    version_name,
+    version_code,
+  };
+}
+
+function get_app_update_release_assets(release_item) {
+  if (!release_item || typeof release_item !== "object") {
+    return [];
+  }
+
+  const release_version = String(
+    release_item.versionName ||
+      release_item.version ||
+      release_item.tag_name ||
+      release_item.name ||
+      "",
+  ).replace(/^v/i, "");
+  const release_version_code = Number(
+    release_item.versionCode || release_item.version_code || 0,
+  );
+
+  if (Array.isArray(release_item.assets)) {
+    return release_item.assets.map((asset) => ({
+      ...asset,
+      versionName: asset.versionName || release_version,
+      versionCode: asset.versionCode || release_version_code,
+    }));
+  }
+
+  return [release_item];
+}
+
+async function fetch_app_update_candidates_from_url(source_url) {
+  const response = await fetch(source_url, {
+    cache: "no-store",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`app_update_source_${response.status}`);
+  }
+
+  const payload = await response.json();
+  const raw_candidates = Array.isArray(payload)
+    ? payload.flatMap(get_app_update_release_assets)
+    : Array.isArray(payload.versions)
+      ? payload.versions
+      : payload.latest
+        ? [payload.latest]
+        : get_app_update_release_assets(payload);
+
+  return raw_candidates.map(normalize_app_update_candidate).filter(Boolean);
+}
+
+async function fetch_app_update_candidates() {
+  const source_urls = [app_update_latest_release_url, get_app_update_source_url()];
+  const all_candidates = [];
+  const seen_source_urls = new Set();
+
+  for (const source_url of source_urls) {
+    if (seen_source_urls.has(source_url)) {
+      continue;
+    }
+
+    seen_source_urls.add(source_url);
+
+    try {
+      const candidates = await fetch_app_update_candidates_from_url(source_url);
+
+      if (candidates.length > 0) {
+        all_candidates.push(...candidates);
+      }
+    } catch (error) {
+      log_app_error("app_update_source_failed", error);
+    }
+  }
+
+  const seen_candidates = new Set();
+  return all_candidates.filter((candidate) => {
+    const key = `${candidate.version_name}:${candidate.file_name}`;
+
+    if (seen_candidates.has(key)) {
+      return false;
+    }
+
+    seen_candidates.add(key);
+    return true;
+  });
+}
+
+function compare_app_update_candidates(left_candidate, right_candidate) {
+  const version_comparison = compare_app_version_names(
+    left_candidate?.version_name,
+    right_candidate?.version_name,
+  );
+
+  if (version_comparison !== 0) {
+    return version_comparison;
+  }
+
+  const left_code = Number(left_candidate?.version_code || 0);
+  const right_code = Number(right_candidate?.version_code || 0);
+
+  return left_code - right_code;
+}
+
+function app_update_is_newer(candidate) {
+  if (!candidate) {
+    return false;
+  }
+
+  if (candidate.version_code && app_update_state.current_version_code) {
+    return candidate.version_code > app_update_state.current_version_code;
+  }
+
+  return (
+    compare_app_version_names(
+      candidate.version_name,
+      app_update_state.current_version_name,
+    ) > 0
+  );
+}
+
+function select_latest_app_update_candidate(candidates) {
+  return [...candidates].sort(compare_app_update_candidates).pop() || null;
+}
+
+function update_app_update_menu() {
+  if (!dom_references.app_update_button) {
+    return;
+  }
+
+  const current_version =
+    app_update_state.current_version_name || app_version_name;
+  const latest_version = app_update_state.latest_update?.version_name || "";
+  const downloaded_version = app_update_state.downloaded_version || "";
+  let button_text = translate("app_update_action");
+  let disabled = false;
+
+  if (app_update_state.status === "downloading") {
+    button_text = translate("app_update_downloading");
+    disabled = true;
+  } else if (
+    latest_version &&
+    downloaded_version &&
+    latest_version === downloaded_version
+  ) {
+    button_text = translate("app_update_install", latest_version);
+  }
+
+  dom_references.app_update_button.textContent = button_text;
+  dom_references.app_update_button.disabled = disabled;
+  set_text(
+    dom_references.app_current_version_label,
+    translate("app_current_version", current_version),
+  );
+}
+
+async function initialize_app_update_menu() {
+  sync_native_platform_class();
+  update_app_update_menu();
+
+  if (!is_android_native_app()) {
+    return;
+  }
+
+  const updater_plugin = get_app_updater_plugin();
+
+  if (updater_plugin?.getStatus) {
+    try {
+      const status = await updater_plugin.getStatus();
+      app_update_state.current_version_name =
+        status.currentVersionName || app_update_state.current_version_name;
+      app_update_state.current_version_code =
+        Number(status.currentVersionCode || app_update_state.current_version_code);
+      app_update_state.downloaded_version =
+        status.downloadedVersion || app_update_state.downloaded_version;
+    } catch (error) {
+      log_app_error("app_update_status_failed", error);
+    }
+  }
+
+  update_app_update_menu();
+  void check_for_app_update(false);
+}
+
+async function notify_app_update_available(candidate) {
+  if (!candidate?.version_name) {
+    return;
+  }
+
+  if (
+    localStorage.getItem(app_update_notified_version_key) ===
+    candidate.version_name
+  ) {
+    return;
+  }
+
+  localStorage.setItem(app_update_notified_version_key, candidate.version_name);
+
+  const updater_plugin = get_app_updater_plugin();
+  if (updater_plugin?.notifyUpdateAvailable) {
+    try {
+      await updater_plugin.notifyUpdateAvailable({
+        versionName: candidate.version_name,
+      });
+      return;
+    } catch (error) {
+      log_app_error("app_update_native_notification_failed", error);
+    }
+  }
+
+  await schedule_activity_notification(
+    translate("app_update_available_title"),
+    translate("app_update_available_body"),
+    `app_update_available_${candidate.version_name}`,
+  );
+}
+
+async function check_for_app_update(show_latest_notice = false) {
+  if (!is_android_native_app()) {
+    return null;
+  }
+
+  app_update_state.status = "checking";
+  update_app_update_menu();
+
+  try {
+    const candidates = await fetch_app_update_candidates();
+    const latest_candidate = select_latest_app_update_candidate(candidates);
+    app_update_state.latest_update = latest_candidate;
+    app_update_state.status = "idle";
+    update_app_update_menu();
+
+    if (!app_update_is_newer(latest_candidate)) {
+      if (show_latest_notice) {
+        show_in_app_notification({
+          title: translate("app_update_available_title"),
+          body: translate(
+            "app_update_latest_body",
+            app_update_state.current_version_name,
+          ),
+          kind: "activity",
+        });
+      }
+      return null;
+    }
+
+    await notify_app_update_available(latest_candidate);
+    return latest_candidate;
+  } catch (error) {
+    app_update_state.status = "idle";
+    update_app_update_menu();
+    log_app_error("app_update_check_failed", error);
+
+    if (show_latest_notice) {
+      show_in_app_notification({
+        title: translate("app_update_available_title"),
+        body: translate("app_update_failed"),
+        kind: "activity",
+      });
+    }
+    return null;
+  }
+}
+
+async function install_downloaded_app_update(candidate) {
+  const updater_plugin = get_app_updater_plugin();
+
+  if (!updater_plugin?.installDownloadedUpdate) {
+    return;
+  }
+
+  try {
+    await updater_plugin.installDownloadedUpdate({
+      versionName: candidate?.version_name || app_update_state.downloaded_version,
+    });
+  } catch (error) {
+    log_app_error("app_update_install_failed", error);
+  }
+}
+
+async function handle_app_update_button_click() {
+  if (!is_android_native_app()) {
+    return;
+  }
+
+  const updater_plugin = get_app_updater_plugin();
+  const latest_candidate =
+    app_update_state.latest_update || (await check_for_app_update(true));
+
+  if (!latest_candidate || !app_update_is_newer(latest_candidate)) {
+    return;
+  }
+
+  if (app_update_state.downloaded_version === latest_candidate.version_name) {
+    await install_downloaded_app_update(latest_candidate);
+    return;
+  }
+
+  if (!updater_plugin?.downloadUpdate) {
+    show_in_app_notification({
+      title: translate("app_update_available_title"),
+      body: translate("app_update_failed"),
+      kind: "activity",
+    });
+    return;
+  }
+
+  app_update_state.status = "downloading";
+  update_app_update_menu();
+  show_in_app_notification({
+    title: translate("app_update_updating"),
+    body: translate("app_update_updating"),
+    kind: "activity",
+  });
+
+  try {
+    const result = await updater_plugin.downloadUpdate({
+      url: latest_candidate.download_url,
+      versionName: latest_candidate.version_name,
+      fileName: latest_candidate.file_name,
+    });
+    app_update_state.status = "idle";
+    app_update_state.downloaded_version =
+      result.versionName || latest_candidate.version_name;
+    update_app_update_menu();
+    show_in_app_notification({
+      title: translate("app_update_available_title"),
+      body: translate("app_update_ready_body", app_update_state.downloaded_version),
+      kind: "activity",
+    });
+    await install_downloaded_app_update(latest_candidate);
+  } catch (error) {
+    app_update_state.status = "idle";
+    update_app_update_menu();
+    log_app_error("app_update_download_failed", error);
+    show_in_app_notification({
+      title: translate("app_update_available_title"),
+      body: translate("app_update_failed"),
+      kind: "activity",
+    });
+  }
 }
 
 function sync_authenticated_chrome() {
@@ -6117,6 +6657,7 @@ function apply_language() {
     translate("menu_button_label"),
   );
   dom_references.app_nav_toggle_button.title = translate("menu_button_label");
+  update_app_update_menu();
   update_auth_restore_screen(current_user_profile);
   dom_references.music_control_pill?.setAttribute(
     "aria-label",
@@ -15960,6 +16501,9 @@ function update_current_user_message_receipts({
   const patch = build_message_receipt_presence_patch(read);
 
   if (Object.keys(patch).length === 0) {
+    if (sync_remote) {
+      void sync_presence_state_to_remote(true);
+    }
     return;
   }
 

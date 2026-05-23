@@ -24,10 +24,10 @@
       }
     }());
   </script>
-  <link rel="stylesheet" href="styles.css?v=20260523c">
+  <link rel="stylesheet" href="styles.css?v=20260523e">
 </head>
 
-<body class="auth_restoring">
+<body class="auth_restoring is_web_app">
   <div class="background_glow" aria-hidden="true"></div>
   <button id="app_nav_toggle_button" class="app_nav_toggle_button" type="button" aria-label="Open navigation"
     title="Open navigation">
@@ -46,6 +46,10 @@
       <button class="app_nav_link" type="button" data-target="event_timeline_section">Memory Days</button>
       <button class="app_nav_link" type="button" data-target="cycle_tracker_section">Cycle Tracker</button>
       <button class="app_nav_link" type="button" data-target="messages_section">Messages</button>
+      <div id="app_update_panel" class="app_update_panel" aria-live="polite">
+        <button id="app_update_button" class="app_update_button" type="button">Update</button>
+        <span id="app_current_version_label" class="app_current_version_label">Current version: 2.064</span>
+      </div>
     </nav>
   </div>
   <div class="floating_graphics" aria-hidden="true">
@@ -617,8 +621,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=20260523c"></script>
-  <script src="script.js?v=20260523c"></script>
+  <script src="supabase-config.js?v=20260523e"></script>
+  <script src="script.js?v=20260523e"></script>
 </body>
 
 </html>
