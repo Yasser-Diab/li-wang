@@ -29,7 +29,7 @@ public class BackgroundSyncPlugin extends Plugin {
     private static final String TOKEN_SOURCE_NATIVE = "native_password";
     private static final String TOKEN_SOURCE_NATIVE_PENDING = "native_signing_in";
     private static final String TOKEN_SOURCE_WEB_ACCESS = "web_access_only";
-    private static final long IMMEDIATE_SYNC_MIN_INTERVAL_MS = 7000L;
+    private static final long IMMEDIATE_SYNC_MIN_INTERVAL_MS = 3000L;
 
     @PluginMethod
     public void configure(PluginCall call) {
@@ -44,7 +44,11 @@ public class BackgroundSyncPlugin extends Plugin {
         boolean hasNativeAuth = !nativeAuthEmail.isEmpty() && !nativeAuthPassword.isEmpty();
         boolean hasNativeSession =
                 TOKEN_SOURCE_NATIVE.equals(prefs.getString(TOKEN_SOURCE, "")) &&
-                        !prefs.getString("refresh_token", "").isEmpty();
+                        !prefs.getString("refresh_token", "").isEmpty() &&
+                        (
+                                nativeAuthEmail.isEmpty() ||
+                                        nativeAuthEmail.equals(prefs.getString("native_auth_email", ""))
+                        );
         editor.putBoolean("enabled", enabled);
         editor.putString("supabase_url", call.getString("supabaseUrl", ""));
         editor.putString("anon_key", call.getString("anonKey", ""));
@@ -60,14 +64,17 @@ public class BackgroundSyncPlugin extends Plugin {
         if (!enabled) {
             editor.remove("access_token");
             editor.remove("refresh_token");
+            editor.remove("native_auth_email");
             editor.remove(TOKEN_SOURCE);
-        } else if (hasNativeAuth) {
+        } else if (hasNativeAuth && !hasNativeSession) {
             editor.putString("access_token", suppliedAccessToken);
             editor.remove("refresh_token");
+            editor.putString("native_auth_email", nativeAuthEmail);
             editor.putString(TOKEN_SOURCE, TOKEN_SOURCE_NATIVE_PENDING);
         } else if (!hasNativeSession) {
             editor.putString("access_token", suppliedAccessToken);
             editor.remove("refresh_token");
+            editor.remove("native_auth_email");
             editor.putString(
                     TOKEN_SOURCE,
                     suppliedAccessToken.isEmpty() ? "" : TOKEN_SOURCE_WEB_ACCESS
@@ -90,7 +97,7 @@ public class BackgroundSyncPlugin extends Plugin {
         editor.commit();
 
         if (enabled) {
-            if (hasNativeAuth) {
+            if (hasNativeAuth && !hasNativeSession) {
                 Context appContext = context.getApplicationContext();
                 String supabaseUrl = call.getString("supabaseUrl", "");
                 String anonKey = call.getString("anonKey", "");
@@ -136,6 +143,7 @@ public class BackgroundSyncPlugin extends Plugin {
             prefs.edit()
                     .putString("access_token", tokens.accessToken)
                     .putString("refresh_token", tokens.refreshToken)
+                    .putString("native_auth_email", email)
                     .putString(TOKEN_SOURCE, TOKEN_SOURCE_NATIVE)
                     .apply();
             BackgroundMessageWorker.syncOnce(context);

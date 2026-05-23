@@ -49,8 +49,8 @@ const supabase_table_names = {
 const supabase_media_bucket_name = "app-media";
 const shared_music_bucket_name_default = "shared-music";
 const shared_music_table_name_default = "shared_music_files";
-const app_version_name = "2.066";
-const app_version_code = 2066;
+const app_version_name = "2.067";
+const app_version_code = 2067;
 const app_update_notified_version_key = "sveta_app_update_notified_version";
 const app_update_github_repo = "Yasser-Diab/li-wang";
 const app_update_releases_url = `https://api.github.com/repos/${app_update_github_repo}/releases?per_page=20`;
@@ -932,6 +932,7 @@ Object.assign(translations.en, {
   app_update_install: (version) => `Install V${version}`,
   app_current_version: (version) => `Current version: ${version}`,
   app_update_available_title: "Update available",
+  app_update_up_to_date_title: "Up to date!",
   app_update_available_body:
     "New app version available open the app to download and install",
   app_update_ready_body: (version) =>
@@ -995,6 +996,7 @@ Object.assign(translations.de, {
   app_update_install: (version) => `Install V${version}`,
   app_current_version: (version) => `Current version: ${version}`,
   app_update_available_title: "Update available",
+  app_update_up_to_date_title: "Up to date!",
   app_update_available_body:
     "New app version available open the app to download and install",
   app_update_ready_body: (version) =>
@@ -1061,6 +1063,7 @@ Object.assign(translations.ar, {
   app_update_install: (version) => `Install V${version}`,
   app_current_version: (version) => `Current version: ${version}`,
   app_update_available_title: "Update available",
+  app_update_up_to_date_title: "Up to date!",
   app_update_available_body:
     "New app version available open the app to download and install",
   app_update_ready_body: (version) =>
@@ -1146,12 +1149,21 @@ Object.assign(translations.en, {
   message_reaction_add: "Add or change reaction",
   message_reaction_remove: "Remove your reaction",
   voice_message_start: "Record voice message",
-  voice_message_stop: "Stop and send voice message",
+  voice_message_stop: "Stop recording",
   voice_message_recording: "Recording voice...",
   voice_message_not_supported:
     "Voice recording is not available on this device.",
   voice_message_permission_error:
     "Microphone permission is needed to send a voice message.",
+  voice_message_recording_failed:
+    "Voice recording could not start on this device right now.",
+  voice_message_confirm_title: "Send voice message?",
+  voice_message_confirm_body:
+    "Do you want to send this voice message now?",
+  voice_message_confirm_send: "Send voice",
+  voice_message_confirm_cancel: "Cancel",
+  live_message_uploading: "Uploading...",
+  live_message_upload_failed: "Upload failed. Please try again.",
   messages_short_heading: "Messages",
   messages_search: "Search messages",
   messages_search_placeholder: "Search messages",
@@ -1265,12 +1277,21 @@ Object.assign(translations.de, {
   message_reaction_add: "Reaktion hinzufügen oder ändern",
   message_reaction_remove: "Deine Reaktion entfernen",
   voice_message_start: "Sprachnachricht aufnehmen",
-  voice_message_stop: "Sprachnachricht stoppen und senden",
+  voice_message_stop: "Aufnahme stoppen",
   voice_message_recording: "Sprachnachricht wird aufgenommen...",
   voice_message_not_supported:
     "Sprachnachrichten sind auf diesem Gerät nicht verfügbar.",
   voice_message_permission_error:
     "Mikrofonzugriff wird benötigt, um eine Sprachnachricht zu senden.",
+  voice_message_recording_failed:
+    "Die Sprachnachricht konnte gerade nicht gestartet werden.",
+  voice_message_confirm_title: "Sprachnachricht senden?",
+  voice_message_confirm_body:
+    "Möchtest du diese Sprachnachricht jetzt senden?",
+  voice_message_confirm_send: "Senden",
+  voice_message_confirm_cancel: "Abbrechen",
+  live_message_uploading: "Wird hochgeladen...",
+  live_message_upload_failed: "Upload fehlgeschlagen. Bitte versuche es erneut.",
   messages_short_heading: "Nachrichten",
   messages_search: "Nachrichten suchen",
   messages_search_placeholder: "Nachrichten suchen",
@@ -1385,12 +1406,21 @@ Object.assign(translations.ar, {
   message_reaction_add: "إضافة أو تغيير التفاعل",
   message_reaction_remove: "حذف تفاعلك",
   voice_message_start: "تسجيل رسالة صوتية",
-  voice_message_stop: "إيقاف وإرسال الرسالة الصوتية",
+  voice_message_stop: "إيقاف التسجيل",
   voice_message_recording: "جار تسجيل الصوت...",
   voice_message_not_supported:
     "التسجيل الصوتي غير متاح على هذا الجهاز.",
   voice_message_permission_error:
     "يجب السماح بالميكروفون لإرسال رسالة صوتية.",
+  voice_message_recording_failed:
+    "تعذر بدء التسجيل الصوتي الآن على هذا الجهاز.",
+  voice_message_confirm_title: "إرسال الرسالة الصوتية؟",
+  voice_message_confirm_body:
+    "هل تريد إرسال هذه الرسالة الصوتية الآن؟",
+  voice_message_confirm_send: "إرسال الصوت",
+  voice_message_confirm_cancel: "إلغاء",
+  live_message_uploading: "جار الرفع...",
+  live_message_upload_failed: "فشل الرفع. حاول مرة أخرى.",
   messages_short_heading: "الرسائل",
   messages_search: "البحث في الرسائل",
   messages_search_placeholder: "ابحثي في الرسائل",
@@ -1654,6 +1684,14 @@ let current_cycle_mood_picker_open = false;
 let current_lightbox_image_data = "";
 let current_lightbox_title = "";
 let current_lightbox_zoom = 1;
+let current_lightbox_pan_x = 0;
+let current_lightbox_pan_y = 0;
+let memory_lightbox_pointer_state = {
+  pointers: new Map(),
+  last_distance: 0,
+  last_center: null,
+  moved: false,
+};
 let most_used_emojis = [];
 let emoji_usage_counts = {};
 let welcome_audio_context = null;
@@ -2946,6 +2984,25 @@ function get_supabase_user_config(username) {
   return get_supabase_user_map()[username] || null;
 }
 
+function get_native_background_auth_credentials() {
+  if (!current_user_profile?.user_key) {
+    return null;
+  }
+
+  const user_key = current_user_profile.user_key;
+  const local_user = allowed_users[user_key];
+  const supabase_user = get_supabase_user_config(user_key);
+
+  if (!local_user?.password || !supabase_user?.email) {
+    return pending_native_background_auth;
+  }
+
+  return {
+    email: supabase_user.email,
+    password: local_user.password,
+  };
+}
+
 function bind_supabase_auth_listener() {
   if (!supabase_client || supabase_auth_subscription) {
     return;
@@ -3329,7 +3386,8 @@ async function configure_background_message_sync(enabled = true) {
         new Date(get_live_message_activity_timestamp(left_item)),
     )[0];
   const session_tokens = await get_supabase_session_tokens();
-  const native_background_auth = pending_native_background_auth;
+  const native_background_auth =
+    pending_native_background_auth || get_native_background_auth_credentials();
   const native_cycle_data = current_cycle_data
     ? normalize_cycle_data_store(current_cycle_data)
     : null;
@@ -4434,8 +4492,28 @@ function bind_event_handlers() {
   });
   dom_references.memory_lightbox_image?.addEventListener("click", (event) => {
     event.stopPropagation();
+    if (memory_lightbox_pointer_state.moved) {
+      memory_lightbox_pointer_state.moved = false;
+      return;
+    }
     set_memory_lightbox_zoom(current_lightbox_zoom >= 2 ? 1 : current_lightbox_zoom + 0.5);
   });
+  dom_references.memory_lightbox_image?.addEventListener(
+    "pointerdown",
+    handle_memory_lightbox_pointer_down,
+  );
+  dom_references.memory_lightbox_image?.addEventListener(
+    "pointermove",
+    handle_memory_lightbox_pointer_move,
+  );
+  dom_references.memory_lightbox_image?.addEventListener(
+    "pointerup",
+    handle_memory_lightbox_pointer_end,
+  );
+  dom_references.memory_lightbox_image?.addEventListener(
+    "pointercancel",
+    handle_memory_lightbox_pointer_end,
+  );
   dom_references.memory_lightbox?.addEventListener("wheel", handle_memory_lightbox_wheel, {
     passive: false,
   });
@@ -5247,7 +5325,7 @@ async function check_for_app_update(show_latest_notice = false) {
     if (!app_update_is_newer(latest_candidate)) {
       if (show_latest_notice) {
         show_in_app_notification({
-          title: translate("app_update_available_title"),
+          title: translate("app_update_up_to_date_title"),
           body: translate(
             "app_update_latest_body",
             app_update_state.current_version_name,
@@ -10913,19 +10991,167 @@ function handle_memory_lightbox_download(event) {
   );
 }
 
+function reset_memory_lightbox_gesture_state() {
+  memory_lightbox_pointer_state = {
+    pointers: new Map(),
+    last_distance: 0,
+    last_center: null,
+    moved: false,
+  };
+}
+
+function apply_memory_lightbox_transform() {
+  if (!dom_references.memory_lightbox_image) {
+    return;
+  }
+
+  dom_references.memory_lightbox_image.style.transform =
+    `translate3d(${current_lightbox_pan_x}px, ${current_lightbox_pan_y}px, 0) scale(${current_lightbox_zoom})`;
+  dom_references.memory_lightbox_image.style.cursor =
+    current_lightbox_zoom > 1 ? "grab" : "zoom-in";
+}
+
+function clamp_memory_lightbox_pan() {
+  if (current_lightbox_zoom <= 1) {
+    current_lightbox_pan_x = 0;
+    current_lightbox_pan_y = 0;
+    return;
+  }
+
+  const max_pan_x = Math.max(48, window.innerWidth * 0.48 * current_lightbox_zoom);
+  const max_pan_y = Math.max(48, window.innerHeight * 0.48 * current_lightbox_zoom);
+  current_lightbox_pan_x = Math.min(max_pan_x, Math.max(-max_pan_x, current_lightbox_pan_x));
+  current_lightbox_pan_y = Math.min(max_pan_y, Math.max(-max_pan_y, current_lightbox_pan_y));
+}
+
 function set_memory_lightbox_zoom(next_zoom) {
+  const previous_zoom = current_lightbox_zoom || 1;
   current_lightbox_zoom = Math.min(4, Math.max(1, Number(next_zoom) || 1));
 
-  if (dom_references.memory_lightbox_image) {
-    dom_references.memory_lightbox_image.style.transform = `scale(${current_lightbox_zoom})`;
-    dom_references.memory_lightbox_image.style.cursor =
-      current_lightbox_zoom >= 2 ? "zoom-out" : "zoom-in";
+  if (current_lightbox_zoom <= 1 || previous_zoom <= 1) {
+    current_lightbox_pan_x = 0;
+    current_lightbox_pan_y = 0;
   }
+
+  clamp_memory_lightbox_pan();
+  apply_memory_lightbox_transform();
 
   if (dom_references.memory_lightbox_zoom_reset_button) {
     dom_references.memory_lightbox_zoom_reset_button.textContent = `${current_lightbox_zoom.toFixed(
       current_lightbox_zoom % 1 ? 2 : 0,
     )}x`;
+  }
+}
+
+function get_memory_lightbox_pointer_center() {
+  const pointers = [...memory_lightbox_pointer_state.pointers.values()];
+
+  if (!pointers.length) {
+    return null;
+  }
+
+  const total = pointers.reduce(
+    (sum, pointer) => ({
+      x: sum.x + pointer.x,
+      y: sum.y + pointer.y,
+    }),
+    { x: 0, y: 0 },
+  );
+
+  return {
+    x: total.x / pointers.length,
+    y: total.y / pointers.length,
+  };
+}
+
+function get_memory_lightbox_pointer_distance() {
+  const pointers = [...memory_lightbox_pointer_state.pointers.values()];
+
+  if (pointers.length < 2) {
+    return 0;
+  }
+
+  return Math.hypot(pointers[0].x - pointers[1].x, pointers[0].y - pointers[1].y);
+}
+
+function handle_memory_lightbox_pointer_down(event) {
+  if (!current_lightbox_image_data) {
+    return;
+  }
+
+  event.stopPropagation();
+  dom_references.memory_lightbox_image?.setPointerCapture?.(event.pointerId);
+  memory_lightbox_pointer_state.pointers.set(event.pointerId, {
+    x: event.clientX,
+    y: event.clientY,
+  });
+  memory_lightbox_pointer_state.moved = false;
+  memory_lightbox_pointer_state.last_center = get_memory_lightbox_pointer_center();
+  memory_lightbox_pointer_state.last_distance = get_memory_lightbox_pointer_distance();
+}
+
+function handle_memory_lightbox_pointer_move(event) {
+  if (
+    !memory_lightbox_pointer_state.pointers.has(event.pointerId) ||
+    !current_lightbox_image_data
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  memory_lightbox_pointer_state.pointers.set(event.pointerId, {
+    x: event.clientX,
+    y: event.clientY,
+  });
+
+  const pointer_count = memory_lightbox_pointer_state.pointers.size;
+  const next_center = get_memory_lightbox_pointer_center();
+  const previous_center = memory_lightbox_pointer_state.last_center;
+
+  if (pointer_count >= 2) {
+    const next_distance = get_memory_lightbox_pointer_distance();
+
+    if (memory_lightbox_pointer_state.last_distance > 0 && next_distance > 0) {
+      const zoom_factor = next_distance / memory_lightbox_pointer_state.last_distance;
+      if (Math.abs(next_distance - memory_lightbox_pointer_state.last_distance) > 4) {
+        memory_lightbox_pointer_state.moved = true;
+      }
+      set_memory_lightbox_zoom(current_lightbox_zoom * zoom_factor);
+    }
+
+    if (previous_center && next_center && current_lightbox_zoom > 1) {
+      current_lightbox_pan_x += next_center.x - previous_center.x;
+      current_lightbox_pan_y += next_center.y - previous_center.y;
+      memory_lightbox_pointer_state.moved = true;
+      clamp_memory_lightbox_pan();
+      apply_memory_lightbox_transform();
+    }
+
+    memory_lightbox_pointer_state.last_distance = next_distance;
+  } else if (previous_center && next_center && current_lightbox_zoom > 1) {
+    const move_x = next_center.x - previous_center.x;
+    const move_y = next_center.y - previous_center.y;
+    current_lightbox_pan_x += move_x;
+    current_lightbox_pan_y += move_y;
+    if (Math.hypot(move_x, move_y) > 4) {
+      memory_lightbox_pointer_state.moved = true;
+    }
+    clamp_memory_lightbox_pan();
+    apply_memory_lightbox_transform();
+  }
+
+  memory_lightbox_pointer_state.last_center = next_center;
+}
+
+function handle_memory_lightbox_pointer_end(event) {
+  memory_lightbox_pointer_state.pointers.delete(event.pointerId);
+  memory_lightbox_pointer_state.last_center = get_memory_lightbox_pointer_center();
+  memory_lightbox_pointer_state.last_distance = get_memory_lightbox_pointer_distance();
+
+  if (dom_references.memory_lightbox_image) {
+    dom_references.memory_lightbox_image.style.cursor =
+      current_lightbox_zoom > 1 ? "grab" : "zoom-in";
   }
 }
 
@@ -10950,6 +11176,9 @@ function open_memory_lightbox(image_data, caption_text = "") {
 
   current_lightbox_image_data = image_data;
   current_lightbox_title = caption_text;
+  current_lightbox_pan_x = 0;
+  current_lightbox_pan_y = 0;
+  reset_memory_lightbox_gesture_state();
   set_memory_lightbox_zoom(1);
   dom_references.memory_lightbox_image.src = image_data;
   dom_references.memory_lightbox_image.alt = caption_text;
@@ -10972,6 +11201,9 @@ function close_memory_lightbox(event = null, from_history = false) {
   current_lightbox_image_data = "";
   current_lightbox_title = "";
   current_lightbox_zoom = 1;
+  current_lightbox_pan_x = 0;
+  current_lightbox_pan_y = 0;
+  reset_memory_lightbox_gesture_state();
   close_overlay_layer("memory_lightbox", from_history);
 }
 
@@ -16275,6 +16507,8 @@ function get_live_messages_render_signature() {
         name: attachment?.name,
         type: attachment?.type,
         size: attachment?.size,
+        status: attachment?.status,
+        upload_id: attachment?.upload_id,
         duration_ms: attachment?.duration_ms,
         public_url: attachment?.public_url,
         storage_path: attachment?.storage_path,
@@ -17029,7 +17263,7 @@ function start_presence_updates() {
   presence_interval_id = window.setInterval(() => {
     mark_current_user_seen(is_app_active_for_presence(), true);
     update_presence_status_text();
-  }, 45 * 1000);
+  }, 10 * 1000);
 }
 
 function stop_presence_updates() {
@@ -17110,7 +17344,7 @@ function get_presence_status_text() {
   );
   const time_text = format_presence_time(last_seen_date);
 
-  if (other_state.active && heartbeat_ms >= 0 && heartbeat_ms < 70 * 1000) {
+  if (other_state.active && heartbeat_ms >= 0 && heartbeat_ms < 25 * 1000) {
     return translate("presence_online");
   }
 
@@ -17477,6 +17711,25 @@ function render_live_message_attachment(attachment) {
   attachment_card.className = "live_message_attachment";
   const attachment_source =
     attachment.public_url || attachment.url || attachment.data_url || "";
+  const attachment_type = String(attachment.type || "");
+
+  if (attachment.status === "uploading") {
+    attachment_card.classList.add("is_uploading");
+    const uploading_label = document.createElement("span");
+    uploading_label.className = "live_message_attachment_status";
+    uploading_label.textContent = translate("live_message_uploading");
+    attachment_card.appendChild(uploading_label);
+    return attachment_card;
+  }
+
+  if (attachment.status === "failed") {
+    attachment_card.classList.add("is_failed");
+    const failed_label = document.createElement("span");
+    failed_label.className = "live_message_attachment_status";
+    failed_label.textContent = translate("live_message_upload_failed");
+    attachment_card.appendChild(failed_label);
+  }
+
   const attachment_name = document.createElement("strong");
   attachment_name.className = "live_message_attachment_name";
   attachment_name.textContent = attachment.name || "file";
@@ -17484,7 +17737,8 @@ function render_live_message_attachment(attachment) {
   attachment_meta.className = "live_message_attachment_meta";
   attachment_meta.textContent = format_file_size(attachment.size || 0);
 
-  if ((attachment.type || "").startsWith("image/") && attachment_source) {
+  if (attachment_type.startsWith("image/") && attachment_source) {
+    attachment_card.classList.add("is_image_attachment");
     const image = document.createElement("img");
     image.src = attachment_source;
     image.alt = attachment.name || "attachment";
@@ -17496,22 +17750,21 @@ function render_live_message_attachment(attachment) {
       open_memory_lightbox(attachment_source, attachment.name || "");
     });
     attachment_card.appendChild(image);
-  } else if (
-    (attachment.type || "").startsWith("video/") &&
-    attachment_source
-  ) {
+    return attachment_card;
+  }
+
+  if (attachment_type.startsWith("video/") && attachment_source) {
     const video = document.createElement("video");
     video.src = attachment_source;
     video.controls = true;
     attachment_card.appendChild(video);
-  } else if (
-    (attachment.type || "").startsWith("audio/") &&
-    attachment_source
-  ) {
+  } else if (attachment_type.startsWith("audio/") && attachment_source) {
+    attachment_card.classList.add("is_audio_attachment");
     const audio = document.createElement("audio");
     audio.src = attachment_source;
     audio.controls = true;
     attachment_card.appendChild(audio);
+    return attachment_card;
   }
 
   const attachment_link = document.createElement("a");
@@ -17809,6 +18062,19 @@ async function ensure_native_microphone_permission() {
   }
 }
 
+function is_microphone_permission_error(error) {
+  const error_name = String(error?.name || "");
+  const error_message = String(error?.message || error || "").toLowerCase();
+
+  return (
+    error_name === "NotAllowedError" ||
+    error_name === "SecurityError" ||
+    error_message.includes("permission") ||
+    error_message.includes("denied") ||
+    error_message.includes("notallowed")
+  );
+}
+
 async function finish_voice_message_recording(mime_type) {
   const should_send = voice_message_should_send;
   const chunks = [...voice_message_chunks];
@@ -17824,6 +18090,19 @@ async function finish_voice_message_recording(mime_type) {
   const blob = new Blob(chunks, { type: safe_mime_type });
 
   if (blob.size === 0) {
+    return;
+  }
+
+  const should_confirm_send = await show_app_confirm(
+    translate("voice_message_confirm_body"),
+    {
+      title: translate("voice_message_confirm_title"),
+      confirm_label: translate("voice_message_confirm_send"),
+      cancel_label: translate("voice_message_confirm_cancel"),
+    },
+  );
+
+  if (!should_confirm_send) {
     return;
   }
 
@@ -17927,7 +18206,10 @@ async function start_voice_message_recording() {
   } catch (error) {
     reset_voice_message_recorder();
     log_app_error("voice_message_recording_failed", error);
-    void show_app_alert(translate("voice_message_permission_error"), {
+    const message_key = is_microphone_permission_error(error)
+      ? "voice_message_permission_error"
+      : "voice_message_recording_failed";
+    void show_app_alert(translate(message_key), {
       title: translate("voice_message_start"),
     });
   }
@@ -18203,6 +18485,165 @@ async function delete_live_message(message_id) {
   upsert_live_message(deleted_message, true);
 }
 
+function build_uploading_file_attachment(file_item, index = 0) {
+  return {
+    kind: "file",
+    name: file_item.name || "file",
+    type: file_item.type || "application/octet-stream",
+    size: file_item.size || 0,
+    duration_ms: Number(file_item.voice_duration_ms || 0),
+    status: "uploading",
+    upload_id: `upload_${Date.now()}_${index}_${Math.random()
+      .toString(16)
+      .slice(2)}`,
+  };
+}
+
+function replace_pending_live_message_attachments(
+  message_item,
+  next_file_attachments,
+  status = "",
+) {
+  const next_files = status
+    ? get_file_attachments(message_item.attachments).map((attachment) =>
+        attachment.status === "uploading"
+          ? { ...attachment, status }
+          : attachment,
+      )
+    : next_file_attachments;
+  const retained_attachments = (message_item.attachments || []).filter(
+    (attachment) =>
+      !(
+        (!attachment?.kind || attachment.kind === "file") &&
+        attachment.status === "uploading"
+      ),
+  );
+
+  return {
+    ...message_item,
+    attachments: [...retained_attachments, ...next_files],
+  };
+}
+
+async function fetch_live_message_for_attachment_update(message_id, fallback) {
+  if (!message_id) {
+    return fallback;
+  }
+
+  if (is_supabase_enabled() && current_auth_user_id) {
+    try {
+      const { data, error } = await supabase_client
+        .from(supabase_table_names.live_messages)
+        .select("*")
+        .eq("id", message_id)
+        .eq("room_slug", current_room_slug)
+        .single();
+
+      if (!error && data) {
+        return map_live_message_row_to_item(data);
+      }
+    } catch (error) {
+      log_app_error("live_message_attachment_refresh_failed", error);
+    }
+  }
+
+  return fallback;
+}
+
+async function persist_live_message_attachments(message_item) {
+  if (!message_item) {
+    return null;
+  }
+
+  if (is_supabase_enabled() && current_auth_user_id) {
+    const { data, error } = await supabase_client
+      .from(supabase_table_names.live_messages)
+      .update({
+        attachments: message_item.attachments,
+      })
+      .eq("id", message_item.id)
+      .eq("room_slug", current_room_slug)
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return map_live_message_row_to_item(data);
+  }
+
+  if (can_use_local_api()) {
+    const response = await fetch(
+      `/api/live_messages/${encodeURIComponent(message_item.id)}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender_key: current_user_profile.user_key,
+          text: message_item.text,
+          attachments: message_item.attachments,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("message_attachment_update_failed");
+    }
+
+    const result = await response.json();
+    return result.message || message_item;
+  }
+
+  return message_item;
+}
+
+async function finalize_live_message_file_uploads(message_id, files) {
+  if (!files.length) {
+    return;
+  }
+
+  const local_message = current_live_messages.find(
+    (item) => item.id === message_id,
+  );
+
+  if (!local_message) {
+    return;
+  }
+
+  try {
+    const file_attachments = await Promise.all(
+      files.map(read_file_as_attachment),
+    );
+    const latest_message = await fetch_live_message_for_attachment_update(
+      message_id,
+      local_message,
+    );
+    const updated_message = replace_pending_live_message_attachments(
+      latest_message,
+      file_attachments,
+    );
+    const saved_message = await persist_live_message_attachments(updated_message);
+    upsert_live_message(saved_message || updated_message, true);
+  } catch (error) {
+    log_app_error("live_message_file_upload_failed", error);
+    const failed_message = replace_pending_live_message_attachments(
+      local_message,
+      [],
+      "failed",
+    );
+    upsert_live_message(failed_message, true);
+
+    try {
+      await persist_live_message_attachments(failed_message);
+    } catch (persist_error) {
+      log_app_error("live_message_file_upload_failure_persist_failed", persist_error);
+    }
+  }
+}
+
 async function send_live_message(event) {
   event.preventDefault();
 
@@ -18337,16 +18778,14 @@ async function send_live_message(event) {
     return;
   }
 
-  const file_attachments = await Promise.all(
-    files.map(read_file_as_attachment),
-  );
+  const pending_file_attachments = files.map(build_uploading_file_attachment);
   const attachments = [
     ...(pending_message_context ? [pending_message_context] : []),
     {
       kind: "structured_content",
       segments: message_segments,
     },
-    ...file_attachments,
+    ...pending_file_attachments,
   ];
   const message_item = {
     id: create_item_id(),
@@ -18374,10 +18813,14 @@ async function send_live_message(event) {
         throw error;
       }
 
-      upsert_live_message(map_live_message_row_to_item(data), true);
+      const saved_message = map_live_message_row_to_item(data);
+      upsert_live_message(saved_message, true);
       play_send_message_sound();
       clear_live_message_composer();
       burst_reaction(dom_references.live_messages_list, "heart", 8);
+      if (files.length > 0) {
+        void finalize_live_message_file_uploads(saved_message.id, files);
+      }
       return;
     }
 
@@ -18394,10 +18837,14 @@ async function send_live_message(event) {
     }
 
     const result = await response.json();
-    upsert_live_message(result.message || message_item, true);
+    const saved_message = result.message || message_item;
+    upsert_live_message(saved_message, true);
     play_send_message_sound();
     clear_live_message_composer();
     burst_reaction(dom_references.live_messages_list, "heart", 8);
+    if (files.length > 0) {
+      void finalize_live_message_file_uploads(saved_message.id, files);
+    }
   } catch (error) {
     log_app_error("supabase_live_message_insert_threw", error);
     upsert_live_message(message_item, true);

@@ -2920,8 +2920,9 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   justify-items: center;
   max-width: min(1100px, 100%);
   max-height: calc(100vh - 36px);
-  overflow: auto;
+  overflow: hidden;
   position: relative;
+  touch-action: none;
 }
 
 .memory_lightbox img {
@@ -2933,6 +2934,8 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   cursor: zoom-in;
   transform-origin: center center;
   transition: transform 160ms ease;
+  touch-action: none;
+  user-select: none;
 }
 
 .memory_lightbox p {
@@ -2965,11 +2968,11 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
 }
 
 .memory_lightbox_zoom_controls {
+  display: none;
   position: absolute;
   top: 12px;
   left: 12px;
   z-index: 2;
-  display: inline-flex;
   gap: 6px;
   padding: 5px;
   border: 1px solid rgba(255, 255, 255, 0.34);
@@ -3415,6 +3418,50 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   border-color: var(--line_gold);
 }
 
+.live_message_attachment.is_image_attachment {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.live_message_attachment.is_audio_attachment {
+  padding: 8px 0 0;
+  border: 0;
+  background: transparent;
+}
+
+.live_message_attachment.is_uploading,
+.live_message_attachment.is_failed {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  color: var(--ink_soft);
+  font-weight: 800;
+}
+
+.live_message_attachment_status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live_message_attachment.is_uploading .live_message_attachment_status::before {
+  content: "";
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(201, 164, 93, 0.32);
+  border-top-color: rgba(201, 164, 93, 0.96);
+  border-radius: 999px;
+  animation: attachment_upload_spin 780ms linear infinite;
+}
+
+@keyframes attachment_upload_spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .live_message_attachment img,
 .live_message_attachment video {
   display: block;
@@ -3427,6 +3474,10 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
   border-radius: 10px;
 }
 
+.live_message_attachment.is_image_attachment img {
+  margin-bottom: 0;
+}
+
 .live_message_attachment img {
   cursor: zoom-in;
   background: rgba(255, 255, 255, 0.36);
@@ -3434,7 +3485,7 @@ html[data-theme="dark"] .cycle_day_button:not(.is_period):not(.is_predicted):not
 
 .live_message_attachment audio {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 0;
 }
 
 .live_message_attachment_link {

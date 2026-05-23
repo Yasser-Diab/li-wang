@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 public class BackgroundSyncService extends Service {
     public static final String CHANNEL_ID = "background-sync";
     private static final int NOTIFICATION_ID = 700001;
-    private static final long POLL_INTERVAL_MS = TimeUnit.SECONDS.toMillis(12);
+    private static final long POLL_INTERVAL_MS = TimeUnit.SECONDS.toMillis(5);
     private ExecutorService executor;
     private volatile boolean running = false;
 

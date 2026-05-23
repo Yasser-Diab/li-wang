@@ -8,7 +8,14 @@ import android.content.SharedPreferences;
 public class BackgroundBootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (!Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+        String action = intent == null ? "" : intent.getAction();
+
+        if (
+                !Intent.ACTION_BOOT_COMPLETED.equals(action) &&
+                        !"android.intent.action.MY_PACKAGE_REPLACED".equals(action) &&
+                        !"android.intent.action.QUICKBOOT_POWERON".equals(action) &&
+                        !"android.intent.action.LOCKED_BOOT_COMPLETED".equals(action)
+        ) {
             return;
         }
 
