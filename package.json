@@ -1,12 +1,12 @@
 {
   "name": "svetlana_and_diab_happiness_space",
-  "version": "2.0.67",
+  "version": "2.0.68",
   "description": "A private joyful memory space for Svetlana and Diab.",
   "main": "server.js",
   "scripts": {
     "generate:messages": "node scripts/generate_daily_messages.js",
     "start": "node server.js",
-    "check": "node --check script.js && node --check server.js && node --check scripts/prepare-capacitor.js && node --check scripts/run-android-gradle.js",
+    "check": "node --check script.js && node --check server.js && node --check scripts/prepare-capacitor.js && node --check scripts/run-android-gradle.js && node --check scripts/migrate-supabase-v2068.mjs",
     "mobile:prepare": "node scripts/prepare-capacitor.js",
     "mobile:sync": "npm run mobile:prepare && npx cap sync android",
     "android:apk": "npm run mobile:sync && node scripts/run-android-gradle.js assembleDebug",

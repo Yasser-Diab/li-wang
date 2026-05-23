@@ -30,6 +30,9 @@ const presence_state_storage_prefix = "svetlana_diab_presence_state";
 const live_notification_activity_storage_prefix =
   "svetlana_diab_notified_message_activity";
 const live_messages_cache_storage_prefix = "svetlana_diab_live_messages_cache";
+const notification_event_online_storage_prefix =
+  "svetlana_diab_presence_online_event";
+const live_messages_recent_sync_limit = 140;
 const daily_content_history_storage_prefix =
   "svetlana_diab_daily_content_history";
 const biometric_last_password_key = "svetlana_diab_biometric_last_password_at";
@@ -45,12 +48,13 @@ const supabase_table_names = {
   live_messages: "app_live_messages",
   cycle_states: "app_cycle_states",
   media_files: "app_media_files",
+  notification_events: "app_notification_events",
 };
 const supabase_media_bucket_name = "app-media";
 const shared_music_bucket_name_default = "shared-music";
 const shared_music_table_name_default = "shared_music_files";
-const app_version_name = "2.067";
-const app_version_code = 2067;
+const app_version_name = "2.068";
+const app_version_code = 2068;
 const app_update_notified_version_key = "sveta_app_update_notified_version";
 const app_update_github_repo = "Yasser-Diab/li-wang";
 const app_update_releases_url = `https://api.github.com/repos/${app_update_github_repo}/releases?per_page=20`;
@@ -3362,6 +3366,21 @@ function load_live_messages_cache() {
   }
 }
 
+function merge_live_message_lists(base_messages = [], next_messages = []) {
+  const message_map = new Map();
+
+  [...base_messages, ...next_messages].forEach((message_item) => {
+    if (message_item?.id) {
+      message_map.set(message_item.id, message_item);
+    }
+  });
+
+  return Array.from(message_map.values()).sort(
+    (left_item, right_item) =>
+      new Date(left_item.created_at) - new Date(right_item.created_at),
+  );
+}
+
 async function configure_background_message_sync(enabled = true) {
   const background_sync_plugin = get_capacitor_plugin("BackgroundSync");
 
@@ -3572,6 +3591,113 @@ function run_once_for_live_notification_activity(activity_key, callback) {
   remember_live_notification_activity(activity_key);
   callback?.();
   return true;
+}
+
+function create_notification_event_id(
+  event_type,
+  reference_id = "",
+  created_at = "",
+  target_user_key = "",
+) {
+  return [
+    "notify",
+    event_type || "event",
+    reference_id || create_item_id(),
+    target_user_key || "both",
+    created_at || new Date().toISOString(),
+  ]
+    .join("_")
+    .replace(/[^a-z0-9_-]+/gi, "_")
+    .slice(0, 180);
+}
+
+async function enqueue_notification_event(event_type, options = {}) {
+  if (!is_supabase_enabled() || !current_auth_user_id || !current_user_profile) {
+    return;
+  }
+
+  const target_user_key = String(
+    options.target_user_key || get_other_user_key() || "",
+  );
+
+  if (!target_user_key || target_user_key === current_user_profile.user_key) {
+    return;
+  }
+
+  const created_at = String(options.created_at || new Date().toISOString());
+  const message_id = String(options.message_id || "");
+  const event_item = {
+    id:
+      options.id ||
+      create_notification_event_id(
+        event_type,
+        message_id || options.reference_id || "",
+        created_at,
+        target_user_key,
+      ),
+    room_slug: current_room_slug,
+    event_type: String(event_type || "activity"),
+    actor_key: current_user_profile.user_key,
+    target_user_key,
+    message_id,
+    title: String(options.title || current_user_profile.display_name || ""),
+    body: String(options.body || ""),
+    metadata: options.metadata || {},
+    created_at,
+  };
+
+  try {
+    await supabase_client
+      .from(supabase_table_names.notification_events)
+      .upsert(event_item, { onConflict: "id" });
+  } catch (error) {
+    log_app_error("notification_event_enqueue_failed", error);
+  }
+}
+
+function get_live_message_notification_body(message_item) {
+  const body_text = get_plain_text_snippet(
+    get_live_message_display_text(message_item),
+    140,
+  );
+
+  if (body_text) {
+    return body_text;
+  }
+
+  const file_attachments = get_file_attachments(message_item?.attachments);
+  const has_image = file_attachments.some((attachment) =>
+    String(attachment?.type || "").startsWith("image/"),
+  );
+  const has_audio = file_attachments.some((attachment) =>
+    String(attachment?.type || "").startsWith("audio/"),
+  );
+
+  if (has_audio) {
+    return "Sent a voice message.";
+  }
+
+  if (has_image) {
+    return "Sent a photo.";
+  }
+
+  return file_attachments.length ? "Sent a file." : "Sent a message.";
+}
+
+function enqueue_live_message_notification_event(message_item) {
+  if (!message_item || is_deleted_live_message(message_item)) {
+    return;
+  }
+
+  void enqueue_notification_event("message", {
+    message_id: message_item.id,
+    title:
+      message_item.sender_name ||
+      current_user_profile?.display_name ||
+      "Message",
+    body: get_live_message_notification_body(message_item),
+    created_at: message_item.created_at || new Date().toISOString(),
+  });
 }
 
 function get_reaction_activity_key_from_message(message_item) {
@@ -9005,6 +9131,19 @@ function build_cycle_state_live_message(cycle_data, change_type = "") {
   };
 }
 
+function get_cycle_notification_event_title(change_type = "") {
+  const key_map = {
+    start: "cycle_update_start",
+    end: "cycle_update_end",
+    note: "cycle_update_note",
+    mood: "cycle_update_mood",
+    checkin: "cycle_update_checkin",
+    settings: "cycle_update_settings",
+  };
+
+  return translate(key_map[change_type] || "cycle_update_generic");
+}
+
 async function sync_cycle_data_to_remote(immediate = false) {
   if (!current_user_profile) {
     return;
@@ -9047,6 +9186,13 @@ async function sync_cycle_data_to_remote(immediate = false) {
         .upsert(build_cycle_state_live_message(cycle_data, change_type), {
           onConflict: "id",
         });
+      void enqueue_notification_event("cycle", {
+        reference_id: create_cycle_state_message_id(),
+        title: get_cycle_notification_event_title(change_type),
+        body: "Cycle calendar was updated.",
+        created_at: cycle_data.updated_at || new Date().toISOString(),
+        metadata: { change_type },
+      });
       return;
     } catch (error) {
       log_app_error("supabase_cycle_state_sync_failed", error);
@@ -9182,6 +9328,13 @@ async function announce_shared_activity(activity_type, title = "", body = "") {
     await supabase_client
       .from(supabase_table_names.live_messages)
       .insert(message_item);
+    void enqueue_notification_event("activity", {
+      reference_id: message_item.id,
+      title: title || get_shared_activity_title(activity_type),
+      body: body || title || get_shared_activity_title(activity_type),
+      created_at: now_text,
+      metadata: { activity_type },
+    });
   } catch (error) {
     log_app_error("shared_activity_announce_failed", error);
   }
@@ -10689,6 +10842,12 @@ async function set_live_message_reaction(message_id, emoji_character) {
   const previous_reaction_attachment = get_message_reactions_attachment(
     latest_message.attachments,
   );
+  const should_notify_reaction = Boolean(
+    safe_emoji &&
+      previous_user_reaction !== safe_emoji &&
+      latest_message.sender_key &&
+      latest_message.sender_key !== current_user_profile.user_key,
+  );
   const has_legacy_reaction_edit_stamp = Boolean(
     previous_reaction_attachment?.updated_at &&
       latest_message.edited_at &&
@@ -10740,7 +10899,24 @@ async function set_live_message_reaction(message_id, emoji_character) {
         throw error;
       }
 
-      upsert_live_message(map_live_message_row_to_item(data), false);
+      const saved_message = map_live_message_row_to_item(data);
+      upsert_live_message(saved_message, false);
+      if (should_notify_reaction) {
+        void enqueue_notification_event("reaction", {
+          target_user_key: latest_message.sender_key,
+          message_id,
+          title: translate(
+            "message_reaction_notification_title",
+            current_user_profile.display_name,
+            safe_emoji,
+          ),
+          body: translate(
+            "message_reaction_notification_body",
+            get_reaction_notification_preview(latest_message),
+          ),
+          created_at: updated_at,
+        });
+      }
       return;
     }
 
@@ -12531,6 +12707,12 @@ async function sync_shared_music_tracks_to_remote(immediate = false) {
     await supabase_client
       .from(supabase_table_names.live_messages)
       .upsert(message_item, { onConflict: "id" });
+    void enqueue_notification_event("shared_music", {
+      reference_id: message_item.id,
+      title: translate("shared_activity_music"),
+      body: "New music is available in the app.",
+      created_at: now_text,
+    });
   } catch (error) {
     log_app_error("shared_music_manifest_sync_failed", error);
   }
@@ -12855,20 +13037,8 @@ async function create_shared_music_track(file_item) {
 }
 
 async function create_inline_shared_music_track(file_item) {
-  const id = create_item_id();
-  const data_url = await read_file_as_data_url(file_item);
-
-  return {
-    id,
-    name: file_item.name || "music",
-    type: file_item.type || "audio/*",
-    size: file_item.size || 0,
-    data_url,
-    src: data_url,
-    owner_key: current_user_profile?.user_key || "",
-    is_shared: true,
-    storage_mode: "inline_manifest",
-  };
+  log_app_error("shared_music_inline_disabled", file_item?.name || "music");
+  return null;
 }
 
 async function handle_music_files_selected(event) {
@@ -12893,15 +13063,8 @@ async function handle_music_files_selected(event) {
     let tracks = shared_tracks;
 
     if (shared_tracks.length !== files.length) {
-      const fallback_files = shared_results
-        .filter((result) => !result.track)
-        .map((result) => result.file_item);
-      const inline_shared_tracks = await Promise.all(
-        fallback_files.map(create_inline_shared_music_track),
-      );
-      shared_tracks.push(...inline_shared_tracks);
       tracks = [...shared_tracks];
-      void show_app_alert(translate("music_shared_inline_fallback"), {
+      void show_app_alert(translate("music_shared_upload_failed"), {
         title: translate("music_library"),
       });
     }
@@ -12922,9 +13085,11 @@ async function handle_music_files_selected(event) {
 
     render_music_library_panel();
     update_music_control_buttons();
-    void show_app_alert(translate("music_added", tracks.length), {
-      title: translate("music_library"),
-    });
+    if (tracks.length > 0) {
+      void show_app_alert(translate("music_added", tracks.length), {
+        title: translate("music_library"),
+      });
+    }
   } catch (error) {
     log_app_error("local_music_add_failed", error);
   } finally {
@@ -15489,8 +15654,13 @@ async function save_memory_from_form(event) {
       )
     : null;
   const image_data = image_file
-    ? uploaded_image?.public_url || (await read_file_as_data_url(image_file))
+    ? uploaded_image?.public_url || editing_memory_image_data || ""
     : editing_memory_image_data;
+  if (image_file && !uploaded_image?.public_url) {
+    void show_app_alert(translate("live_message_upload_failed"), {
+      title: translate("shared_activity_memory"),
+    });
+  }
   const memory_thoughts = {
     ...get_item_thoughts(existing_memory, "note"),
   };
@@ -15699,9 +15869,10 @@ async function load_live_messages() {
     try {
       const { data, error } = await supabase_client
         .from(supabase_table_names.live_messages)
-        .select("*")
+        .select("id,room_slug,sender_key,sender_name,text,created_at,edited_at,attachments")
         .eq("room_slug", current_room_slug)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(live_messages_recent_sync_limit);
 
       if (error) {
         log_app_error("supabase_live_messages_load_failed", error);
@@ -15709,12 +15880,24 @@ async function load_live_messages() {
       }
 
       const hydrated_messages = await hydrate_live_message_storage_sources(
-        Array.isArray(data) ? data.map(map_live_message_row_to_item) : [],
+        Array.isArray(data)
+          ? data
+              .map(map_live_message_row_to_item)
+              .sort(
+                (left_item, right_item) =>
+                  new Date(left_item.created_at) -
+                  new Date(right_item.created_at),
+              )
+          : [],
       );
-      current_live_messages = split_visible_live_messages(hydrated_messages);
-      save_live_messages_cache(hydrated_messages);
+      const merged_messages = merge_live_message_lists(
+        cached_messages.length > 0 ? cached_messages : current_live_messages,
+        hydrated_messages,
+      );
+      current_live_messages = split_visible_live_messages(merged_messages);
+      save_live_messages_cache(merged_messages);
       if (is_initial_history_load) {
-        remember_live_notification_activities_from_history(hydrated_messages);
+        remember_live_notification_activities_from_history(merged_messages);
       }
       render_live_messages(true);
       update_current_user_message_receipts({
@@ -17184,6 +17367,36 @@ function build_presence_live_message(state) {
   };
 }
 
+function get_presence_online_event_storage_key() {
+  return `${notification_event_online_storage_prefix}_${current_room_slug}_${current_user_profile?.user_key || "guest"}`;
+}
+
+function maybe_enqueue_presence_online_event(state) {
+  if (
+    current_user_profile?.user_key !== "svetlana" ||
+    !state?.active ||
+    state.visible === false
+  ) {
+    return;
+  }
+
+  const now_ms = Date.now();
+  const storage_key = get_presence_online_event_storage_key();
+  const last_event_at = Number(localStorage.getItem(storage_key) || "0");
+
+  if (Number.isFinite(last_event_at) && now_ms - last_event_at < 2 * 60 * 1000) {
+    return;
+  }
+
+  localStorage.setItem(storage_key, String(now_ms));
+  void enqueue_notification_event("presence_online", {
+    target_user_key: "diab",
+    title: translate("presence_svetlana_online_title"),
+    body: translate("presence_svetlana_online_body"),
+    created_at: state.updated_at || new Date().toISOString(),
+  });
+}
+
 function get_current_presence_state_for_remote() {
   if (!current_user_profile) {
     return null;
@@ -17246,6 +17459,7 @@ async function sync_presence_state_to_remote(immediate = false) {
     await supabase_client
       .from(supabase_table_names.live_messages)
       .upsert(presence_message, { onConflict: "id" });
+    maybe_enqueue_presence_online_event(state);
   } catch (error) {
     // Presence still works locally when the network is unavailable.
   }
@@ -18818,6 +19032,7 @@ async function send_live_message(event) {
       play_send_message_sound();
       clear_live_message_composer();
       burst_reaction(dom_references.live_messages_list, "heart", 8);
+      enqueue_live_message_notification_event(saved_message);
       if (files.length > 0) {
         void finalize_live_message_file_uploads(saved_message.id, files);
       }
@@ -18842,6 +19057,7 @@ async function send_live_message(event) {
     play_send_message_sound();
     clear_live_message_composer();
     burst_reaction(dom_references.live_messages_list, "heart", 8);
+    enqueue_live_message_notification_event(saved_message);
     if (files.length > 0) {
       void finalize_live_message_file_uploads(saved_message.id, files);
     }
@@ -18880,12 +19096,5 @@ async function read_file_as_attachment(file_item) {
     };
   }
 
-  return {
-    kind: "file",
-    name: file_item.name,
-    type: file_item.type || "application/octet-stream",
-    size: file_item.size || 0,
-    duration_ms: Number(file_item.voice_duration_ms || 0),
-    data_url: await read_file_as_data_url(file_item),
-  };
+  throw new Error("supabase_media_upload_required");
 }

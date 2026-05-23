@@ -66,12 +66,47 @@ create table if not exists public.app_media_files (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create table if not exists public.app_notification_events (
+  id text primary key,
+  room_slug text not null default 'svetlana-diab',
+  event_type text not null default 'activity',
+  actor_key text not null default '',
+  target_user_key text not null default '',
+  message_id text not null default '',
+  title text not null default '',
+  body text not null default '',
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+create index if not exists app_live_messages_room_created_idx
+on public.app_live_messages (room_slug, created_at desc);
+
+create index if not exists app_media_files_room_category_created_idx
+on public.app_media_files (room_slug, category, created_at desc);
+
+create index if not exists app_notification_events_room_created_idx
+on public.app_notification_events (room_slug, created_at);
+
+create index if not exists app_notification_events_target_created_idx
+on public.app_notification_events (room_slug, target_user_key, created_at desc);
+
 alter table public.app_profiles enable row level security;
 alter table public.app_memories enable row level security;
 alter table public.app_events enable row level security;
 alter table public.app_live_messages enable row level security;
 alter table public.app_cycle_states enable row level security;
 alter table public.app_media_files enable row level security;
+alter table public.app_notification_events enable row level security;
+
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on public.app_profiles to authenticated;
+grant select, insert, update, delete on public.app_memories to authenticated;
+grant select, insert, update, delete on public.app_events to authenticated;
+grant select, insert, update, delete on public.app_live_messages to authenticated;
+grant select, insert, update, delete on public.app_cycle_states to authenticated;
+grant select, insert, update, delete on public.app_media_files to authenticated;
+grant select, insert, update, delete on public.app_notification_events to authenticated;
 
 drop policy if exists "profiles_select_own" on public.app_profiles;
 create policy "profiles_select_own"
@@ -202,6 +237,28 @@ with check (
     from public.app_profiles profiles
     where profiles.id = auth.uid()
       and profiles.room_slug = app_media_files.room_slug
+  )
+);
+
+drop policy if exists "room_members_manage_notification_events" on public.app_notification_events;
+create policy "room_members_manage_notification_events"
+on public.app_notification_events
+for all
+to authenticated
+using (
+  exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = app_notification_events.room_slug
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = app_notification_events.room_slug
   )
 );
 

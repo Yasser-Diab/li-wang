@@ -38,9 +38,19 @@ public class BackgroundSyncPlugin extends Plugin {
         SharedPreferences.Editor editor =
                 prefs.edit();
         boolean enabled = call.getBoolean("enabled", false);
+        String suppliedSupabaseUrl = call.getString("supabaseUrl", "");
+        String suppliedRoomSlug = call.getString("roomSlug", "svetlana-diab");
+        String suppliedUserKey = call.getString("userKey", "");
         String suppliedAccessToken = call.getString("accessToken", "");
         String nativeAuthEmail = call.getString("nativeAuthEmail", "");
         String nativeAuthPassword = call.getString("nativeAuthPassword", "");
+        boolean syncTargetChanged =
+                enabled &&
+                        (
+                                !suppliedSupabaseUrl.equals(prefs.getString("supabase_url", "")) ||
+                                        !suppliedRoomSlug.equals(prefs.getString("room_slug", "svetlana-diab")) ||
+                                        !suppliedUserKey.equals(prefs.getString("user_key", ""))
+                        );
         boolean hasNativeAuth = !nativeAuthEmail.isEmpty() && !nativeAuthPassword.isEmpty();
         boolean hasNativeSession =
                 TOKEN_SOURCE_NATIVE.equals(prefs.getString(TOKEN_SOURCE, "")) &&
@@ -48,12 +58,13 @@ public class BackgroundSyncPlugin extends Plugin {
                         (
                                 nativeAuthEmail.isEmpty() ||
                                         nativeAuthEmail.equals(prefs.getString("native_auth_email", ""))
-                        );
+                        ) &&
+                        suppliedSupabaseUrl.equals(prefs.getString("native_supabase_url", ""));
         editor.putBoolean("enabled", enabled);
-        editor.putString("supabase_url", call.getString("supabaseUrl", ""));
+        editor.putString("supabase_url", suppliedSupabaseUrl);
         editor.putString("anon_key", call.getString("anonKey", ""));
-        editor.putString("room_slug", call.getString("roomSlug", "svetlana-diab"));
-        editor.putString("user_key", call.getString("userKey", ""));
+        editor.putString("room_slug", suppliedRoomSlug);
+        editor.putString("user_key", suppliedUserKey);
         editor.putString("cycle_data", call.getString("cycleData", ""));
         editor.putString("app_update_source_url", call.getString("appUpdateSourceUrl", ""));
         editor.putString("app_version_name", call.getString("appVersionName", ""));
@@ -65,20 +76,31 @@ public class BackgroundSyncPlugin extends Plugin {
             editor.remove("access_token");
             editor.remove("refresh_token");
             editor.remove("native_auth_email");
+            editor.remove("native_supabase_url");
             editor.remove(TOKEN_SOURCE);
         } else if (hasNativeAuth && !hasNativeSession) {
             editor.putString("access_token", suppliedAccessToken);
             editor.remove("refresh_token");
             editor.putString("native_auth_email", nativeAuthEmail);
+            editor.putString("native_supabase_url", suppliedSupabaseUrl);
             editor.putString(TOKEN_SOURCE, TOKEN_SOURCE_NATIVE_PENDING);
         } else if (!hasNativeSession) {
             editor.putString("access_token", suppliedAccessToken);
             editor.remove("refresh_token");
             editor.remove("native_auth_email");
+            editor.remove("native_supabase_url");
             editor.putString(
                     TOKEN_SOURCE,
                     suppliedAccessToken.isEmpty() ? "" : TOKEN_SOURCE_WEB_ACCESS
             );
+        }
+        if (syncTargetChanged) {
+            editor.remove("last_notification_event_at");
+            editor.remove("last_message_created_at");
+            editor.remove("delivered_message_activity_at");
+            editor.remove("notified_activity_keys");
+            editor.putBoolean("notification_event_cursor_ready", false);
+            editor.putBoolean("message_notification_cursor_ready", false);
         }
         String lastMessageCreatedAt = call.getString("lastMessageCreatedAt", "");
         String currentLastMessageCreatedAt = context
@@ -99,12 +121,11 @@ public class BackgroundSyncPlugin extends Plugin {
         if (enabled) {
             if (hasNativeAuth && !hasNativeSession) {
                 Context appContext = context.getApplicationContext();
-                String supabaseUrl = call.getString("supabaseUrl", "");
                 String anonKey = call.getString("anonKey", "");
                 new Thread(
                         () -> signInNativeBackgroundSession(
                                 appContext,
-                                supabaseUrl,
+                                suppliedSupabaseUrl,
                                 anonKey,
                                 nativeAuthEmail,
                                 nativeAuthPassword
@@ -144,6 +165,7 @@ public class BackgroundSyncPlugin extends Plugin {
                     .putString("access_token", tokens.accessToken)
                     .putString("refresh_token", tokens.refreshToken)
                     .putString("native_auth_email", email)
+                    .putString("native_supabase_url", supabaseUrl)
                     .putString(TOKEN_SOURCE, TOKEN_SOURCE_NATIVE)
                     .apply();
             BackgroundMessageWorker.syncOnce(context);

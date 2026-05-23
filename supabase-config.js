@@ -1,13 +1,14 @@
 window.supabase_public_config = {
-  url: "https://raggjtzizfcfoaxvkgov.supabase.co",
+  url: "https://uwxjtarrgkznkollwqko.supabase.co",
   anon_key:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJhZ2dqdHppemZjZm9heHZrZ292Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2NDgwNDAsImV4cCI6MjA5NDIyNDA0MH0.qsNj79Ki4YcqzLQleVYEyIXj0ZeMaM-k72skTV2YeEs",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eGp0YXJyZ2t6bmtvbGx3cWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NDcwNzEsImV4cCI6MjA5NTEyMzA3MX0.49VnXStaT5zbXOBrWMMzOBsGZItludpv-G3scEAkf18",
+  publishable_key: "sb_publishable_HSeLEz-XObK38fqaLAQSPA_nEYJox2x",
   room_slug: "svetlana-diab",
   shared_music: {
-    url: "https://obvnjracqstbcpjfibji.supabase.co",
+    url: "https://uwxjtarrgkznkollwqko.supabase.co",
     anon_key:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9idm5qcmFjcXN0YmNwamZpYmppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzIyOTksImV4cCI6MjA5NDk0ODI5OX0.ySiMLd9yyhf4zB3ydZgp-iqS-0VXtmbX5JsMuCljAqY",
-    publishable_key: "sb_publishable_ZrTVeCBhkDIAvpJ20j1MwQ_p3EgM9Te",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eGp0YXJyZ2t6bmtvbGx3cWtvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NDcwNzEsImV4cCI6MjA5NTEyMzA3MX0.49VnXStaT5zbXOBrWMMzOBsGZItludpv-G3scEAkf18",
+    publishable_key: "sb_publishable_HSeLEz-XObK38fqaLAQSPA_nEYJox2x",
     bucket: "shared-music",
     table: "shared_music_files",
   },

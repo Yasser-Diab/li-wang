@@ -16,6 +16,9 @@ alter table public.shared_music_files enable row level security;
 grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on public.shared_music_files to anon, authenticated;
 
+create index if not exists shared_music_files_room_created_idx
+on public.shared_music_files (room_slug, created_at desc);
+
 drop policy if exists "shared_music_public_read" on public.shared_music_files;
 create policy "shared_music_public_read"
 on public.shared_music_files

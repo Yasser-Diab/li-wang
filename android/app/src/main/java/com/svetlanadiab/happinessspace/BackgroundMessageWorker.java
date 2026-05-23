@@ -71,6 +71,8 @@ public class BackgroundMessageWorker extends Worker {
     private static final String LAST_UPDATE_CHECK_AT = "last_update_check_at";
     private static final String NOTIFIED_UPDATE_VERSION = "notified_update_version";
     private static final String MESSAGE_CURSOR_READY = "message_notification_cursor_ready";
+    private static final String LAST_NOTIFICATION_EVENT_AT = "last_notification_event_at";
+    private static final String NOTIFICATION_EVENT_CURSOR_READY = "notification_event_cursor_ready";
     private static final long UPDATE_CHECK_INTERVAL_MS = TimeUnit.MINUTES.toMillis(5);
 
     public BackgroundMessageWorker(
@@ -144,7 +146,7 @@ public class BackgroundMessageWorker extends Worker {
         String anonKey = prefs.getString("anon_key", "");
         String roomSlug = prefs.getString("room_slug", "svetlana-diab");
         String userKey = prefs.getString("user_key", "");
-        String lastSeenAt = prefs.getString("last_message_created_at", "");
+        String lastSeenAt = prefs.getString(LAST_NOTIFICATION_EVENT_AT, "");
         String deliveredThroughAt = prefs.getString("delivered_message_activity_at", "");
 
         if (supabaseUrl.isEmpty() || anonKey.isEmpty() || userKey.isEmpty()) {
@@ -152,17 +154,23 @@ public class BackgroundMessageWorker extends Worker {
         }
 
         try {
-            String response = fetchLatestMessages(appContext, supabaseUrl, anonKey, roomSlug, lastSeenAt);
-            JSONArray messages = new JSONArray(response);
+            String response = fetchLatestNotificationEvents(
+                    appContext,
+                    supabaseUrl,
+                    anonKey,
+                    roomSlug,
+                    userKey,
+                    lastSeenAt
+            );
+            JSONArray events = new JSONArray(response);
             String newestSeenAt = lastSeenAt;
-            boolean firstSync = !prefs.getBoolean(MESSAGE_CURSOR_READY, false) && lastSeenAt.isEmpty();
+            boolean firstSync = lastSeenAt.isEmpty();
             String newestDeliveredActivityAt = "";
 
-            for (int index = 0; index < messages.length(); index++) {
-                JSONObject message = messages.getJSONObject(index);
-                String activityAt = latestMessageActivityTimestamp(message);
-                String receiptAt = messageReceiptTimestamp(message);
-                boolean shouldMarkDelivered = shouldMarkDelivered(message, userKey);
+            for (int index = 0; index < events.length(); index++) {
+                JSONObject event = events.getJSONObject(index);
+                String activityAt = event.optString("created_at", "");
+                boolean shouldMarkDelivered = shouldMarkDeliveredEvent(event, userKey);
 
                 if (!activityAt.isEmpty() && compareTimestamp(activityAt, newestSeenAt) > 0) {
                     newestSeenAt = activityAt;
@@ -170,24 +178,30 @@ public class BackgroundMessageWorker extends Worker {
 
                 if (
                         shouldMarkDelivered &&
-                                !receiptAt.isEmpty() &&
-                                compareTimestamp(receiptAt, deliveredThroughAt) > 0 &&
-                                compareTimestamp(receiptAt, newestDeliveredActivityAt) > 0
+                                !activityAt.isEmpty() &&
+                                compareTimestamp(activityAt, deliveredThroughAt) > 0 &&
+                                compareTimestamp(activityAt, newestDeliveredActivityAt) > 0
                 ) {
-                    newestDeliveredActivityAt = receiptAt;
+                    newestDeliveredActivityAt = activityAt;
                 }
 
                 if (!firstSync && compareTimestamp(activityAt, lastSeenAt) > 0) {
-                    notifyForMessage(appContext, prefs, message, userKey, lastSeenAt);
+                    notifyForEvent(appContext, prefs, event, userKey);
                 }
             }
 
             if (!newestSeenAt.equals(lastSeenAt)) {
-                prefs.edit().putString("last_message_created_at", newestSeenAt).apply();
+                prefs.edit()
+                        .putString(LAST_NOTIFICATION_EVENT_AT, newestSeenAt)
+                        .putString("last_message_created_at", newestSeenAt)
+                        .apply();
             }
 
-            if (!prefs.getBoolean(MESSAGE_CURSOR_READY, false)) {
-                prefs.edit().putBoolean(MESSAGE_CURSOR_READY, true).apply();
+            if (!prefs.getBoolean(NOTIFICATION_EVENT_CURSOR_READY, false)) {
+                prefs.edit()
+                        .putBoolean(NOTIFICATION_EVENT_CURSOR_READY, true)
+                        .putBoolean(MESSAGE_CURSOR_READY, true)
+                        .apply();
             }
 
             if (!newestDeliveredActivityAt.isEmpty()) {
@@ -211,6 +225,87 @@ public class BackgroundMessageWorker extends Worker {
         } catch (Exception error) {
             return false;
         }
+    }
+
+    private static boolean shouldMarkDeliveredEvent(JSONObject event, String userKey) {
+        return "message".equals(event.optString("event_type", "")) &&
+                shouldNotifyEvent(event, userKey);
+    }
+
+    private static boolean shouldNotifyEvent(JSONObject event, String userKey) {
+        String actorKey = event.optString("actor_key", "");
+        String targetUserKey = event.optString("target_user_key", "");
+
+        return !actorKey.isEmpty() &&
+                !actorKey.equals(userKey) &&
+                (targetUserKey.isEmpty() || targetUserKey.equals(userKey));
+    }
+
+    private static void notifyForEvent(
+            Context context,
+            SharedPreferences prefs,
+            JSONObject event,
+            String userKey
+    ) {
+        if (!shouldNotifyEvent(event, userKey)) {
+            return;
+        }
+
+        String eventId = event.optString("id", "");
+        String eventType = event.optString("event_type", "activity");
+        String actorKey = event.optString("actor_key", "");
+        String title = event.optString("title", "");
+        String body = event.optString("body", "");
+        String messageId = event.optString("message_id", "");
+        String channelId = CHANNEL_ACTIVITY;
+        String kind = "activity";
+        int baseId = 630000;
+
+        if (title.isEmpty()) {
+            title = displayNameForUser(actorKey);
+        }
+        if (body.isEmpty()) {
+            body = "Open Our Universe to see what changed.";
+        }
+
+        if ("message".equals(eventType)) {
+            channelId = CHANNEL_MESSAGES;
+            kind = "message";
+            baseId = 610000;
+        } else if ("reaction".equals(eventType)) {
+            channelId = CHANNEL_MESSAGES;
+            kind = "message";
+            baseId = 645000;
+        } else if ("cycle".equals(eventType)) {
+            channelId = CHANNEL_CYCLE;
+            kind = "cycle";
+            baseId = 620000;
+        } else if ("presence_online".equals(eventType)) {
+            if (!"diab".equals(userKey) || !"svetlana".equals(actorKey)) {
+                return;
+            }
+            channelId = CHANNEL_ACTIVITY;
+            kind = "activity";
+            baseId = 655000;
+        } else if ("shared_music".equals(eventType)) {
+            channelId = CHANNEL_ACTIVITY;
+            kind = "activity";
+            baseId = 640000;
+        }
+
+        if (!rememberNotificationActivity(prefs, "event:" + eventId)) {
+            return;
+        }
+
+        showNotification(
+                context,
+                channelId,
+                buildNotificationId(baseId, eventId),
+                title,
+                body,
+                kind,
+                messageId
+        );
     }
 
     private static void notifyForMessage(
@@ -871,6 +966,7 @@ public class BackgroundMessageWorker extends Worker {
             String supabaseUrl,
             String anonKey,
             String roomSlug,
+            String userKey,
             String lastSeenAt
     ) throws Exception {
         SharedPreferences prefs =
@@ -901,6 +997,99 @@ public class BackgroundMessageWorker extends Worker {
         }
 
         return response.body;
+    }
+
+    private static String fetchLatestNotificationEvents(
+            Context context,
+            String supabaseUrl,
+            String anonKey,
+            String roomSlug,
+            String userKey,
+            String lastSeenAt
+    ) throws Exception {
+        SharedPreferences prefs =
+                context.getSharedPreferences(BackgroundSyncPlugin.PREFS_NAME, Context.MODE_PRIVATE);
+        String accessToken = prefs.getString("access_token", "");
+        HttpResponse response =
+                requestNotificationEvents(supabaseUrl, anonKey, accessToken, roomSlug, userKey, lastSeenAt);
+
+        boolean canRefreshNativeSession =
+                TOKEN_SOURCE_NATIVE.equals(prefs.getString("token_source", "")) &&
+                        !prefs.getString("refresh_token", "").isEmpty();
+
+        if ((response.code == 401 || response.code == 403) && canRefreshNativeSession) {
+            SessionTokens tokens = refreshSession(supabaseUrl, anonKey, prefs.getString("refresh_token", ""));
+            prefs.edit()
+                    .putString("access_token", tokens.accessToken)
+                    .putString("refresh_token", tokens.refreshToken)
+                    .putString("token_source", TOKEN_SOURCE_NATIVE)
+                    .apply();
+            response = requestNotificationEvents(
+                    supabaseUrl,
+                    anonKey,
+                    tokens.accessToken,
+                    roomSlug,
+                    userKey,
+                    lastSeenAt
+            );
+        }
+
+        if ((response.code == 401 || response.code == 403) && !canRefreshNativeSession) {
+            return "[]";
+        }
+
+        if (response.code < 200 || response.code >= 300) {
+            throw new IllegalStateException(
+                    "Supabase notification event response " + response.code + ": " + response.body
+            );
+        }
+
+        return response.body;
+    }
+
+    private static HttpResponse requestNotificationEvents(
+            String supabaseUrl,
+            String anonKey,
+            String accessToken,
+            String roomSlug,
+            String userKey,
+            String lastSeenAt
+    ) throws Exception {
+        StringBuilder endpoint = new StringBuilder();
+        endpoint.append(supabaseUrl.replaceAll("/+$", ""));
+        endpoint.append("/rest/v1/app_notification_events");
+        endpoint.append("?select=id,event_type,actor_key,target_user_key,message_id,title,body,created_at,metadata");
+        endpoint.append("&room_slug=");
+        endpoint.append(urlEncode("eq." + roomSlug));
+        endpoint.append("&target_user_key=");
+        endpoint.append(urlEncode("eq." + userKey));
+        String normalizedLastSeenAt = lastSeenAt == null ? "" : lastSeenAt.trim();
+        if (normalizedLastSeenAt.isEmpty()) {
+            endpoint.append("&order=created_at.desc&limit=80");
+        } else {
+            endpoint.append("&created_at=");
+            endpoint.append(urlEncode("gt." + normalizedLastSeenAt));
+            endpoint.append("&order=created_at.asc&limit=80");
+        }
+
+        HttpURLConnection connection = (HttpURLConnection) new URL(endpoint.toString()).openConnection();
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("apikey", anonKey);
+        connection.setRequestProperty(
+                "Authorization",
+                "Bearer " + (accessToken.isEmpty() ? anonKey : accessToken)
+        );
+        connection.setRequestProperty("Accept", "application/json");
+        connection.setConnectTimeout(4000);
+        connection.setReadTimeout(4000);
+
+        int responseCode = connection.getResponseCode();
+        InputStream stream = responseCode >= 200 && responseCode < 300
+                ? connection.getInputStream()
+                : connection.getErrorStream();
+        String body = readStream(stream);
+        connection.disconnect();
+        return new HttpResponse(responseCode, body);
     }
 
     private static HttpResponse requestMessages(
