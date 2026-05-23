@@ -65,7 +65,11 @@ function normalize_app_data(app_data) {
   return {
     memories: Array.isArray(app_data.memories) ? app_data.memories : [],
     events: Array.isArray(app_data.events) ? app_data.events : [],
-    live_messages: Array.isArray(app_data.live_messages) ? app_data.live_messages : []
+    live_messages: Array.isArray(app_data.live_messages) ? app_data.live_messages : [],
+    cycle_data:
+      app_data.cycle_data && typeof app_data.cycle_data === "object"
+        ? app_data.cycle_data
+        : null
   };
 }
 
@@ -112,6 +116,7 @@ async function read_sound_manifest() {
     const background_paths = [
       ...(await list_audio_files(path.join(base_directory, "music"))),
       ...(await list_audio_files(path.join(base_directory, "background"))),
+      ...(await list_audio_files(path.join(base_directory, "shared"))),
       ...(await list_audio_files(base_directory))
     ];
 
@@ -195,8 +200,155 @@ function broadcast_live_message_deleted(message_id) {
   }
 }
 
+function sanitize_message_segment(segment) {
+  if (!segment || typeof segment !== "object") {
+    return null;
+  }
+
+  const safe_segment = {
+    type: String(segment.type || "text")
+  };
+
+  [
+    "kind",
+    "reference_type",
+    "reference_id",
+    "title",
+    "subtitle",
+    "text"
+  ].forEach((key) => {
+    if (segment[key] !== undefined) {
+      safe_segment[key] = String(segment[key] || "");
+    }
+  });
+
+  return safe_segment;
+}
+
+function sanitize_live_message_attachment(attachment) {
+  if (!attachment || typeof attachment !== "object") {
+    return null;
+  }
+
+  const safe_attachment = {};
+
+  [
+    "kind",
+    "name",
+    "type",
+    "data_url",
+    "bucket",
+    "storage_path",
+    "public_url",
+    "reference_type",
+    "reference_id",
+    "title",
+    "subtitle",
+    "text",
+    "preview_label",
+    "preview_body",
+    "user_key",
+    "activity_type",
+    "change_type",
+    "updated_by",
+    "last_seen_at",
+    "typing_until",
+    "updated_at"
+  ].forEach((key) => {
+    if (attachment[key] !== undefined) {
+      safe_attachment[key] = String(attachment[key] || "");
+    }
+  });
+
+  if (attachment.size !== undefined) {
+    safe_attachment.size = Number(attachment.size || 0);
+  }
+
+  if (attachment.visible !== undefined) {
+    safe_attachment.visible = attachment.visible !== false;
+  }
+
+  if (attachment.active !== undefined) {
+    safe_attachment.active = Boolean(attachment.active);
+  }
+
+  if (Array.isArray(attachment.hidden_deleted_message_ids)) {
+    safe_attachment.hidden_deleted_message_ids = attachment.hidden_deleted_message_ids
+      .map((item) => String(item || ""))
+      .filter(Boolean);
+  }
+
+  if (Array.isArray(attachment.segments)) {
+    safe_attachment.segments = attachment.segments
+      .map(sanitize_message_segment)
+      .filter(Boolean);
+  }
+
+  if (attachment.cycle_data && typeof attachment.cycle_data === "object") {
+    safe_attachment.cycle_data = attachment.cycle_data;
+  }
+
+  if (Array.isArray(attachment.tracks)) {
+    safe_attachment.tracks = attachment.tracks
+      .map((track) => ({
+        id: String(track.id || ""),
+        name: String(track.name || "music"),
+        type: String(track.type || "audio/*"),
+        size: Number(track.size || 0),
+        bucket: String(track.bucket || ""),
+        storage_path: String(track.storage_path || ""),
+        public_url: String(track.public_url || ""),
+        owner_key: String(track.owner_key || "")
+      }))
+      .filter((track) => track.id);
+  }
+
+  if (attachment.reactions && typeof attachment.reactions === "object") {
+    safe_attachment.reactions = ["svetlana", "diab"].reduce(
+      (reactions, user_key) => {
+        const emoji_value = String(
+          attachment.reactions[user_key] || ""
+        ).trim();
+
+        if (emoji_value) {
+          reactions[user_key] = emoji_value;
+        }
+
+        return reactions;
+      },
+      {}
+    );
+  }
+
+  return safe_attachment;
+}
+
+function sanitize_live_message_item(message_item, existing_message = null) {
+  return {
+    id: String(message_item.id),
+    room_slug: String(message_item.room_slug || existing_message?.room_slug || "svetlana-diab"),
+    sender_key: String(message_item.sender_key),
+    sender_name: String(message_item.sender_name || existing_message?.sender_name || ""),
+    text: String(message_item.text || ""),
+    created_at: String(
+      message_item.created_at ||
+        existing_message?.created_at ||
+        new Date().toISOString()
+    ),
+    edited_at: String(message_item.edited_at || existing_message?.edited_at || ""),
+    attachments: Array.isArray(message_item.attachments)
+      ? message_item.attachments
+          .map(sanitize_live_message_attachment)
+          .filter(Boolean)
+      : Array.isArray(existing_message?.attachments)
+        ? existing_message.attachments
+        : []
+  };
+}
+
 async function handle_api_request(request, response) {
   const live_message_item_match = request.url.match(/^\/api\/live_messages\/([^/?#]+)$/);
+  const live_message_reaction_match = request.url.match(/^\/api\/live_messages\/([^/?#]+)\/reactions$/);
 
   if (request.method === "POST" && request.url === "/api/login") {
     const body_text = await read_request_body(request);
@@ -333,6 +485,12 @@ async function handle_api_request(request, response) {
     return true;
   }
 
+  if (request.method === "GET" && request.url === "/api/cycle_data") {
+    const app_data = await read_app_data();
+    send_json(response, 200, app_data.cycle_data || null);
+    return true;
+  }
+
   if (request.method === "GET" && request.url === "/api/live_messages_stream") {
     response.writeHead(200, {
       "Content-Type": "text/event-stream; charset=utf-8",
@@ -371,6 +529,27 @@ async function handle_api_request(request, response) {
     return true;
   }
 
+  if (request.method === "POST" && request.url === "/api/cycle_data") {
+    const body_text = await read_request_body(request);
+    const cycle_data = JSON.parse(body_text || "null");
+
+    if (!cycle_data || typeof cycle_data !== "object" || Array.isArray(cycle_data)) {
+      send_json(response, 400, {
+        ok: false
+      });
+      return true;
+    }
+
+    const app_data = await read_app_data();
+    app_data.cycle_data = cycle_data;
+    await write_app_data(app_data);
+    send_json(response, 200, {
+      ok: true,
+      cycle_data
+    });
+    return true;
+  }
+
   if (request.method === "POST" && request.url === "/api/live_messages") {
     const body_text = await read_request_body(request);
     const message_item = JSON.parse(body_text || "{}");
@@ -380,31 +559,99 @@ async function handle_api_request(request, response) {
       return true;
     }
 
-    const safe_message = {
-      id: String(message_item.id),
-      sender_key: String(message_item.sender_key),
-      sender_name: String(message_item.sender_name || ""),
-      text: String(message_item.text || ""),
-      created_at: String(message_item.created_at || new Date().toISOString()),
-      edited_at: String(message_item.edited_at || ""),
-      attachments: Array.isArray(message_item.attachments)
-        ? message_item.attachments.map((attachment) => ({
-            name: String(attachment.name || "file"),
-            type: String(attachment.type || "application/octet-stream"),
-            size: Number(attachment.size || 0),
-            data_url: String(attachment.data_url || "")
-          }))
-        : []
-    };
-
     const app_data = await read_app_data();
-    app_data.live_messages = [...app_data.live_messages, safe_message].slice(-500);
+    const existing_index = app_data.live_messages.findIndex(
+      (item) => item.id === String(message_item.id)
+    );
+    const safe_message = sanitize_live_message_item(
+      message_item,
+      existing_index >= 0 ? app_data.live_messages[existing_index] : null
+    );
+
+    if (existing_index >= 0) {
+      app_data.live_messages[existing_index] = safe_message;
+    } else {
+      app_data.live_messages = [...app_data.live_messages, safe_message].slice(-500);
+    }
     await write_app_data(app_data);
-    broadcast_live_message(safe_message);
+    if (existing_index >= 0) {
+      broadcast_live_message_updated(safe_message);
+    } else {
+      broadcast_live_message(safe_message);
+    }
 
     send_json(response, 200, {
       ok: true,
       message: safe_message
+    });
+    return true;
+  }
+
+  if (live_message_reaction_match && request.method === "PATCH") {
+    const message_id = decodeURIComponent(live_message_reaction_match[1]);
+    const body_text = await read_request_body(request);
+    const body = JSON.parse(body_text || "{}");
+    const user_key = String(body.user_key || "");
+    const emoji = String(body.emoji || "").trim();
+    const app_data = await read_app_data();
+    const existing_message = app_data.live_messages.find((message_item) => message_item.id === message_id);
+
+    if (!existing_message || !["svetlana", "diab"].includes(user_key)) {
+      send_json(response, 404, { ok: false });
+      return true;
+    }
+
+    const updated_at = new Date().toISOString();
+    const base_attachments = Array.isArray(existing_message.attachments)
+      ? existing_message.attachments.filter((attachment) => attachment?.kind !== "message_reactions")
+      : [];
+    const existing_reactions_attachment = Array.isArray(existing_message.attachments)
+      ? existing_message.attachments.find((attachment) => attachment?.kind === "message_reactions")
+      : null;
+    const has_legacy_reaction_edit_stamp = Boolean(
+      existing_reactions_attachment?.updated_at &&
+        existing_message.edited_at &&
+        String(existing_reactions_attachment.updated_at) === String(existing_message.edited_at)
+    );
+    const reactions =
+      existing_reactions_attachment?.reactions &&
+      typeof existing_reactions_attachment.reactions === "object"
+        ? { ...existing_reactions_attachment.reactions }
+        : {};
+
+    if (emoji && reactions[user_key] === emoji) {
+      delete reactions[user_key];
+    } else if (emoji) {
+      reactions[user_key] = emoji;
+    } else {
+      delete reactions[user_key];
+    }
+
+    const next_attachments = Object.keys(reactions).length > 0
+      ? [
+          ...base_attachments,
+          {
+            kind: "message_reactions",
+            reactions,
+            updated_by: user_key,
+            updated_at
+          }
+        ]
+      : base_attachments;
+    const updated_message = sanitize_live_message_item({
+      ...existing_message,
+      attachments: next_attachments,
+      ...(has_legacy_reaction_edit_stamp ? { edited_at: "" } : {})
+    }, has_legacy_reaction_edit_stamp ? null : existing_message);
+
+    app_data.live_messages = app_data.live_messages.map((message_item) =>
+      message_item.id === message_id ? updated_message : message_item
+    );
+    await write_app_data(app_data);
+    broadcast_live_message_updated(updated_message);
+    send_json(response, 200, {
+      ok: true,
+      message: updated_message
     });
     return true;
   }
@@ -423,21 +670,15 @@ async function handle_api_request(request, response) {
       return true;
     }
 
-    const next_attachments = Array.isArray(body.attachments)
-      ? body.attachments.map((attachment) => ({
-          name: String(attachment.name || "file"),
-          type: String(attachment.type || "application/octet-stream"),
-          size: Number(attachment.size || 0),
-          data_url: String(attachment.data_url || "")
-        }))
-      : existing_message.attachments;
-
-    const updated_message = {
-      ...existing_message,
+    const updated_message = sanitize_live_message_item({
+      ...body,
+      id: existing_message.id,
+      room_slug: existing_message.room_slug,
+      sender_key: existing_message.sender_key,
+      sender_name: existing_message.sender_name,
       text: next_text,
-      attachments: next_attachments,
       edited_at: new Date().toISOString()
-    };
+    }, existing_message);
 
     app_data.live_messages = app_data.live_messages.map((message_item) =>
       message_item.id === message_id ? updated_message : message_item

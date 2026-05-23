@@ -1,14 +1,38 @@
 apply plugin: 'com.android.application'
 
+def svetaSigningProps = new Properties()
+def svetaSigningPropsFile = rootProject.file('signing.properties')
+if (svetaSigningPropsFile.exists()) {
+    svetaSigningPropsFile.withInputStream { stream ->
+        svetaSigningProps.load(stream)
+    }
+}
+
+def svetaKeystorePath = System.getenv('SVETA_KEYSTORE_PATH') ?: svetaSigningProps.getProperty('storeFile', '')
+def svetaKeystorePassword = System.getenv('SVETA_KEYSTORE_PASSWORD') ?: svetaSigningProps.getProperty('storePassword', '')
+def svetaKeyAlias = System.getenv('SVETA_KEY_ALIAS') ?: svetaSigningProps.getProperty('keyAlias', '')
+def svetaKeyPassword = System.getenv('SVETA_KEY_PASSWORD') ?: svetaSigningProps.getProperty('keyPassword', svetaKeystorePassword)
+def hasSvetaSigning = svetaKeystorePath && svetaKeystorePassword && svetaKeyAlias && svetaKeyPassword
+
 android {
     namespace = "com.svetlanadiab.happinessspace"
     compileSdk = rootProject.ext.compileSdkVersion
+    signingConfigs {
+        if (hasSvetaSigning) {
+            oldApp {
+                storeFile rootProject.file(svetaKeystorePath)
+                storePassword svetaKeystorePassword
+                keyAlias svetaKeyAlias
+                keyPassword svetaKeyPassword
+            }
+        }
+    }
     defaultConfig {
         applicationId "com.svetlanadiab.happinessspace"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2066
+        versionName "2.066"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -17,8 +41,16 @@ android {
         }
     }
     buildTypes {
+        debug {
+            if (hasSvetaSigning) {
+                signingConfig signingConfigs.oldApp
+            }
+        }
         release {
             minifyEnabled false
+            if (hasSvetaSigning) {
+                signingConfig signingConfigs.oldApp
+            }
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }

@@ -8,8 +8,10 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(BackgroundSyncPlugin.class);
+        registerPlugin(AppUpdaterPlugin.class);
         super.onCreate(savedInstanceState);
         BackgroundMessageWorker.schedule(this);
+        BackgroundSyncService.start(this);
     }
 
     @Override
@@ -30,22 +32,35 @@ public class MainActivity extends BridgeActivity {
                 intent == null ||
                         bridge == null ||
                         bridge.getWebView() == null ||
-                        !"messages".equals(intent.getStringExtra("open_panel"))
+                        (
+                                intent.getStringExtra("open_panel") == null &&
+                                        intent.getStringExtra("open_update") == null
+                        )
         ) {
             return;
         }
 
+        String panelName = intent.getStringExtra("open_panel");
         String messageId = intent.getStringExtra("message_id");
+        boolean openUpdate = intent.getStringExtra("open_update") != null;
         if (messageId == null) {
             messageId = "";
         }
         String safeMessageId = messageId.replace("\\", "\\\\").replace("'", "\\'");
+        String safePanelName = panelName == null
+                ? ""
+                : panelName.replace("\\", "\\\\").replace("'", "\\'");
         String script =
-                "window.dispatchEvent(new CustomEvent('svetaNativeOpen', { detail: { panel: 'messages', messageId: '" +
+                "window.dispatchEvent(new CustomEvent('svetaNativeOpen', { detail: { panel: '" +
+                        safePanelName +
+                        "', messageId: '" +
                         safeMessageId +
-                        "' } }));";
+                        "', update: " +
+                        openUpdate +
+                        " } }));";
         bridge.getWebView().postDelayed(() -> bridge.getWebView().evaluateJavascript(script, null), 600);
         intent.removeExtra("open_panel");
         intent.removeExtra("message_id");
+        intent.removeExtra("open_update");
     }
 }

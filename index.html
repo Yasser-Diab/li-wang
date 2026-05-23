@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Svetlana & Diab</title>
+  <title>Our Universe</title>
   <link rel="icon" href="favicon.png?v=20260517f" type="image/png">
   <link rel="apple-touch-icon" href="favicon.png?v=20260517f">
   <script>
@@ -24,10 +24,10 @@
       }
     }());
   </script>
-  <link rel="stylesheet" href="styles.css?v=20260517e">
+  <link rel="stylesheet" href="styles.css?v=20260523g">
 </head>
 
-<body>
+<body class="auth_restoring is_web_app">
   <div class="background_glow" aria-hidden="true"></div>
   <button id="app_nav_toggle_button" class="app_nav_toggle_button" type="button" aria-label="Open navigation"
     title="Open navigation">
@@ -46,6 +46,10 @@
       <button class="app_nav_link" type="button" data-target="event_timeline_section">Memory Days</button>
       <button class="app_nav_link" type="button" data-target="cycle_tracker_section">Cycle Tracker</button>
       <button class="app_nav_link" type="button" data-target="messages_section">Messages</button>
+      <div id="app_update_panel" class="app_update_panel" aria-live="polite">
+        <button id="app_update_button" class="app_update_button" type="button">Update</button>
+        <span id="app_current_version_label" class="app_current_version_label">Current version: 2.066</span>
+      </div>
     </nav>
   </div>
   <div class="floating_graphics" aria-hidden="true">
@@ -66,6 +70,18 @@
   </button>
 
   <main id="app_root">
+    <section id="auth_restore_screen" class="auth_restore_screen" aria-live="polite" aria-label="Loading">
+      <div class="auth_restore_panel">
+        <p id="auth_restore_kicker" class="eyebrow_text">Our Universe</p>
+        <h1 id="auth_restore_message">Loading...</h1>
+        <div class="auth_restore_dots" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    </section>
+
     <section id="login_screen" class="login_screen" aria-labelledby="login_heading">
       <div class="login_panel">
         <p class="eyebrow_text">our private place</p>
@@ -91,6 +107,11 @@
           <button id="biometric_login_button" class="text_link_button biometric_login_button hidden" type="button">
             Use fingerprint
           </button>
+          <label id="biometric_opt_in_label" class="login_switch" for="biometric_opt_in_checkbox">
+            <input id="biometric_opt_in_checkbox" name="biometric_opt_in_checkbox" type="checkbox">
+            <span class="login_switch_track" aria-hidden="true"></span>
+            <span id="biometric_opt_in_text">Use fingerprint next time</span>
+          </label>
 
           <button id="login_button" type="submit">Enter our world</button>
           <p id="login_error_message" class="login_error_message" role="alert"></p>
@@ -273,7 +294,7 @@
       <section id="cycle_tracker_section" class="content_band cycle_band" aria-labelledby="cycle_heading">
         <div class="section_header">
           <div>
-            <p class="eyebrow_text" id="cycle_eyebrow">for her comfort</p>
+            <p class="eyebrow_text" id="cycle_eyebrow">For Your Comfort My Angel</p>
             <h2 id="cycle_heading">Cycle Calendar</h2>
           </div>
           <div class="section_header_actions">
@@ -416,15 +437,19 @@
                   aria-label="Open emoji picker" title="Emoji">
                   &#128522;
                 </button>
-                <label for="live_message_files_input" id="live_message_files_label"
-                  class="composer_icon_button file_attach_button" aria-label="Add files" title="Add files">
+                <button id="live_message_files_label"
+                  class="composer_icon_button file_attach_button" type="button" aria-label="Add files" title="Add files">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path
                       d="m21.44 11.05-8.49 8.49a5.5 5.5 0 1 1-7.78-7.78l8.48-8.49a3.5 3.5 0 1 1 4.95 4.95l-8.49 8.48a1.5 1.5 0 0 1-2.12-2.12l8.49-8.49">
                     </path>
                   </svg>
-                </label>
+                </button>
                 <input id="live_message_files_input" name="live_message_files_input" type="file" multiple>
+                <button id="voice_message_button" class="composer_icon_button voice_message_button" type="button"
+                  aria-label="Record voice message" title="Record voice message">
+                  <span aria-hidden="true">🎙️</span>
+                </button>
                 <button id="send_live_message_button" class="composer_icon_button send_message_button" type="submit"
                   aria-label="Send now" title="Send now">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -585,14 +610,19 @@
           <path d="M11 4h2v8.2l3.2-3.2 1.4 1.4L12 16 6.4 10.4 7.8 9l3.2 3.2V4Zm-5 14h12v2H6v-2Z"></path>
         </svg>
       </button>
+      <div class="memory_lightbox_zoom_controls" aria-label="Image zoom controls">
+        <button id="memory_lightbox_zoom_out_button" type="button" aria-label="Zoom out" title="Zoom out">-</button>
+        <button id="memory_lightbox_zoom_reset_button" type="button" aria-label="Reset zoom" title="Reset zoom">1x</button>
+        <button id="memory_lightbox_zoom_in_button" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+      </div>
       <img id="memory_lightbox_image" src="" alt="">
       <p id="memory_lightbox_caption"></p>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js?v=20260517e"></script>
-  <script src="script.js?v=20260517e"></script>
+  <script src="supabase-config.js?v=20260523g"></script>
+  <script src="script.js?v=20260523g"></script>
 </body>
 
 </html>

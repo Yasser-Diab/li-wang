@@ -85,6 +85,7 @@ async function build_sound_manifest() {
     manifest.background_music.push(
       ...(await list_audio_files(path.join(base_path, "music"))),
       ...(await list_audio_files(path.join(base_path, "background"))),
+      ...(await list_audio_files(path.join(base_path, "shared"))),
       ...(await list_audio_files(base_path)),
     );
     manifest.welcome.push(await list_audio_files(path.join(base_path, "welcome")));

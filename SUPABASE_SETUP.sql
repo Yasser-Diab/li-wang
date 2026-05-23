@@ -44,10 +44,34 @@ create table if not exists public.app_live_messages (
   attachments jsonb not null default '[]'::jsonb
 );
 
+create table if not exists public.app_cycle_states (
+  room_slug text primary key default 'svetlana-diab',
+  cycle_data jsonb not null default '{}'::jsonb,
+  updated_by text not null default '',
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+create table if not exists public.app_media_files (
+  id text primary key,
+  room_slug text not null default 'svetlana-diab',
+  category text not null check (category in ('music', 'memory-gallery', 'shared-files')),
+  name text not null default '',
+  mime_type text not null default 'application/octet-stream',
+  size_bytes bigint not null default 0,
+  storage_bucket text not null default 'app-media',
+  storage_path text not null default '',
+  public_url text not null default '',
+  owner_key text not null default '',
+  created_at timestamptz not null default timezone('utc', now()),
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
 alter table public.app_profiles enable row level security;
 alter table public.app_memories enable row level security;
 alter table public.app_events enable row level security;
 alter table public.app_live_messages enable row level security;
+alter table public.app_cycle_states enable row level security;
+alter table public.app_media_files enable row level security;
 
 drop policy if exists "profiles_select_own" on public.app_profiles;
 create policy "profiles_select_own"
@@ -137,6 +161,110 @@ with check (
   )
 );
 
+drop policy if exists "room_members_manage_cycle_states" on public.app_cycle_states;
+create policy "room_members_manage_cycle_states"
+on public.app_cycle_states
+for all
+to authenticated
+using (
+  exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = app_cycle_states.room_slug
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = app_cycle_states.room_slug
+  )
+);
+
+drop policy if exists "room_members_manage_media_files" on public.app_media_files;
+create policy "room_members_manage_media_files"
+on public.app_media_files
+for all
+to authenticated
+using (
+  exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = app_media_files.room_slug
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = app_media_files.room_slug
+  )
+);
+
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('app-media', 'app-media', true, 52428800)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit;
+
+drop policy if exists "room_members_upload_app_media" on storage.objects;
+create policy "room_members_upload_app_media"
+on storage.objects
+for insert
+to authenticated
+with check (
+  bucket_id = 'app-media'
+  and exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = split_part(storage.objects.name, '/', 1)
+  )
+);
+
+drop policy if exists "room_members_update_app_media" on storage.objects;
+create policy "room_members_update_app_media"
+on storage.objects
+for update
+to authenticated
+using (
+  bucket_id = 'app-media'
+  and exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = split_part(storage.objects.name, '/', 1)
+  )
+)
+with check (
+  bucket_id = 'app-media'
+  and exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = split_part(storage.objects.name, '/', 1)
+  )
+);
+
+drop policy if exists "room_members_delete_app_media" on storage.objects;
+create policy "room_members_delete_app_media"
+on storage.objects
+for delete
+to authenticated
+using (
+  bucket_id = 'app-media'
+  and exists (
+    select 1
+    from public.app_profiles profiles
+    where profiles.id = auth.uid()
+      and profiles.room_slug = split_part(storage.objects.name, '/', 1)
+  )
+);
+
 do $$
 begin
   if not exists (
@@ -147,6 +275,26 @@ begin
       and tablename = 'app_live_messages'
   ) then
     alter publication supabase_realtime add table public.app_live_messages;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'app_cycle_states'
+  ) then
+    alter publication supabase_realtime add table public.app_cycle_states;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'app_media_files'
+  ) then
+    alter publication supabase_realtime add table public.app_media_files;
   end if;
 end
 $$;

@@ -1,5 +1,33 @@
 {
   "memories": [],
   "events": [],
-  "live_messages": []
+  "live_messages": [
+    {
+      "id": "presence_svetlana-diab_svetlana",
+      "room_slug": "svetlana-diab",
+      "sender_key": "svetlana",
+      "sender_name": "Svetlana",
+      "text": "__SVETA_APP_PRESENCE__",
+      "created_at": "2026-05-23T02:06:21.126Z",
+      "edited_at": "2026-05-23T02:06:21.126Z",
+      "attachments": [
+        {
+          "kind": "presence_state",
+          "user_key": "svetlana",
+          "last_seen_at": "2026-05-23T02:06:21.126Z",
+          "typing_until": "",
+          "updated_at": "2026-05-23T02:06:21.126Z",
+          "visible": false,
+          "active": false,
+          "hidden_deleted_message_ids": [
+            "item_1778667211300_c9cd0785d5aa78",
+            "item_1778670946587_567306bb656b8",
+            "item_1778672649068_0854491b8c0e38",
+            "item_1778672657377_5f69ba7f7fe3a8"
+          ]
+        }
+      ]
+    }
+  ],
+  "cycle_data": null
 }
