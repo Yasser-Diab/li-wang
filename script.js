@@ -27,6 +27,8 @@ const cycle_panel_open_storage_key = "svetlana_diab_cycle_panel_open";
 const presence_visibility_storage_prefix = "svetlana_diab_presence_visible";
 const presence_seen_storage_prefix = "svetlana_diab_presence_seen";
 const presence_state_storage_prefix = "svetlana_diab_presence_state";
+const live_notification_activity_storage_prefix =
+  "svetlana_diab_notified_message_activity";
 const daily_content_history_storage_prefix =
   "svetlana_diab_daily_content_history";
 const biometric_last_password_key = "svetlana_diab_biometric_last_password_at";
@@ -1101,10 +1103,12 @@ Object.assign(translations.en, {
   presence_hidden: "Last seen hidden",
   presence_show_setting: "Show online status",
   presence_hide_setting: "Hide online status",
-  presence_seen_toggle: "Gesehen",
-  presence_hidden_toggle: "Verborgen",
+  presence_seen_toggle: "Seen",
+  presence_hidden_toggle: "Hidden",
   presence_waiting: "Status will appear soon",
   presence_typing: "Typing...",
+  presence_svetlana_online_title: "Svetlana is online",
+  presence_svetlana_online_body: "Svetlana just opened Our Universe.",
   incoming_message_title: (name) => `New message from ${name}`,
   incoming_message_close: "Close notification",
   daily_notification_morning_title: "Good morning, Svetlana my angel",
@@ -1121,6 +1125,13 @@ Object.assign(translations.en, {
     `${name} reacted with ${emoji}`,
   message_reaction_notification_body: (message_text) =>
     `to your message "${message_text}"`,
+  message_receipt_pending: "Not delivered yet",
+  message_receipt_delivered: (date_text) => `Delivered at ${date_text}`,
+  message_receipt_read: (date_text) => `Read at ${date_text}`,
+  message_receipt_pending_label: "Message not delivered yet",
+  message_receipt_delivered_label: (date_text) =>
+    `Delivered at ${date_text}`,
+  message_receipt_read_label: (date_text) => `Read at ${date_text}`,
   show_password: "Show password",
   hide_password: "Hide password",
   biometric_login: "Use fingerprint",
@@ -1211,10 +1222,12 @@ Object.assign(translations.de, {
   presence_hidden: "Zuletzt gesehen verborgen",
   presence_show_setting: "Online-Status zeigen",
   presence_hide_setting: "Online-Status verbergen",
-  presence_seen_toggle: "مرئي",
-  presence_hidden_toggle: "مخفي",
+  presence_seen_toggle: "Gesehen",
+  presence_hidden_toggle: "Verborgen",
   presence_waiting: "Status erscheint gleich",
   presence_typing: "Schreibt...",
+  presence_svetlana_online_title: "Svetlana ist online",
+  presence_svetlana_online_body: "Svetlana hat Our Universe gerade geöffnet.",
   incoming_message_title: (name) => `Neue Nachricht von ${name}`,
   incoming_message_close: "Benachrichtigung schließen",
   daily_notification_morning_title: "Guten Morgen, Svetlana, mein Engel",
@@ -1231,6 +1244,13 @@ Object.assign(translations.de, {
     `${name} hat mit ${emoji} reagiert`,
   message_reaction_notification_body: (message_text) =>
     `auf deine Nachricht "${message_text}"`,
+  message_receipt_pending: "Noch nicht zugestellt",
+  message_receipt_delivered: (date_text) => `Zugestellt um ${date_text}`,
+  message_receipt_read: (date_text) => `Gelesen um ${date_text}`,
+  message_receipt_pending_label: "Nachricht noch nicht zugestellt",
+  message_receipt_delivered_label: (date_text) =>
+    `Zugestellt um ${date_text}`,
+  message_receipt_read_label: (date_text) => `Gelesen um ${date_text}`,
   show_password: "Passwort zeigen",
   hide_password: "Passwort verbergen",
   biometric_login: "Fingerabdruck verwenden",
@@ -1322,10 +1342,12 @@ Object.assign(translations.ar, {
   presence_hidden: "آخر ظهور مخفي",
   presence_show_setting: "إظهار الحالة",
   presence_hide_setting: "إخفاء الحالة",
-  presence_seen_toggle: "Seen",
-  presence_hidden_toggle: "Hidden",
+  presence_seen_toggle: "مرئي",
+  presence_hidden_toggle: "مخفي",
   presence_waiting: "ستظهر الحالة قريباً",
   presence_typing: "يكتب الآن...",
+  presence_svetlana_online_title: "سفيتلانا متصلة الآن",
+  presence_svetlana_online_body: "فتحت سفيتلانا عالمنا الآن.",
   incoming_message_title: (name) => `رسالة جديدة من ${name}`,
   incoming_message_close: "إغلاق الإشعار",
   daily_notification_morning_title: "صباح الخير يا سفيتلانا يا ملاكي",
@@ -1342,6 +1364,12 @@ Object.assign(translations.ar, {
     `${name} تفاعل بـ ${emoji}`,
   message_reaction_notification_body: (message_text) =>
     `على رسالتك "${message_text}"`,
+  message_receipt_pending: "لم تصل بعد",
+  message_receipt_delivered: (date_text) => `وصلت في ${date_text}`,
+  message_receipt_read: (date_text) => `تمت القراءة في ${date_text}`,
+  message_receipt_pending_label: "الرسالة لم تصل بعد",
+  message_receipt_delivered_label: (date_text) => `وصلت في ${date_text}`,
+  message_receipt_read_label: (date_text) => `تمت القراءة في ${date_text}`,
   show_password: "إظهار كلمة السر",
   hide_password: "إخفاء كلمة السر",
   biometric_login: "استخدام البصمة",
@@ -1576,6 +1604,7 @@ let cycle_panel_auto_expanded = false;
 let message_search_query = "";
 let message_search_matches = [];
 let message_search_active_index = -1;
+let active_message_receipt_popover = null;
 let presence_interval_id = null;
 let presence_sync_timeout_id = null;
 let presence_state_by_user = {};
@@ -3087,10 +3116,37 @@ function get_live_message_activity_timestamp(message_item) {
   );
 }
 
+function compare_iso_timestamp(left, right) {
+  const safe_left = String(left || "");
+  const safe_right = String(right || "");
+
+  if (!safe_left && !safe_right) {
+    return 0;
+  }
+
+  if (!safe_left) {
+    return -1;
+  }
+
+  if (!safe_right) {
+    return 1;
+  }
+
+  return safe_left.localeCompare(safe_right);
+}
+
+function get_message_receipt_activity_timestamp(message_item) {
+  return String(message_item?.created_at || get_live_message_activity_timestamp(message_item));
+}
+
 async function configure_background_message_sync(enabled = true) {
   const background_sync_plugin = get_capacitor_plugin("BackgroundSync");
 
   if (!background_sync_plugin?.configure) {
+    return;
+  }
+
+  if (enabled && current_user_profile && !live_messages_history_loaded) {
     return;
   }
 
@@ -3229,6 +3285,183 @@ function build_notification_id(prefix_value, seed_text) {
     prefix_value,
   );
   return Math.max(1, hash_value);
+}
+
+function get_live_notification_activity_storage_key() {
+  return `${live_notification_activity_storage_prefix}_${current_room_slug}_${current_user_profile?.user_key || "guest"}`;
+}
+
+function get_stored_live_notification_activity_keys() {
+  try {
+    const stored_value = JSON.parse(
+      localStorage.getItem(get_live_notification_activity_storage_key()) ||
+        "[]",
+    );
+    return Array.isArray(stored_value)
+      ? stored_value.map((item) => String(item || "")).filter(Boolean)
+      : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function remember_live_notification_activity(activity_key) {
+  if (!activity_key) {
+    return;
+  }
+
+  const activity_keys = [
+    activity_key,
+    ...get_stored_live_notification_activity_keys().filter(
+      (item) => item !== activity_key,
+    ),
+  ].slice(0, 700);
+
+  localStorage.setItem(
+    get_live_notification_activity_storage_key(),
+    JSON.stringify(activity_keys),
+  );
+}
+
+function has_live_notification_activity(activity_key) {
+  return get_stored_live_notification_activity_keys().includes(activity_key);
+}
+
+function build_live_notification_activity_key(kind, message_id, activity_at) {
+  return `${kind}:${message_id || ""}:${activity_at || ""}`;
+}
+
+function run_once_for_live_notification_activity(activity_key, callback) {
+  if (!activity_key || has_live_notification_activity(activity_key)) {
+    return false;
+  }
+
+  remember_live_notification_activity(activity_key);
+  callback?.();
+  return true;
+}
+
+function get_reaction_activity_key_from_message(message_item) {
+  if (!current_user_profile || !message_item) {
+    return "";
+  }
+
+  const reaction_attachment = get_message_reactions_attachment(
+    message_item.attachments,
+  );
+
+  if (
+    !reaction_attachment?.updated_at ||
+    reaction_attachment.updated_by === current_user_profile.user_key
+  ) {
+    return "";
+  }
+
+  return build_live_notification_activity_key(
+    "reaction",
+    message_item.id,
+    reaction_attachment.updated_at,
+  );
+}
+
+function get_system_live_notification_activity_key(message_item) {
+  if (!current_user_profile || !message_item) {
+    return "";
+  }
+
+  const message_text = String(message_item.text || "");
+
+  if (message_text === cycle_state_live_message_marker) {
+    const attachment = get_cycle_state_attachment(message_item);
+
+    if (!attachment || attachment.updated_by === current_user_profile.user_key) {
+      return "";
+    }
+
+    return build_live_notification_activity_key(
+      "cycle",
+      message_item.id,
+      attachment.updated_at ||
+        attachment.cycle_data?.updated_at ||
+        get_live_message_activity_timestamp(message_item),
+    );
+  }
+
+  if (message_text === shared_activity_live_message_marker) {
+    const attachment = get_shared_activity_attachment(message_item);
+
+    if (!attachment || attachment.updated_by === current_user_profile.user_key) {
+      return "";
+    }
+
+    return build_live_notification_activity_key(
+      `activity_${attachment.activity_type || "generic"}`,
+      message_item.id,
+      attachment.updated_at || get_live_message_activity_timestamp(message_item),
+    );
+  }
+
+  if (message_text === shared_music_live_message_marker) {
+    const attachment = get_shared_music_attachment(message_item);
+
+    if (!attachment || attachment.updated_by === current_user_profile.user_key) {
+      return "";
+    }
+
+    return build_live_notification_activity_key(
+      "music",
+      message_item.id,
+      attachment.updated_at || get_live_message_activity_timestamp(message_item),
+    );
+  }
+
+  return "";
+}
+
+function remember_live_notification_activities_from_history(message_items) {
+  if (!current_user_profile || !Array.isArray(message_items)) {
+    return;
+  }
+
+  message_items.forEach((message_item) => {
+    if (!message_item) {
+      return;
+    }
+
+    const system_activity_key =
+      get_system_live_notification_activity_key(message_item);
+
+    if (system_activity_key) {
+      remember_live_notification_activity(system_activity_key);
+      return;
+    }
+
+    if (is_system_live_message(message_item)) {
+      return;
+    }
+
+    if (
+      message_item.sender_key &&
+      message_item.sender_key !== current_user_profile.user_key &&
+      !is_deleted_live_message(message_item)
+    ) {
+      remember_live_notification_activity(
+        build_live_notification_activity_key(
+          "message",
+          message_item.id,
+          get_live_message_activity_timestamp(message_item),
+        ),
+      );
+      return;
+    }
+
+    const reaction_activity_key =
+      get_reaction_activity_key_from_message(message_item);
+
+    if (reaction_activity_key) {
+      remember_live_notification_activity(reaction_activity_key);
+    }
+  });
 }
 
 async function schedule_activity_notification(title, body, seed_text) {
@@ -4281,6 +4514,10 @@ function bind_event_handlers() {
     update_messages_scroll_button,
   );
   dom_references.live_messages_list.addEventListener(
+    "scroll",
+    close_message_receipt_popover,
+  );
+  dom_references.live_messages_list.addEventListener(
     "click",
     handle_live_message_action,
   );
@@ -4932,6 +5169,7 @@ function handle_emoji_edge_swipe_end(event) {
 }
 
 function handle_document_click(event) {
+  const event_path = event.composedPath?.() || [];
   const clicked_inside_nav = dom_references.app_nav_drawer.contains(
     event.target,
   );
@@ -4952,9 +5190,14 @@ function handle_document_click(event) {
   );
   const clicked_music_panel =
     dom_references.music_library_panel?.contains(event.target) ||
-    dom_references.music_library_button?.contains(event.target);
+    dom_references.music_library_button?.contains(event.target) ||
+    event_path.includes(dom_references.music_library_panel) ||
+    event_path.includes(dom_references.music_library_button);
   const clicked_reaction_control = Boolean(
     event.target.closest?.(".live_message_reaction_control"),
+  );
+  const clicked_receipt_control = Boolean(
+    event.target.closest?.(".message_receipt_button"),
   );
 
   if (
@@ -4977,6 +5220,10 @@ function handle_document_click(event) {
 
   if (!clicked_music_panel) {
     dom_references.music_library_panel?.classList.add("hidden");
+  }
+
+  if (!clicked_receipt_control) {
+    close_message_receipt_popover();
   }
 }
 
@@ -6544,6 +6791,8 @@ function handle_logout() {
   current_auth_refresh_token = "";
   local_music_tracks = [];
   shared_music_tracks = [];
+  current_live_messages = [];
+  live_messages_history_loaded = false;
   render_music_library_panel();
   sync_authenticated_chrome();
   void configure_background_message_sync(false);
@@ -6811,6 +7060,7 @@ async function enter_home_from_welcome() {
 }
 
 async function initialize_live_messages_for_session() {
+  live_messages_history_loaded = false;
   await load_live_messages();
   open_live_messages_stream();
 }
@@ -8112,17 +8362,25 @@ function apply_cycle_state_from_message(message_item) {
     attachment.updated_by !== current_user_profile.user_key
   ) {
     const title = get_cycle_update_title(attachment.change_type);
-    show_in_app_notification({
-      title,
-      body: translate("shared_activity_cycle"),
-      reference_id: "cycle",
-      kind: "cycle",
-    });
-    void schedule_activity_notification(
-      title,
-      translate("shared_activity_cycle"),
-      `cycle_${incoming_updated_at || Date.now()}`,
+    const activity_key = build_live_notification_activity_key(
+      "cycle",
+      message_item.id,
+      incoming_updated_at || get_live_message_activity_timestamp(message_item),
     );
+
+    run_once_for_live_notification_activity(activity_key, () => {
+      show_in_app_notification({
+        title,
+        body: translate("shared_activity_cycle"),
+        reference_id: "cycle",
+        kind: "cycle",
+      });
+      void schedule_activity_notification(
+        title,
+        translate("shared_activity_cycle"),
+        `cycle_${incoming_updated_at || Date.now()}`,
+      );
+    });
   }
 }
 
@@ -8208,20 +8466,28 @@ function apply_shared_activity_from_message(message_item) {
     return;
   }
 
-  const title =
-    attachment.title || get_shared_activity_title(attachment.activity_type);
-  const body =
-    attachment.body || get_shared_activity_title(attachment.activity_type);
-  show_in_app_notification({
-    title,
-    body,
-    kind: attachment.activity_type === "cycle" ? "cycle" : "activity",
-  });
-  void schedule_activity_notification(
-    title,
-    body,
-    `activity_${attachment.activity_type}_${attachment.updated_at || Date.now()}`,
+  const activity_key = build_live_notification_activity_key(
+    `activity_${attachment.activity_type || "generic"}`,
+    message_item.id,
+    attachment.updated_at || get_live_message_activity_timestamp(message_item),
   );
+
+  run_once_for_live_notification_activity(activity_key, () => {
+    const title =
+      attachment.title || get_shared_activity_title(attachment.activity_type);
+    const body =
+      attachment.body || get_shared_activity_title(attachment.activity_type);
+    show_in_app_notification({
+      title,
+      body,
+      kind: attachment.activity_type === "cycle" ? "cycle" : "activity",
+    });
+    void schedule_activity_notification(
+      title,
+      body,
+      `activity_${attachment.activity_type}_${attachment.updated_at || Date.now()}`,
+    );
+  });
 }
 
 async function supabase_get_items(item_type) {
@@ -9624,7 +9890,7 @@ function render_live_message_reactions(message_item, is_own_message) {
   control.setAttribute("aria-label", translate("message_reaction_add"));
 
   if (reaction_entries.length === 0) {
-    control.textContent = "+";
+    control.textContent = "";
     return control;
   }
 
@@ -10869,7 +11135,9 @@ function load_local_music_tracks() {
     const stored_tracks = JSON.parse(
       localStorage.getItem(get_local_music_storage_key()) || "[]",
     );
-    local_music_tracks = Array.isArray(stored_tracks) ? stored_tracks : [];
+    local_music_tracks = dedupe_music_tracks(
+      Array.isArray(stored_tracks) ? stored_tracks : [],
+    );
   } catch (error) {
     local_music_tracks = [];
   }
@@ -10878,6 +11146,7 @@ function load_local_music_tracks() {
 }
 
 function save_local_music_tracks() {
+  local_music_tracks = dedupe_music_tracks(local_music_tracks);
   const serialized_tracks = local_music_tracks.map(
     ({ src, ...track }) => track,
   );
@@ -10888,6 +11157,7 @@ function save_local_music_tracks() {
 }
 
 function save_shared_music_tracks_locally() {
+  shared_music_tracks = dedupe_music_tracks(shared_music_tracks);
   const serialized_tracks = shared_music_tracks.map(
     ({ src, ...track }) => track,
   );
@@ -10936,13 +11206,79 @@ function get_shared_music_track_source(track) {
   );
 }
 
+function get_music_track_dedupe_key(track) {
+  if (!track) {
+    return "";
+  }
+
+  const name_key = String(track.name || "").trim().toLowerCase();
+
+  if (name_key) {
+    return `name:${name_key}`;
+  }
+
+  const source_key =
+    track.storage_path ||
+    track.public_url ||
+    track.src ||
+    track.data_url ||
+    track.path ||
+    "";
+
+  if (source_key) {
+    return String(source_key).trim().toLowerCase();
+  }
+
+  const size_key = Number(track.size || 0);
+  const type_key = String(track.type || "").trim().toLowerCase();
+  return size_key || type_key ? `file:${size_key}|${type_key}` : String(track.id || "");
+}
+
+function dedupe_music_tracks(track_list) {
+  const seen_tracks = new Set();
+
+  return (Array.isArray(track_list) ? track_list : []).filter((track) => {
+    const key = get_music_track_dedupe_key(track);
+
+    if (!key) {
+      return true;
+    }
+
+    if (seen_tracks.has(key)) {
+      return false;
+    }
+
+    seen_tracks.add(key);
+    return true;
+  });
+}
+
+function take_unique_music_tracks(track_list, seen_tracks = new Set()) {
+  return (Array.isArray(track_list) ? track_list : []).filter((track) => {
+    const key = get_music_track_dedupe_key(track);
+
+    if (!key) {
+      return true;
+    }
+
+    if (seen_tracks.has(key)) {
+      return false;
+    }
+
+    seen_tracks.add(key);
+    return true;
+  });
+}
+
 async function hydrate_shared_music_track_sources() {
-  shared_music_tracks = shared_music_tracks
-    .map((track) => ({
-      ...track,
-      src: get_shared_music_track_source(track),
-    }))
-    .filter((track) => track.src);
+  shared_music_tracks = dedupe_music_tracks(
+    shared_music_tracks
+      .map((track) => ({
+        ...track,
+        src: get_shared_music_track_source(track),
+      }))
+      .filter((track) => track.src),
+  );
   save_shared_music_tracks_locally();
   update_music_control_buttons();
   render_music_library_panel();
@@ -10970,7 +11306,9 @@ async function load_shared_music_tracks() {
     const stored_tracks = JSON.parse(
       localStorage.getItem(shared_music_storage_key) || "[]",
     );
-    shared_music_tracks = Array.isArray(stored_tracks) ? stored_tracks : [];
+    shared_music_tracks = dedupe_music_tracks(
+      Array.isArray(stored_tracks) ? stored_tracks : [],
+    );
   } catch (error) {
     shared_music_tracks = [];
   }
@@ -10986,18 +11324,20 @@ async function load_shared_music_tracks() {
         .order("created_at", { ascending: true });
 
       if (!error && Array.isArray(data)) {
-        shared_music_tracks = data.map((row) => ({
-          id: String(row.id),
-          name: String(row.name || "music"),
-          type: String(row.mime_type || "audio/*"),
-          size: Number(row.size_bytes || 0),
-          bucket: String(row.storage_bucket || get_shared_music_bucket_name()),
-          storage_path: String(row.storage_path || ""),
-          public_url: String(row.public_url || ""),
-          owner_key: String(row.owner_key || ""),
-          storage_mode: "shared_music_supabase",
-          is_shared: true,
-        }));
+        shared_music_tracks = dedupe_music_tracks(
+          data.map((row) => ({
+            id: String(row.id),
+            name: String(row.name || "music"),
+            type: String(row.mime_type || "audio/*"),
+            size: Number(row.size_bytes || 0),
+            bucket: String(row.storage_bucket || get_shared_music_bucket_name()),
+            storage_path: String(row.storage_path || ""),
+            public_url: String(row.public_url || ""),
+            owner_key: String(row.owner_key || ""),
+            storage_mode: "shared_music_supabase",
+            is_shared: true,
+          })),
+        );
         shared_music_table_loaded = true;
       }
     } catch (error) {
@@ -11015,18 +11355,20 @@ async function load_shared_music_tracks() {
         .order("created_at", { ascending: true });
 
       if (!error && Array.isArray(data)) {
-        shared_music_tracks = data.map((row) => ({
-          id: String(row.id),
-          name: String(row.name || "music"),
-          type: String(row.mime_type || "audio/*"),
-          size: Number(row.size_bytes || 0),
-          bucket: String(row.storage_bucket || supabase_media_bucket_name),
-          storage_path: String(row.storage_path || ""),
-          public_url: String(row.public_url || ""),
-          owner_key: String(row.owner_key || ""),
-          storage_mode: "legacy_app_media",
-          is_shared: true,
-        }));
+        shared_music_tracks = dedupe_music_tracks(
+          data.map((row) => ({
+            id: String(row.id),
+            name: String(row.name || "music"),
+            type: String(row.mime_type || "audio/*"),
+            size: Number(row.size_bytes || 0),
+            bucket: String(row.storage_bucket || supabase_media_bucket_name),
+            storage_path: String(row.storage_path || ""),
+            public_url: String(row.public_url || ""),
+            owner_key: String(row.owner_key || ""),
+            storage_mode: "legacy_app_media",
+            is_shared: true,
+          })),
+        );
       }
     } catch (error) {
       // The live-message manifest below covers older Supabase setups.
@@ -11060,9 +11402,11 @@ async function load_shared_music_tracks() {
                   is_shared: true,
                 });
               });
-            shared_music_tracks = Array.from(merged_tracks.values());
+            shared_music_tracks = dedupe_music_tracks(
+              Array.from(merged_tracks.values()),
+            );
           } else {
-            shared_music_tracks = attachment.tracks;
+            shared_music_tracks = dedupe_music_tracks(attachment.tracks);
           }
         }
       }
@@ -11210,10 +11554,12 @@ function apply_shared_music_state_from_message(message_item) {
     return;
   }
 
-  shared_music_tracks = attachment.tracks.map((track) => ({
-    ...track,
-    is_shared: true,
-  }));
+  shared_music_tracks = dedupe_music_tracks(
+    attachment.tracks.map((track) => ({
+      ...track,
+      is_shared: true,
+    })),
+  );
   void hydrate_shared_music_track_sources();
   void refresh_shared_music_from_remote();
 
@@ -11222,10 +11568,18 @@ function apply_shared_music_state_from_message(message_item) {
     current_user_profile &&
     attachment.updated_by !== current_user_profile.user_key
   ) {
-    show_in_app_notification({
-      title: translate("shared_activity_music"),
-      body: translate("shared_activity_music"),
-      kind: "activity",
+    const activity_key = build_live_notification_activity_key(
+      "music",
+      message_item.id,
+      attachment.updated_at || get_live_message_activity_timestamp(message_item),
+    );
+
+    run_once_for_live_notification_activity(activity_key, () => {
+      show_in_app_notification({
+        title: translate("shared_activity_music"),
+        body: translate("shared_activity_music"),
+        kind: "activity",
+      });
     });
   }
 }
@@ -11564,7 +11918,10 @@ async function handle_music_files_selected(event) {
     }
 
     if (shared_tracks.length > 0) {
-      shared_music_tracks = [...shared_music_tracks, ...shared_tracks];
+      shared_music_tracks = dedupe_music_tracks([
+        ...shared_music_tracks,
+        ...shared_tracks,
+      ]);
       save_shared_music_tracks_locally();
       void sync_shared_music_tracks_to_remote(true);
       void announce_shared_activity(
@@ -11639,11 +11996,11 @@ function get_shared_music_tracks() {
 }
 
 function get_all_music_tracks() {
-  return [
+  return take_unique_music_tracks([
     ...get_default_music_tracks(),
     ...get_shared_music_tracks(),
     ...get_personal_music_tracks(),
-  ];
+  ]);
 }
 
 function create_music_library_heading(label_text) {
@@ -11698,9 +12055,19 @@ function render_music_library_panel() {
   }
 
   panel.innerHTML = "";
-  const default_tracks = get_default_music_tracks();
-  const shared_tracks = get_shared_music_tracks();
-  const personal_tracks = get_personal_music_tracks();
+  const visible_track_keys = new Set();
+  const default_tracks = take_unique_music_tracks(
+    get_default_music_tracks(),
+    visible_track_keys,
+  );
+  const shared_tracks = take_unique_music_tracks(
+    get_shared_music_tracks(),
+    visible_track_keys,
+  );
+  const personal_tracks = take_unique_music_tracks(
+    get_personal_music_tracks(),
+    visible_track_keys,
+  );
 
   if (default_tracks.length > 0) {
     panel.appendChild(
@@ -11738,6 +12105,7 @@ function render_music_library_panel() {
 }
 
 async function handle_music_library_action(event) {
+  event.stopPropagation();
   const play_button = event.target.closest(".music_library_play_button");
   const delete_button = event.target.closest(".music_library_delete_button");
 
@@ -14296,6 +14664,8 @@ function update_theme_button(theme_name) {
 }
 
 async function load_live_messages() {
+  const is_initial_history_load = !live_messages_history_loaded;
+
   if (is_supabase_enabled() && current_auth_user_id) {
     try {
       const { data, error } = await supabase_client
@@ -14313,7 +14683,14 @@ async function load_live_messages() {
         Array.isArray(data) ? data.map(map_live_message_row_to_item) : [],
       );
       current_live_messages = split_visible_live_messages(hydrated_messages);
+      if (is_initial_history_load) {
+        remember_live_notification_activities_from_history(hydrated_messages);
+      }
       render_live_messages(true);
+      update_current_user_message_receipts({
+        read: is_app_active_for_presence(),
+        sync_remote: true,
+      });
       void configure_background_message_sync();
       return;
     } catch (error) {
@@ -14331,7 +14708,14 @@ async function load_live_messages() {
 
       if (Array.isArray(live_messages)) {
         current_live_messages = split_visible_live_messages(live_messages);
+        if (is_initial_history_load) {
+          remember_live_notification_activities_from_history(live_messages);
+        }
         render_live_messages(true);
+        update_current_user_message_receipts({
+          read: is_app_active_for_presence(),
+          sync_remote: true,
+        });
         void configure_background_message_sync();
       }
     }
@@ -14518,19 +14902,51 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
     message_item.sender_key !== current_user_profile.user_key &&
     !is_deleted_live_message(message_item)
   ) {
-    play_receive_message_sound();
-    show_in_app_message_notification(message_item);
-    if (document.hidden || !document.hasFocus()) {
-      void schedule_message_notification(message_item);
+    const message_activity_key = build_live_notification_activity_key(
+      "message",
+      message_item.id,
+      get_live_message_activity_timestamp(message_item),
+    );
+
+    if (!has_live_notification_activity(message_activity_key)) {
+      remember_live_notification_activity(message_activity_key);
+      play_receive_message_sound();
+
+      if (document.hidden || !document.hasFocus()) {
+        void schedule_message_notification(message_item);
+      } else {
+        show_in_app_message_notification(message_item);
+      }
     }
   }
 
   if (reaction_notification && live_messages_history_loaded) {
-    if (document.hidden || !document.hasFocus()) {
-      void schedule_reaction_notification(message_item, reaction_notification);
-    } else {
-      show_in_app_reaction_notification(message_item, reaction_notification);
+    const reaction_activity_key = build_live_notification_activity_key(
+      "reaction",
+      message_item.id,
+      reaction_notification.updated_at,
+    );
+
+    if (!has_live_notification_activity(reaction_activity_key)) {
+      remember_live_notification_activity(reaction_activity_key);
+
+      if (document.hidden || !document.hasFocus()) {
+        void schedule_reaction_notification(message_item, reaction_notification);
+      } else {
+        show_in_app_reaction_notification(message_item, reaction_notification);
+      }
     }
+  }
+
+  if (
+    current_user_profile &&
+    message_item.sender_key !== current_user_profile.user_key &&
+    !is_deleted_live_message(message_item)
+  ) {
+    update_current_user_message_receipts({
+      read: is_app_active_for_presence() && document.hasFocus(),
+      sync_remote: true,
+    });
   }
 
   void configure_background_message_sync();
@@ -14617,6 +15033,10 @@ function get_default_presence_state(user_key) {
     last_seen_at: "",
     updated_at: "",
     typing_until: "",
+    delivered_message_activity_at: "",
+    delivered_at: "",
+    read_message_activity_at: "",
+    read_at: "",
     hidden_deleted_message_ids: [],
   };
 }
@@ -14631,6 +15051,16 @@ function normalize_presence_state(raw_state = {}, fallback_user_key = "") {
     last_seen_at: String(raw_state.last_seen_at || raw_state.lastSeenAt || ""),
     updated_at: String(raw_state.updated_at || raw_state.updatedAt || ""),
     typing_until: String(raw_state.typing_until || raw_state.typingUntil || ""),
+    delivered_message_activity_at: String(
+      raw_state.delivered_message_activity_at ||
+        raw_state.deliveredMessageActivityAt ||
+        "",
+    ),
+    delivered_at: String(raw_state.delivered_at || raw_state.deliveredAt || ""),
+    read_message_activity_at: String(
+      raw_state.read_message_activity_at || raw_state.readMessageActivityAt || "",
+    ),
+    read_at: String(raw_state.read_at || raw_state.readAt || ""),
     hidden_deleted_message_ids: normalize_hidden_deleted_ids(
       raw_state.hidden_deleted_message_ids || raw_state.hiddenDeletedMessageIds,
     ),
@@ -14696,6 +15126,53 @@ function set_presence_state(user_key, next_state, should_save = true) {
   return normalized_state;
 }
 
+function is_presence_online_for_notification(state) {
+  if (!state?.visible || !state?.active) {
+    return false;
+  }
+
+  const heartbeat_text = state.updated_at || state.last_seen_at || "";
+  const heartbeat_date = heartbeat_text ? new Date(heartbeat_text) : null;
+
+  if (!heartbeat_date || Number.isNaN(heartbeat_date.getTime())) {
+    return true;
+  }
+
+  return Date.now() - heartbeat_date.getTime() < 90 * 1000;
+}
+
+function maybe_notify_svetlana_online(previous_state, next_state) {
+  if (
+    current_user_profile?.user_key !== "diab" ||
+    next_state?.user_key !== "svetlana" ||
+    !is_presence_online_for_notification(next_state) ||
+    is_presence_online_for_notification(previous_state)
+  ) {
+    return;
+  }
+
+  const title = translate("presence_svetlana_online_title");
+  const body = translate("presence_svetlana_online_body");
+  const activity_key = build_live_notification_activity_key(
+    "presence_online",
+    "svetlana",
+    next_state.updated_at || next_state.last_seen_at || Date.now(),
+  );
+
+  run_once_for_live_notification_activity(activity_key, () => {
+    if (document.hidden || !document.hasFocus()) {
+      void schedule_activity_notification(title, body, activity_key);
+      return;
+    }
+
+    show_in_app_notification({
+      title,
+      body,
+      kind: "activity",
+    });
+  });
+}
+
 function apply_presence_state_from_message(message_item) {
   const attachment = get_presence_attachment(message_item);
 
@@ -14703,6 +15180,11 @@ function apply_presence_state_from_message(message_item) {
     return;
   }
 
+  const previous_state = normalize_presence_state(
+    presence_state_by_user[message_item.sender_key] ||
+      read_local_presence_state(message_item.sender_key),
+    message_item.sender_key,
+  );
   const state = set_presence_state(
     message_item.sender_key,
     {
@@ -14719,7 +15201,9 @@ function apply_presence_state_from_message(message_item) {
     );
   }
 
+  maybe_notify_svetlana_online(previous_state, state);
   update_presence_status_text();
+  render_live_messages();
 }
 
 function split_visible_live_messages(message_items) {
@@ -14826,6 +15310,136 @@ function get_live_message_display_text(message_item) {
   return String(message_item.text || "");
 }
 
+function get_message_receipt_state(message_item) {
+  if (
+    !current_user_profile ||
+    !message_item ||
+    message_item.sender_key !== current_user_profile.user_key ||
+    is_deleted_live_message(message_item)
+  ) {
+    return null;
+  }
+
+  const other_state =
+    presence_state_by_user[get_other_user_key()] ||
+    read_local_presence_state(get_other_user_key());
+  const message_activity_at = get_message_receipt_activity_timestamp(message_item);
+  const read_activity_at =
+    other_state.read_message_activity_at || other_state.last_seen_at || "";
+  const delivered_activity_at = other_state.delivered_message_activity_at || "";
+
+  if (compare_iso_timestamp(read_activity_at, message_activity_at) >= 0) {
+    return {
+      state: "read",
+      symbol: "✓✓",
+      at: other_state.read_at || other_state.last_seen_at || read_activity_at,
+    };
+  }
+
+  if (compare_iso_timestamp(delivered_activity_at, message_activity_at) >= 0) {
+    return {
+      state: "delivered",
+      symbol: "✓✓",
+      at: other_state.delivered_at || delivered_activity_at,
+    };
+  }
+
+  return {
+    state: "pending",
+    symbol: "✓",
+    at: "",
+  };
+}
+
+function get_message_receipt_text(receipt_state) {
+  if (!receipt_state) {
+    return "";
+  }
+
+  const date_text = receipt_state.at
+    ? format_message_receipt_time(receipt_state.at)
+    : "";
+
+  if (receipt_state.state === "read") {
+    return date_text
+      ? translate("message_receipt_read", date_text)
+      : translate("message_receipt_pending");
+  }
+
+  if (receipt_state.state === "delivered") {
+    return date_text
+      ? translate("message_receipt_delivered", date_text)
+      : translate("message_receipt_pending");
+  }
+
+  return translate("message_receipt_pending");
+}
+
+function get_message_receipt_label(receipt_state) {
+  const date_text = receipt_state?.at
+    ? format_message_receipt_time(receipt_state.at)
+    : "";
+
+  if (receipt_state?.state === "read" && date_text) {
+    return translate("message_receipt_read_label", date_text);
+  }
+
+  if (receipt_state?.state === "delivered" && date_text) {
+    return translate("message_receipt_delivered_label", date_text);
+  }
+
+  return translate("message_receipt_pending_label");
+}
+
+function close_message_receipt_popover() {
+  if (!active_message_receipt_popover) {
+    return;
+  }
+
+  active_message_receipt_popover.remove();
+  active_message_receipt_popover = null;
+}
+
+function show_message_receipt_popover(button, message_id) {
+  const message_item = current_live_messages.find((item) => item.id === message_id);
+  const receipt_state = get_message_receipt_state(message_item);
+
+  if (!button || !receipt_state) {
+    return;
+  }
+
+  if (active_message_receipt_popover?.parentElement === button) {
+    close_message_receipt_popover();
+    return;
+  }
+
+  close_message_receipt_popover();
+
+  const popover = document.createElement("span");
+  popover.className = "message_receipt_popover";
+  popover.textContent = get_message_receipt_text(receipt_state);
+  button.appendChild(popover);
+  active_message_receipt_popover = popover;
+}
+
+function render_message_receipt_status(message_item) {
+  const receipt_state = get_message_receipt_state(message_item);
+
+  if (!receipt_state) {
+    return null;
+  }
+
+  const button = document.createElement("button");
+  button.className = `message_receipt_button is_${receipt_state.state}`;
+  button.type = "button";
+  button.dataset.action = "show_message_receipt";
+  button.dataset.message_id = message_item.id;
+  button.textContent = receipt_state.symbol;
+  button.title = get_message_receipt_label(receipt_state);
+  button.setAttribute("aria-label", button.title);
+  return button;
+}
+
 function render_live_messages(scroll_to_bottom = false) {
   const scroll_anchor = get_live_messages_scroll_anchor();
   dom_references.live_messages_list.innerHTML = "";
@@ -14837,6 +15451,7 @@ function render_live_messages(scroll_to_bottom = false) {
   );
 
   if (!has_messages) {
+    live_messages_history_loaded = true;
     return;
   }
 
@@ -14874,6 +15489,12 @@ function render_live_messages(scroll_to_bottom = false) {
 
     message_meta.append(sender_label, time_label);
     message_element.appendChild(message_meta);
+
+    const receipt_status = render_message_receipt_status(message_item);
+
+    if (receipt_status) {
+      message_element.appendChild(receipt_status);
+    }
 
     const context_attachment = get_context_attachment(message_item.attachments);
 
@@ -15271,13 +15892,103 @@ function is_app_active_for_presence() {
   return !document.hidden;
 }
 
+function get_latest_incoming_message_activity_timestamp() {
+  if (!current_user_profile) {
+    return "";
+  }
+
+  return current_live_messages
+    .filter(
+      (message_item) =>
+        message_item.sender_key &&
+        message_item.sender_key !== current_user_profile.user_key &&
+        !is_deleted_live_message(message_item),
+    )
+    .map(get_message_receipt_activity_timestamp)
+    .filter(Boolean)
+    .sort()
+    .pop() || "";
+}
+
+function build_message_receipt_presence_patch(is_read = false) {
+  if (!current_user_profile) {
+    return {};
+  }
+
+  const latest_incoming_activity = get_latest_incoming_message_activity_timestamp();
+
+  if (!latest_incoming_activity) {
+    return {};
+  }
+
+  const current_state = get_current_presence_state_for_remote();
+  const now_text = new Date().toISOString();
+  const patch = {};
+
+  if (
+    compare_iso_timestamp(
+      latest_incoming_activity,
+      current_state?.delivered_message_activity_at,
+    ) > 0
+  ) {
+    patch.delivered_message_activity_at = latest_incoming_activity;
+    patch.delivered_at = now_text;
+  }
+
+  if (
+    is_read &&
+    compare_iso_timestamp(
+      latest_incoming_activity,
+      current_state?.read_message_activity_at,
+    ) > 0
+  ) {
+    patch.read_message_activity_at = latest_incoming_activity;
+    patch.read_at = now_text;
+  }
+
+  return patch;
+}
+
+function update_current_user_message_receipts({
+  read = false,
+  sync_remote = false,
+} = {}) {
+  if (!current_user_profile) {
+    return;
+  }
+
+  const patch = build_message_receipt_presence_patch(read);
+
+  if (Object.keys(patch).length === 0) {
+    return;
+  }
+
+  set_presence_state(
+    current_user_profile.user_key,
+    {
+      ...patch,
+      updated_at: new Date().toISOString(),
+    },
+    true,
+  );
+
+  if (sync_remote) {
+    void sync_presence_state_to_remote(true);
+  }
+}
+
 function get_current_presence_state_patch(is_active = !document.hidden) {
   const now_text = new Date().toISOString();
+  const receipt_patch = build_message_receipt_presence_patch(
+    Boolean(is_active && current_user_presence_visible),
+  );
+
   return {
     visible: current_user_presence_visible,
     active: Boolean(is_active && current_user_presence_visible),
     last_seen_at: now_text,
     updated_at: now_text,
+    ...receipt_patch,
     hidden_deleted_message_ids,
   };
 }
@@ -15366,6 +16077,10 @@ function build_presence_live_message(state) {
         last_seen_at: state.last_seen_at,
         updated_at: state.updated_at,
         typing_until: state.typing_until,
+        delivered_message_activity_at: state.delivered_message_activity_at,
+        delivered_at: state.delivered_at,
+        read_message_activity_at: state.read_message_activity_at,
+        read_at: state.read_at,
         hidden_deleted_message_ids: state.hidden_deleted_message_ids,
       },
     ],
@@ -15562,8 +16277,43 @@ function get_presence_status_text() {
   );
 }
 
+function render_presence_status_text(status_text) {
+  const presence_bar = dom_references.message_presence_bar;
+
+  if (!presence_bar) {
+    return;
+  }
+
+  const typing_text = translate("presence_typing");
+  const is_typing = status_text === typing_text;
+  presence_bar.classList.toggle("is_typing", is_typing);
+  presence_bar.setAttribute("aria-label", status_text);
+
+  if (!is_typing) {
+    presence_bar.textContent = status_text;
+    return;
+  }
+
+  const base_text = typing_text.replace(/\.\.\.$/, "");
+  const label = document.createElement("span");
+  const dots = document.createElement("span");
+
+  label.className = "typing_status_label";
+  label.textContent = base_text;
+  dots.className = "typing_status_dots";
+
+  [".", ".", "."].forEach((dot_text) => {
+    const dot = document.createElement("span");
+    dot.textContent = dot_text;
+    dots.appendChild(dot);
+  });
+
+  presence_bar.textContent = "";
+  presence_bar.append(label, dots);
+}
+
 function update_presence_status_text() {
-  set_text(dom_references.message_presence_bar, get_presence_status_text());
+  render_presence_status_text(get_presence_status_text());
 
   if (dom_references.message_visibility_button) {
     const label = current_user_presence_visible
@@ -15718,6 +16468,11 @@ function handle_live_message_action(event) {
 
   if (action_button.dataset.action === "react_live_message") {
     open_live_message_reaction_picker(event, message_id);
+    return;
+  }
+
+  if (action_button.dataset.action === "show_message_receipt") {
+    show_message_receipt_popover(action_button, message_id);
     return;
   }
 
@@ -15921,6 +16676,25 @@ function format_message_time(date_value) {
     month: "short",
     day: "numeric",
   });
+}
+
+function format_message_receipt_time(date_value) {
+  const date = new Date(date_value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const day_text = String(date.getDate()).padStart(2, "0");
+  const month_text = date.toLocaleString(translate("locale"), {
+    month: "long",
+  });
+  const time_text = date.toLocaleTimeString(translate("locale"), {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  return `${day_text} ${month_text}, ${date.getFullYear()} at ${time_text}`;
 }
 
 function extract_message_segments_from_composer() {
