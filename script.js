@@ -3061,10 +3061,10 @@ async function restore_existing_session() {
 
       if (error) {
         await supabase_client.auth.signOut({ scope: "local" }).catch(() => {});
-        return false;
-      }
-
-      if (!error && data.session?.user) {
+        current_auth_user_id = "";
+        current_auth_access_token = "";
+        current_auth_refresh_token = "";
+      } else if (data.session?.user) {
         const restored_profile = get_profile_from_supabase_user(
           data.session.user,
         );
@@ -3123,6 +3123,7 @@ async function restore_existing_session() {
       update_auth_restore_screen(saved_profile);
       current_user_profile = saved_profile;
       current_auth_user_id = current_auth_user_id || "";
+      await restore_supabase_session_for_saved_profile(saved_profile);
       load_local_music_tracks();
       await load_shared_music_tracks();
       start_shared_music_sync_watch();
@@ -3148,6 +3149,48 @@ async function restore_existing_session() {
   }
 
   return false;
+}
+
+async function restore_supabase_session_for_saved_profile(saved_profile) {
+  if (!is_supabase_enabled() || current_auth_user_id || !saved_profile?.user_key) {
+    return;
+  }
+
+  const local_user = allowed_users[saved_profile.user_key];
+  const supabase_user = get_supabase_user_config(saved_profile.user_key);
+
+  if (!local_user?.password || !supabase_user?.email) {
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase_client.auth.signInWithPassword({
+      email: supabase_user.email,
+      password: local_user.password,
+    });
+
+    if (error || !data.user) {
+      log_app_error("supabase_saved_session_restore_failed", error || "missing_user");
+      return;
+    }
+
+    current_auth_user_id = data.user.id;
+    current_auth_access_token = String(data.session?.access_token || "");
+    current_auth_refresh_token = String(
+      data.session?.refresh_token || current_auth_refresh_token || "",
+    );
+    current_user_profile = {
+      ...saved_profile,
+      email: saved_profile.email || supabase_user.email,
+    };
+    pending_native_background_auth = {
+      email: supabase_user.email,
+      password: local_user.password,
+    };
+    await ensure_supabase_profile_row(current_user_profile);
+  } catch (error) {
+    log_app_error("supabase_saved_session_restore_threw", error);
+  }
 }
 
 async function ensure_supabase_profile_row(user_profile) {
