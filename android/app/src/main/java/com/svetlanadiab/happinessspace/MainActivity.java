@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(BackgroundSyncPlugin.class);
         registerPlugin(AppUpdaterPlugin.class);
+        registerPlugin(MicrophonePermissionPlugin.class);
         super.onCreate(savedInstanceState);
         BackgroundMessageWorker.schedule(this);
         BackgroundSyncService.start(this);

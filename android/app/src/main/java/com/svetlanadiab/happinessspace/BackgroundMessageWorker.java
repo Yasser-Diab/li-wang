@@ -61,6 +61,7 @@ public class BackgroundMessageWorker extends Worker {
     private static final String NOTIFIED_ACTIVITY_KEYS = "notified_activity_keys";
     private static final String SVETLANA_ONLINE_STATE = "svetlana_online_state";
     private static final String SVETLANA_ONLINE_AT = "svetlana_online_at";
+    private static final String TOKEN_SOURCE_NATIVE = "native_password";
     private static final String UPDATE_SOURCE_URL =
             "https://api.github.com/repos/Yasser-Diab/li-wang/releases?per_page=20";
     private static final String[] UPDATE_FALLBACK_SOURCE_URLS = new String[] {
@@ -163,11 +164,7 @@ public class BackgroundMessageWorker extends Worker {
                 String receiptAt = messageReceiptTimestamp(message);
                 boolean shouldMarkDelivered = shouldMarkDelivered(message, userKey);
 
-                if (
-                        !isSystemMessage(message) &&
-                                !activityAt.isEmpty() &&
-                                compareTimestamp(activityAt, newestSeenAt) > 0
-                ) {
+                if (!activityAt.isEmpty() && compareTimestamp(activityAt, newestSeenAt) > 0) {
                     newestSeenAt = activityAt;
                 }
 
@@ -881,13 +878,22 @@ public class BackgroundMessageWorker extends Worker {
         String accessToken = prefs.getString("access_token", "");
         HttpResponse response = requestMessages(supabaseUrl, anonKey, accessToken, roomSlug, lastSeenAt);
 
-        if ((response.code == 401 || response.code == 403) && !prefs.getString("refresh_token", "").isEmpty()) {
+        boolean canRefreshNativeSession =
+                TOKEN_SOURCE_NATIVE.equals(prefs.getString("token_source", "")) &&
+                        !prefs.getString("refresh_token", "").isEmpty();
+
+        if ((response.code == 401 || response.code == 403) && canRefreshNativeSession) {
             SessionTokens tokens = refreshSession(supabaseUrl, anonKey, prefs.getString("refresh_token", ""));
             prefs.edit()
                     .putString("access_token", tokens.accessToken)
                     .putString("refresh_token", tokens.refreshToken)
+                    .putString("token_source", TOKEN_SOURCE_NATIVE)
                     .apply();
             response = requestMessages(supabaseUrl, anonKey, tokens.accessToken, roomSlug, lastSeenAt);
+        }
+
+        if ((response.code == 401 || response.code == 403) && !canRefreshNativeSession) {
+            return "[]";
         }
 
         if (response.code < 200 || response.code >= 300) {
@@ -910,8 +916,14 @@ public class BackgroundMessageWorker extends Worker {
         endpoint.append("?select=id,sender_key,sender_name,text,created_at,edited_at,attachments");
         endpoint.append("&room_slug=");
         endpoint.append(urlEncode("eq." + roomSlug));
-
-        endpoint.append("&order=created_at.desc&limit=500");
+        String normalizedLastSeenAt = lastSeenAt == null ? "" : lastSeenAt.trim();
+        if (normalizedLastSeenAt.isEmpty()) {
+            endpoint.append("&order=created_at.desc&limit=120");
+        } else {
+            endpoint.append("&created_at=");
+            endpoint.append(urlEncode("gt." + normalizedLastSeenAt));
+            endpoint.append("&order=created_at.asc&limit=80");
+        }
 
         HttpURLConnection connection = (HttpURLConnection) new URL(endpoint.toString()).openConnection();
         connection.setRequestMethod("GET");

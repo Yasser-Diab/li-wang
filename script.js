@@ -1700,6 +1700,7 @@ let current_room_slug = supabase_room_slug_default;
 let current_auth_user_id = "";
 let current_auth_access_token = "";
 let current_auth_refresh_token = "";
+let pending_native_background_auth = null;
 let password_recovery_mode_active = false;
 let last_exit_sound_time = 0;
 let active_overlay_name = "";
@@ -3285,6 +3286,7 @@ async function configure_background_message_sync(enabled = true) {
         new Date(get_live_message_activity_timestamp(left_item)),
     )[0];
   const session_tokens = await get_supabase_session_tokens();
+  const native_background_auth = pending_native_background_auth;
   const native_cycle_data = current_cycle_data
     ? normalize_cycle_data_store(current_cycle_data)
     : null;
@@ -3295,7 +3297,9 @@ async function configure_background_message_sync(enabled = true) {
       supabaseUrl: normalize_supabase_project_url(supabase_config.url),
       anonKey: String(supabase_config.anon_key || ""),
       accessToken: session_tokens.accessToken,
-      refreshToken: session_tokens.refreshToken,
+      refreshToken: "",
+      nativeAuthEmail: native_background_auth?.email || "",
+      nativeAuthPassword: native_background_auth?.password || "",
       roomSlug: current_room_slug,
       userKey: current_user_profile?.user_key || "",
       appUpdateSourceUrl: get_app_update_source_url(),
@@ -3306,6 +3310,9 @@ async function configure_background_message_sync(enabled = true) {
         : "",
       cycleData: native_cycle_data ? JSON.stringify(native_cycle_data) : "",
     });
+    if (native_background_auth) {
+      pending_native_background_auth = null;
+    }
 
     if (
       enabled &&
@@ -7365,6 +7372,10 @@ async function authenticate_user(username, password) {
         current_auth_refresh_token = String(
           data.session?.refresh_token || current_auth_refresh_token || "",
         );
+        pending_native_background_auth = {
+          email: supabase_user.email,
+          password,
+        };
         const user_profile = build_user_profile(username, supabase_user.email);
         await ensure_supabase_profile_row(user_profile);
         return user_profile;
@@ -7410,6 +7421,7 @@ function handle_logout() {
   current_auth_user_id = "";
   current_auth_access_token = "";
   current_auth_refresh_token = "";
+  pending_native_background_auth = null;
   local_music_tracks = [];
   shared_music_tracks = [];
   current_live_messages = [];
@@ -15920,6 +15932,17 @@ function maybe_notify_svetlana_online(previous_state, next_state) {
   });
 }
 
+function get_presence_message_render_signature(state) {
+  const normalized_state = normalize_presence_state(state || {});
+  return [
+    normalized_state.delivered_message_activity_at,
+    normalized_state.delivered_at,
+    normalized_state.read_message_activity_at,
+    normalized_state.read_at,
+    normalized_state.hidden_deleted_message_ids.join(","),
+  ].join("|");
+}
+
 function apply_presence_state_from_message(message_item) {
   const attachment = get_presence_attachment(message_item);
 
@@ -15932,6 +15955,8 @@ function apply_presence_state_from_message(message_item) {
       read_local_presence_state(message_item.sender_key),
     message_item.sender_key,
   );
+  const previous_render_signature =
+    get_presence_message_render_signature(previous_state);
   const state = set_presence_state(
     message_item.sender_key,
     {
@@ -15950,7 +15975,11 @@ function apply_presence_state_from_message(message_item) {
 
   maybe_notify_svetlana_online(previous_state, state);
   update_presence_status_text();
-  render_live_messages();
+  if (
+    previous_render_signature !== get_presence_message_render_signature(state)
+  ) {
+    render_live_messages();
+  }
 }
 
 function split_visible_live_messages(message_items) {
@@ -17719,6 +17748,24 @@ function reset_voice_message_recorder() {
   update_live_message_action_labels();
 }
 
+async function ensure_native_microphone_permission() {
+  const microphone_permission_plugin = get_capacitor_plugin(
+    "MicrophonePermission",
+  );
+
+  if (!microphone_permission_plugin?.ensure) {
+    return true;
+  }
+
+  try {
+    const result = await microphone_permission_plugin.ensure();
+    return result?.granted !== false;
+  } catch (error) {
+    log_app_error("native_microphone_permission_failed", error);
+    return false;
+  }
+}
+
 async function finish_voice_message_recording(mime_type) {
   const should_send = voice_message_should_send;
   const chunks = [...voice_message_chunks];
@@ -17769,6 +17816,13 @@ async function start_voice_message_recording() {
   }
 
   try {
+    const native_permission_granted =
+      await ensure_native_microphone_permission();
+
+    if (!native_permission_granted) {
+      throw new Error("microphone_permission_denied");
+    }
+
     let stream = null;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
