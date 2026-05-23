@@ -140,7 +140,13 @@ public class BackgroundMessageWorker extends Worker {
             return true;
         }
 
-        maybeShowAppUpdateNotification(appContext, prefs);
+        long webAppActiveAt = prefs.getLong("web_app_active_at", 0L);
+        boolean webAppActive =
+                prefs.getBoolean("web_app_active", false) &&
+                        webAppActiveAt > 0L &&
+                        System.currentTimeMillis() - webAppActiveAt < TimeUnit.SECONDS.toMillis(45);
+
+        maybeShowAppUpdateNotification(appContext, prefs, webAppActive);
 
         String supabaseUrl = prefs.getString("supabase_url", "");
         String anonKey = prefs.getString("anon_key", "");
@@ -186,6 +192,11 @@ public class BackgroundMessageWorker extends Worker {
                 }
 
                 if (!firstSync && compareTimestamp(activityAt, lastSeenAt) > 0) {
+                    if (webAppActive && shouldNotifyEvent(event, userKey)) {
+                        rememberNotificationActivity(prefs, "event:" + event.optString("id", ""));
+                        continue;
+                    }
+
                     notifyForEvent(appContext, prefs, event, userKey);
                 }
             }
@@ -220,7 +231,7 @@ public class BackgroundMessageWorker extends Worker {
                 }
             }
 
-            maybeShowCycleReminder(appContext, prefs);
+            maybeShowCycleReminder(appContext, prefs, webAppActive);
             return true;
         } catch (Exception error) {
             return false;
@@ -500,7 +511,11 @@ public class BackgroundMessageWorker extends Worker {
                 text.equals(SHARED_ACTIVITY_MARKER);
     }
 
-    private static void maybeShowAppUpdateNotification(Context context, SharedPreferences prefs) {
+    private static void maybeShowAppUpdateNotification(
+            Context context,
+            SharedPreferences prefs,
+            boolean webAppActive
+    ) {
         long now = System.currentTimeMillis();
         long lastUpdateCheckAt = prefs.getLong(LAST_UPDATE_CHECK_AT, 0);
 
@@ -525,6 +540,10 @@ public class BackgroundMessageWorker extends Worker {
             }
 
             if (candidate.versionName.equals(prefs.getString(NOTIFIED_UPDATE_VERSION, ""))) {
+                return;
+            }
+
+            if (webAppActive) {
                 return;
             }
 
@@ -1195,7 +1214,11 @@ public class BackgroundMessageWorker extends Worker {
         return builder.toString();
     }
 
-    private static void maybeShowCycleReminder(Context context, SharedPreferences prefs) {
+    private static void maybeShowCycleReminder(
+            Context context,
+            SharedPreferences prefs,
+            boolean webAppActive
+    ) {
         String cycleDataText = prefs.getString("cycle_data", "");
         if (cycleDataText.isEmpty()) {
             return;
@@ -1270,6 +1293,10 @@ public class BackgroundMessageWorker extends Worker {
             }
 
             if (reminderKey.isEmpty() || reminderKey.equals(prefs.getString("last_cycle_reminder_key", ""))) {
+                return;
+            }
+
+            if (webAppActive) {
                 return;
             }
 

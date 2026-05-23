@@ -68,6 +68,9 @@ public class BackgroundSyncPlugin extends Plugin {
         editor.putString("cycle_data", call.getString("cycleData", ""));
         editor.putString("app_update_source_url", call.getString("appUpdateSourceUrl", ""));
         editor.putString("app_version_name", call.getString("appVersionName", ""));
+        boolean appActive = call.getBoolean("appActive", false);
+        editor.putBoolean("web_app_active", appActive);
+        editor.putLong("web_app_active_at", appActive ? System.currentTimeMillis() : 0L);
         Integer appVersionCode = call.getInt("appVersionCode");
         if (appVersionCode != null) {
             editor.putInt("app_version_code", appVersionCode);
@@ -147,6 +150,22 @@ public class BackgroundSyncPlugin extends Plugin {
 
         JSObject result = new JSObject();
         result.put("enabled", enabled);
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void setAppActive(PluginCall call) {
+        Context context = getContext();
+        SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean active = call.getBoolean("active", false);
+
+        prefs.edit()
+                .putBoolean("web_app_active", active)
+                .putLong("web_app_active_at", active ? System.currentTimeMillis() : 0L)
+                .apply();
+
+        JSObject result = new JSObject();
+        result.put("active", active);
         call.resolve(result);
     }
 

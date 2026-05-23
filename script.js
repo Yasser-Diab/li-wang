@@ -53,8 +53,8 @@ const supabase_table_names = {
 const supabase_media_bucket_name = "app-media";
 const shared_music_bucket_name_default = "shared-music";
 const shared_music_table_name_default = "shared_music_files";
-const app_version_name = "2.068";
-const app_version_code = 2068;
+const app_version_name = "2.069";
+const app_version_code = 2069;
 const app_update_notified_version_key = "sveta_app_update_notified_version";
 const app_update_github_repo = "Yasser-Diab/li-wang";
 const app_update_releases_url = `https://api.github.com/repos/${app_update_github_repo}/releases?per_page=20`;
@@ -1719,6 +1719,7 @@ let message_search_active_index = -1;
 let active_message_receipt_popover = null;
 let presence_interval_id = null;
 let presence_sync_timeout_id = null;
+let presence_refresh_in_flight = false;
 let presence_state_by_user = {};
 let current_user_presence_visible = true;
 let biometric_auto_prompt_attempted = false;
@@ -1774,6 +1775,7 @@ let shared_music_sync_timeout_id = null;
 let pending_cycle_change_type = "";
 let typing_idle_timeout_id = null;
 let last_typing_sync_time = 0;
+let last_presence_status_render_key = "";
 let in_app_notification_layer = null;
 let birthday_page_effect_key = "";
 let cycle_calendar_swipe_state = null;
@@ -3425,6 +3427,7 @@ async function configure_background_message_sync(enabled = true) {
       appUpdateSourceUrl: get_app_update_source_url(),
       appVersionName: app_update_state.current_version_name || app_version_name,
       appVersionCode: app_update_state.current_version_code || app_version_code,
+      appActive: is_app_visible_to_user(),
       lastMessageCreatedAt: latest_message
         ? get_live_message_activity_timestamp(latest_message)
         : "",
@@ -3652,6 +3655,22 @@ async function enqueue_notification_event(event_type, options = {}) {
       .upsert(event_item, { onConflict: "id" });
   } catch (error) {
     log_app_error("notification_event_enqueue_failed", error);
+  }
+}
+
+async function set_native_background_app_active(is_active = is_app_visible_to_user()) {
+  const background_sync_plugin = get_capacitor_plugin("BackgroundSync");
+
+  if (!background_sync_plugin?.setAppActive) {
+    return;
+  }
+
+  try {
+    await background_sync_plugin.setAppActive({
+      active: Boolean(is_active && current_user_profile),
+    });
+  } catch (error) {
+    log_app_error("background_sync_active_state_failed", error);
   }
 }
 
@@ -5024,18 +5043,24 @@ function bind_event_handlers() {
   window.addEventListener("focus", () => {
     mark_current_user_seen(is_app_active_for_presence(), true);
     update_presence_status_text();
+    void set_native_background_app_active(true);
   });
   window.addEventListener("beforeunload", () => {
-    mark_current_user_seen(false, true);
+    mark_current_user_seen(false, false);
+    void set_native_background_app_active(false);
+    void sync_presence_state_to_remote(true, { keepalive: true });
     close_live_messages_stream();
   });
   window.addEventListener("pagehide", () => {
     native_app_is_in_background = true;
-    mark_current_user_seen(false, true);
+    mark_current_user_seen(false, false);
+    void set_native_background_app_active(false);
+    void sync_presence_state_to_remote(true, { keepalive: true });
     pause_background_music_for_lifecycle();
   });
   window.addEventListener("pageshow", () => {
     native_app_is_in_background = false;
+    void set_native_background_app_active(true);
     resume_background_music_from_lifecycle();
   });
   window.addEventListener("resize", handle_visual_viewport_change);
@@ -12186,13 +12211,16 @@ function handle_app_visibility_change() {
   if (document.hidden) {
     native_app_is_in_background = true;
     mark_current_user_typing(false);
-    mark_current_user_seen(false, true);
+    mark_current_user_seen(false, false);
+    void set_native_background_app_active(false);
+    void sync_presence_state_to_remote(true, { keepalive: true });
     pause_background_music_for_lifecycle();
     return;
   }
 
   native_app_is_in_background = false;
   mark_current_user_seen(is_app_active_for_presence(), true);
+  void set_native_background_app_active(true);
   resume_background_music_from_lifecycle();
 }
 
@@ -12207,22 +12235,28 @@ function bind_capacitor_app_lifecycle() {
     if (state?.isActive) {
       native_app_is_in_background = false;
       mark_current_user_seen(true, true);
+      void set_native_background_app_active(true);
       resume_background_music_from_lifecycle();
       return;
     }
 
     native_app_is_in_background = true;
-    mark_current_user_seen(false, true);
+    mark_current_user_seen(false, false);
+    void set_native_background_app_active(false);
+    void sync_presence_state_to_remote(true, { keepalive: true });
     pause_background_music_for_lifecycle();
   });
   app_plugin.addListener("pause", () => {
     native_app_is_in_background = true;
-    mark_current_user_seen(false, true);
+    mark_current_user_seen(false, false);
+    void set_native_background_app_active(false);
+    void sync_presence_state_to_remote(true, { keepalive: true });
     pause_background_music_for_lifecycle();
   });
   app_plugin.addListener("resume", () => {
     native_app_is_in_background = false;
     mark_current_user_seen(true, true);
+    void set_native_background_app_active(true);
     resume_background_music_from_lifecycle();
   });
 }
@@ -16128,12 +16162,6 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
     if (!has_live_notification_activity(message_activity_key)) {
       remember_live_notification_activity(message_activity_key);
       play_receive_message_sound();
-
-      if (document.hidden || !document.hasFocus()) {
-        void schedule_message_notification(message_item);
-      } else {
-        show_in_app_message_notification(message_item);
-      }
     }
   }
 
@@ -16146,12 +16174,6 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
 
     if (!has_live_notification_activity(reaction_activity_key)) {
       remember_live_notification_activity(reaction_activity_key);
-
-      if (document.hidden || !document.hasFocus()) {
-        void schedule_reaction_notification(message_item, reaction_notification);
-      } else {
-        show_in_app_reaction_notification(message_item, reaction_notification);
-      }
     }
   }
 
@@ -16379,14 +16401,7 @@ function maybe_notify_svetlana_online(previous_state, next_state) {
   run_once_for_live_notification_activity(activity_key, () => {
     if (document.hidden || !document.hasFocus()) {
       void schedule_activity_notification(title, body, activity_key);
-      return;
     }
-
-    show_in_app_notification({
-      title,
-      body,
-      kind: "activity",
-    });
   });
 }
 
@@ -17165,8 +17180,12 @@ function load_presence_visibility() {
   set_presence_state(current_user_profile?.user_key || "guest", current_state);
 }
 
+function is_app_visible_to_user() {
+  return Boolean(!document.hidden && !native_app_is_in_background);
+}
+
 function is_app_active_for_presence() {
-  return !document.hidden;
+  return is_app_visible_to_user();
 }
 
 function get_latest_incoming_message_activity_timestamp() {
@@ -17409,7 +17428,7 @@ function get_current_presence_state_for_remote() {
   );
 }
 
-async function sync_presence_state_to_remote(immediate = false) {
+async function sync_presence_state_to_remote(immediate = false, options = {}) {
   if (!current_user_profile) {
     return;
   }
@@ -17456,6 +17475,33 @@ async function sync_presence_state_to_remote(immediate = false) {
   }
 
   try {
+    if (options.keepalive && current_auth_access_token) {
+      const supabase_config = window.supabase_public_config || {};
+      const supabase_url = normalize_supabase_project_url(
+        supabase_config.url,
+      );
+      const anon_key = String(supabase_config.anon_key || "");
+
+      if (supabase_url && anon_key) {
+        await fetch(
+          `${supabase_url}/rest/v1/${supabase_table_names.live_messages}?on_conflict=id`,
+          {
+            method: "POST",
+            keepalive: true,
+            headers: {
+              apikey: anon_key,
+              Authorization: `Bearer ${current_auth_access_token}`,
+              "Content-Type": "application/json",
+              Prefer: "resolution=merge-duplicates",
+            },
+            body: JSON.stringify(presence_message),
+          },
+        );
+        maybe_enqueue_presence_online_event(state);
+        return;
+      }
+    }
+
     await supabase_client
       .from(supabase_table_names.live_messages)
       .upsert(presence_message, { onConflict: "id" });
@@ -17465,9 +17511,47 @@ async function sync_presence_state_to_remote(immediate = false) {
   }
 }
 
+async function refresh_presence_state_from_remote() {
+  if (
+    presence_refresh_in_flight ||
+    !current_user_profile ||
+    !is_supabase_enabled() ||
+    !current_auth_user_id
+  ) {
+    return;
+  }
+
+  presence_refresh_in_flight = true;
+
+  try {
+    const presence_ids = ["svetlana", "diab"].map((user_key) =>
+      create_presence_message_id(user_key),
+    );
+    const { data, error } = await supabase_client
+      .from(supabase_table_names.live_messages)
+      .select("id,room_slug,sender_key,sender_name,text,created_at,edited_at,attachments")
+      .eq("room_slug", current_room_slug)
+      .in("id", presence_ids);
+
+    if (error) {
+      throw error;
+    }
+
+    (Array.isArray(data) ? data : [])
+      .map(map_live_message_row_to_item)
+      .forEach(apply_presence_state_from_message);
+  } catch (error) {
+    log_app_error("presence_refresh_failed", error);
+  } finally {
+    presence_refresh_in_flight = false;
+  }
+}
+
 function start_presence_updates() {
   load_presence_visibility();
   mark_current_user_seen(is_app_active_for_presence(), true);
+  void set_native_background_app_active(is_app_visible_to_user());
+  void refresh_presence_state_from_remote();
   update_presence_status_text();
 
   if (presence_interval_id) {
@@ -17476,12 +17560,16 @@ function start_presence_updates() {
 
   presence_interval_id = window.setInterval(() => {
     mark_current_user_seen(is_app_active_for_presence(), true);
+    void set_native_background_app_active(is_app_visible_to_user());
+    void refresh_presence_state_from_remote();
     update_presence_status_text();
   }, 10 * 1000);
 }
 
 function stop_presence_updates() {
-  mark_current_user_seen(false, true);
+  mark_current_user_seen(false, false);
+  void set_native_background_app_active(false);
+  void sync_presence_state_to_remote(true, { keepalive: true });
 
   if (presence_interval_id) {
     window.clearInterval(presence_interval_id);
@@ -17533,13 +17621,14 @@ function get_presence_status_text() {
     return translate("presence_typing");
   }
 
-  const last_seen_text = other_state.last_seen_at || "";
+  const last_seen_text =
+    other_state.last_seen_at || other_state.updated_at || other_state.read_at || "";
   const last_seen_date = last_seen_text ? new Date(last_seen_text) : null;
   const updated_text = other_state.updated_at || last_seen_text;
   const updated_date = updated_text ? new Date(updated_text) : last_seen_date;
 
   if (!last_seen_date || Number.isNaN(last_seen_date.getTime())) {
-    return translate("presence_waiting");
+    return other_state.active ? translate("presence_online") : translate("presence_waiting");
   }
 
   const now = new Date();
@@ -17558,7 +17647,7 @@ function get_presence_status_text() {
   );
   const time_text = format_presence_time(last_seen_date);
 
-  if (other_state.active && heartbeat_ms >= 0 && heartbeat_ms < 25 * 1000) {
+  if (other_state.active && heartbeat_ms >= 0 && heartbeat_ms < 55 * 1000) {
     return translate("presence_online");
   }
 
@@ -17597,6 +17686,13 @@ function render_presence_status_text(status_text) {
 
   const typing_text = translate("presence_typing");
   const is_typing = status_text === typing_text;
+  const render_key = `${is_typing ? "typing" : "text"}:${status_text}`;
+
+  if (last_presence_status_render_key === render_key) {
+    return;
+  }
+
+  last_presence_status_render_key = render_key;
   presence_bar.classList.toggle("is_typing", is_typing);
   presence_bar.setAttribute("aria-label", status_text);
 

@@ -1915,13 +1915,16 @@ body.panel_fullscreen_open .language_toggle_button .flag_icon {
   margin-top: 5px;
   border-top: 1px solid rgba(201, 164, 93, 0.38);
   border-bottom: 1px solid rgba(201, 164, 93, 0.28);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: var(--gold_bright2);
   font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.02em;
   text-align: center;
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .message_presence_bar.is_typing {
@@ -1931,7 +1934,9 @@ body.panel_fullscreen_open .language_toggle_button .flag_icon {
 .typing_status_dots {
   display: inline-flex;
   align-items: flex-end;
-  margin-left: 1px;
+  flex: 0 0 auto;
+  margin-left: 2px;
+  line-height: 1;
 }
 
 .typing_status_dots span {
