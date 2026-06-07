@@ -1,27 +1,41 @@
 import { createClient } from "@supabase/supabase-js";
 
-const env = (name, fallback = "") => String(process.env[name] || fallback).trim();
+const env = (name, fallback = "") =>
+  String(process.env[name] || fallback).trim();
 
 const roomSlug = env("ROOM_SLUG", "svetlana-diab");
-const migrationEmail = env("SUPABASE_MIGRATION_EMAIL", "yasserdiabhassan@gmail.com");
+const migrationEmail = env(
+  "SUPABASE_MIGRATION_EMAIL",
+  "yasserdiabhassan@gmail.com",
+);
 const migrationPassword = env("SUPABASE_MIGRATION_PASSWORD", "Wolf&Luna");
 const migrationUserKey = env("SUPABASE_MIGRATION_USER_KEY", "diab");
-const migrationDisplayName = migrationUserKey === "svetlana" ? "Svetlana" : "Diab";
+const migrationDisplayName =
+  migrationUserKey === "svetlana" ? "Svetlana" : "Diab";
 const migrateMedia = env("MIGRATE_MEDIA", "1") !== "0";
 
-const oldSupabaseUrl = env("OLD_SUPABASE_URL", "https://raggjtzizfcfoaxvkgov.supabase.co");
+const oldSupabaseUrl = env(
+  "OLD_SUPABASE_URL",
+  "https://raggjtzizfcfoaxvkgov.supabase.co",
+);
 const oldSupabaseAnonKey = env(
   "OLD_SUPABASE_ANON_KEY",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJyYWdnanR6aXpmY2ZvYXh2a2dvdiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzc4NjQ4MDQwLCJleHAiOjIwOTQyMjQwNDB9.qsNj79Ki4YcqzLQleVYEyIXj0ZeMaM-k72skTV2YeEs",
 );
-const newSupabaseUrl = env("NEW_SUPABASE_URL", "https://uwxjtarrgkznkollwqko.supabase.co");
+const newSupabaseUrl = env(
+  "NEW_SUPABASE_URL",
+  "https://uwxjtarrgkznkollwqko.supabase.co",
+);
 const newSupabaseAnonKey = env(
   "NEW_SUPABASE_ANON_KEY",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJ1d3hqdGFycmdrem5rb2xsd3FrbyIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzc5NTQ3MDcxLCJleHAiOjIwOTUxMjMwNzF9.49VnXStaT5zbXOBrWMMzOBsGZItludpv-G3scEAkf18",
 );
 
 const oldSharedMusicUrl = env("OLD_SHARED_MUSIC_SUPABASE_URL", oldSupabaseUrl);
-const oldSharedMusicAnonKey = env("OLD_SHARED_MUSIC_SUPABASE_ANON_KEY", oldSupabaseAnonKey);
+const oldSharedMusicAnonKey = env(
+  "OLD_SHARED_MUSIC_SUPABASE_ANON_KEY",
+  oldSupabaseAnonKey,
+);
 
 const appMediaBucket = "app-media";
 const sharedMusicBucket = "shared-music";
@@ -53,7 +67,9 @@ async function signIn(client, label) {
   });
 
   if (error || !data.user) {
-    throw new Error(`${label} sign-in failed: ${error?.message || "missing user"}`);
+    throw new Error(
+      `${label} sign-in failed: ${error?.message || "missing user"}`,
+    );
   }
 
   return data.user;
@@ -75,16 +91,34 @@ async function ensureNewProfile(client, user) {
   }
 }
 
-async function fetchRows(client, tableName, { roomScoped = true, orderBy = "created_at" } = {}) {
+function isMissingTableError(error) {
+  const message = String(error?.message || "").toLowerCase();
+
+  return (
+    error?.code === "42P01" ||
+    message.includes("could not find the table") ||
+    message.includes("does not exist")
+  );
+}
+
+async function fetchRows(
+  client,
+  tableName,
+  { roomScoped = true, orderBy = "created_at" } = {},
+) {
   const pageSize = 1000;
   const rows = [];
 
   for (let from = 0; ; from += pageSize) {
-    let query = client.from(tableName).select("*").range(from, from + pageSize - 1);
+    let query = client
+      .from(tableName)
+      .select("*")
+      .range(from, from + pageSize - 1);
 
     if (roomScoped) {
       query = query.eq("room_slug", roomSlug);
     }
+
     if (orderBy) {
       query = query.order(orderBy, { ascending: true });
     }
@@ -92,6 +126,13 @@ async function fetchRows(client, tableName, { roomScoped = true, orderBy = "crea
     const { data, error } = await query;
 
     if (error) {
+      if (isMissingTableError(error)) {
+        log(
+          `${tableName}: skipped because table does not exist in source project`,
+        );
+        return [];
+      }
+
       throw new Error(`${tableName} read failed: ${error.message}`);
     }
 
@@ -114,7 +155,9 @@ async function upsertRows(client, tableName, rows, onConflict) {
 
   for (let index = 0; index < rows.length; index += 100) {
     const chunk = rows.slice(index, index + 100);
-    const { error } = await client.from(tableName).upsert(chunk, { onConflict });
+    const { error } = await client
+      .from(tableName)
+      .upsert(chunk, { onConflict });
 
     if (error) {
       throw new Error(`${tableName} write failed: ${error.message}`);
@@ -130,7 +173,11 @@ function isNewProjectUrl(value) {
 
 function shouldCopyMediaSource(value) {
   const source = String(value || "");
-  return Boolean(source && migrateMedia && (source.startsWith("data:") || !isNewProjectUrl(source)));
+  return Boolean(
+    source &&
+    migrateMedia &&
+    (source.startsWith("data:") || !isNewProjectUrl(source)),
+  );
 }
 
 function parseDataUrl(dataUrl) {
@@ -198,7 +245,10 @@ async function readMediaSource(source, fallbackMimeType) {
   }
 
   const bytes = Buffer.from(await response.arrayBuffer());
-  const mimeType = response.headers.get("content-type") || fallbackMimeType || "application/octet-stream";
+  const mimeType =
+    response.headers.get("content-type") ||
+    fallbackMimeType ||
+    "application/octet-stream";
   return { bytes, mimeType };
 }
 
@@ -221,16 +271,20 @@ async function copyMediaToNewStorage({
       return null;
     }
 
-    const { error } = await targetClient.storage.from(bucket).upload(storagePath, media.bytes, {
-      upsert: true,
-      contentType: media.mimeType || fallbackMimeType,
-    });
+    const { error } = await targetClient.storage
+      .from(bucket)
+      .upload(storagePath, media.bytes, {
+        upsert: true,
+        contentType: media.mimeType || fallbackMimeType,
+      });
 
     if (error) {
       throw error;
     }
 
-    const { data } = targetClient.storage.from(bucket).getPublicUrl(storagePath);
+    const { data } = targetClient.storage
+      .from(bucket)
+      .getPublicUrl(storagePath);
     return {
       bucket,
       storage_path: storagePath,
@@ -295,9 +349,12 @@ async function migrateLiveMessageRow(row, targetClient) {
     const source = String(attachment.data_url || attachment.public_url || "");
     const mimeType = String(attachment.type || "application/octet-stream");
     const extension = extensionFromMimeType(mimeType, "bin");
-    const safeName = sanitizePathSegment(attachment.name || `file-${index}.${extension}`);
+    const safeName = sanitizePathSegment(
+      attachment.name || `file-${index}.${extension}`,
+    );
     const storagePath =
-      attachment.storage_path && String(attachment.storage_path).startsWith(`${roomSlug}/`)
+      attachment.storage_path &&
+      String(attachment.storage_path).startsWith(`${roomSlug}/`)
         ? String(attachment.storage_path)
         : `${roomSlug}/shared-files/${sanitizePathSegment(row.id)}-${index}-${safeName}`;
     const copied = await copyMediaToNewStorage({
@@ -321,7 +378,8 @@ async function migrateLiveMessageRow(row, targetClient) {
     } else {
       nextAttachments.push({
         ...attachment,
-        data_url: attachment.data_url && migrateMedia ? "" : attachment.data_url,
+        data_url:
+          attachment.data_url && migrateMedia ? "" : attachment.data_url,
       });
       changed = changed || Boolean(attachment.data_url && migrateMedia);
     }
@@ -330,13 +388,23 @@ async function migrateLiveMessageRow(row, targetClient) {
   return changed ? { ...row, attachments: nextAttachments } : row;
 }
 
-async function migrateMediaFileRow(row, targetClient, sourceClient, bucketFallback = appMediaBucket) {
+async function migrateMediaFileRow(
+  row,
+  targetClient,
+  sourceClient,
+  bucketFallback = appMediaBucket,
+) {
   const sourceBucket = String(row.storage_bucket || bucketFallback);
   const sourcePath = String(row.storage_path || "");
   const publicUrl =
     String(row.public_url || "") ||
-    (sourcePath ? sourceClient.storage.from(sourceBucket).getPublicUrl(sourcePath).data?.publicUrl || "" : "");
-  const storagePath = sourcePath || `${roomSlug}/${sanitizePathSegment(row.category || "shared-files")}/${sanitizePathSegment(row.id)}`;
+    (sourcePath
+      ? sourceClient.storage.from(sourceBucket).getPublicUrl(sourcePath).data
+          ?.publicUrl || ""
+      : "");
+  const storagePath =
+    sourcePath ||
+    `${roomSlug}/${sanitizePathSegment(row.category || "shared-files")}/${sanitizePathSegment(row.id)}`;
   const copied = await copyMediaToNewStorage({
     targetClient,
     bucket: bucketFallback,
@@ -361,8 +429,19 @@ async function migrateMediaFileRow(row, targetClient, sourceClient, bucketFallba
   };
 }
 
-async function copyTable({ sourceClient, targetClient, tableName, onConflict, roomScoped, orderBy, transform }) {
-  const rows = await fetchRows(sourceClient, tableName, { roomScoped, orderBy });
+async function copyTable({
+  sourceClient,
+  targetClient,
+  tableName,
+  onConflict,
+  roomScoped,
+  orderBy,
+  transform,
+}) {
+  const rows = await fetchRows(sourceClient, tableName, {
+    roomScoped,
+    orderBy,
+  });
   const nextRows = [];
 
   for (const row of rows) {
@@ -389,7 +468,12 @@ async function migrateSharedMusic(oldMusicClient, targetClient) {
 
   for (const row of rows) {
     nextRows.push(
-      await migrateMediaFileRow(row, targetClient, oldMusicClient, sharedMusicBucket),
+      await migrateMediaFileRow(
+        row,
+        targetClient,
+        oldMusicClient,
+        sharedMusicBucket,
+      ),
     );
   }
 
@@ -406,7 +490,10 @@ async function main() {
 
   const oldClient = createSupabaseClient(oldSupabaseUrl, oldSupabaseAnonKey);
   const newClient = createSupabaseClient(newSupabaseUrl, newSupabaseAnonKey);
-  const oldMusicClient = createSupabaseClient(oldSharedMusicUrl, oldSharedMusicAnonKey);
+  const oldMusicClient = createSupabaseClient(
+    oldSharedMusicUrl,
+    oldSharedMusicAnonKey,
+  );
 
   log(`signing in as ${migrationEmail}`);
   await signIn(oldClient, "old project");
@@ -455,11 +542,14 @@ async function main() {
     onConflict: "id",
     roomScoped: true,
     orderBy: "created_at",
-    transform: (row, targetClient) => migrateMediaFileRow(row, targetClient, oldClient, appMediaBucket),
+    transform: (row, targetClient) =>
+      migrateMediaFileRow(row, targetClient, oldClient, appMediaBucket),
   });
   await migrateSharedMusic(oldMusicClient, newClient);
 
-  log("done. app_notification_events was intentionally not migrated, so old push notifications cannot replay.");
+  log(
+    "done. app_notification_events was intentionally not migrated, so old push notifications cannot replay.",
+  );
 }
 
 main().catch((error) => {

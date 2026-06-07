@@ -53,8 +53,8 @@ const supabase_table_names = {
 const supabase_media_bucket_name = "app-media";
 const shared_music_bucket_name_default = "shared-music";
 const shared_music_table_name_default = "shared_music_files";
-const app_version_name = "2.069";
-const app_version_code = 2069;
+const app_version_name = "2.070";
+const app_version_code = 2070;
 const app_update_notified_version_key = "sveta_app_update_notified_version";
 const app_update_github_repo = "Yasser-Diab/li-wang";
 const app_update_releases_url = `https://api.github.com/repos/${app_update_github_repo}/releases?per_page=20`;
@@ -102,6 +102,14 @@ const cycle_support_messages = [
 const cycle_music_window_days = 2;
 const cycle_party_pre_start_days = 2;
 const cycle_support_burst_emojis = ["😜", "😋", "😄", "😂", "🥳", "😇"];
+const cycle_party_mood_decorations = Object.freeze({
+  default: ["🎈", "😂", "😄", "✨", "😘", "❤", "🎆", "💫", "😋", "🥳"],
+  very_low: ["🥹", "😭", "❤", "😘", "🫂", "✨", "🎈", "💗", "😂", "🌧️"],
+  low: ["🙂", "😜", "😘", "🎈", "✨", "😂", "💛", "🌟", "😄", "🫶"],
+  soft: ["😌", "🫶", "😘", "💗", "✨", "🎈", "😇", "🌸", "😂", "💫"],
+  good: ["😏", "😂", "💛", "🎈", "✨", "😘", "😄", "🥳", "🎆", "❤"],
+  bright: ["🥳", "💎", "💙", "✨", "🎆", "😘", "😂", "🎈", "💛", "🌟"],
+});
 const cycle_mood_music_tracks_fallback = Object.freeze([
   "assets/cycle_mood_music/1.mp3",
   "assets/cycle_mood_music/2.mp3",
@@ -1752,6 +1760,7 @@ let cycle_ambient_nodes = null;
 let cycle_mood_audio = null;
 let last_cycle_mood_music_url = "";
 let last_cycle_party_mood_key = "";
+let cycle_party_message_exclusion_frame_id = 0;
 let voice_message_media_recorder = null;
 let voice_message_stream = null;
 let voice_message_chunks = [];
@@ -1781,6 +1790,8 @@ let birthday_page_effect_key = "";
 let cycle_calendar_swipe_state = null;
 let suppress_cycle_day_click_until = 0;
 let current_cycle_runtime_state = null;
+let background_sync_configure_signature = "";
+let background_sync_configure_last_at = 0;
 let app_update_state = {
   current_version_name: app_version_name,
   current_version_code: app_version_code,
@@ -2226,6 +2237,7 @@ function collect_dom_references() {
     document.getElementById("daily_joy_message");
   dom_references.enter_home_button =
     document.getElementById("enter_home_button");
+  dom_references.app_root = document.getElementById("app_root");
   dom_references.home_screen = document.getElementById("home_screen");
   dom_references.home_header_eyebrow = document.querySelector(
     ".home_header .eyebrow_text",
@@ -2390,6 +2402,8 @@ function collect_dom_references() {
     "cycle_compact_summary_text",
   );
   dom_references.cycle_shell = document.querySelector(".cycle_shell");
+  dom_references.cycle_party_layer =
+    document.getElementById("cycle_party_layer");
   dom_references.cycle_status_label =
     document.getElementById("cycle_status_label");
   dom_references.cycle_summary_text =
@@ -3412,6 +3426,28 @@ async function configure_background_message_sync(enabled = true) {
   const native_cycle_data = current_cycle_data
     ? normalize_cycle_data_store(current_cycle_data)
     : null;
+  const latest_message_activity = latest_message
+    ? get_live_message_activity_timestamp(latest_message)
+    : "";
+  const configure_signature = JSON.stringify({
+    enabled: Boolean(enabled && current_user_profile),
+    supabaseUrl: normalize_supabase_project_url(supabase_config.url),
+    roomSlug: current_room_slug,
+    userKey: current_user_profile?.user_key || "",
+    authUser: current_auth_user_id || "",
+    latestMessage: latest_message_activity,
+    cycleUpdatedAt: native_cycle_data?.updated_at || "",
+    version: app_update_state.current_version_name || app_version_name,
+  });
+  const now_ms = Date.now();
+
+  if (
+    enabled &&
+    configure_signature === background_sync_configure_signature &&
+    now_ms - background_sync_configure_last_at < 60 * 1000
+  ) {
+    return;
+  }
 
   try {
     await background_sync_plugin.configure({
@@ -3428,11 +3464,11 @@ async function configure_background_message_sync(enabled = true) {
       appVersionName: app_update_state.current_version_name || app_version_name,
       appVersionCode: app_update_state.current_version_code || app_version_code,
       appActive: is_app_visible_to_user(),
-      lastMessageCreatedAt: latest_message
-        ? get_live_message_activity_timestamp(latest_message)
-        : "",
+      lastMessageCreatedAt: latest_message_activity,
       cycleData: native_cycle_data ? JSON.stringify(native_cycle_data) : "",
     });
+    background_sync_configure_signature = configure_signature;
+    background_sync_configure_last_at = now_ms;
     if (native_background_auth) {
       pending_native_background_auth = null;
     }
@@ -3456,6 +3492,20 @@ async function configure_background_message_sync(enabled = true) {
     }
   } catch (error) {
     log_app_error("background_sync_configure_failed", error);
+  }
+}
+
+async function request_native_background_sync_now() {
+  const background_sync_plugin = get_capacitor_plugin("BackgroundSync");
+
+  if (!background_sync_plugin?.syncNow) {
+    return;
+  }
+
+  try {
+    await background_sync_plugin.syncNow({});
+  } catch (error) {
+    log_app_error("background_sync_now_failed", error);
   }
 }
 
@@ -3653,6 +3703,7 @@ async function enqueue_notification_event(event_type, options = {}) {
     await supabase_client
       .from(supabase_table_names.notification_events)
       .upsert(event_item, { onConflict: "id" });
+    void request_native_background_sync_now();
   } catch (error) {
     log_app_error("notification_event_enqueue_failed", error);
   }
@@ -4754,9 +4805,22 @@ function bind_event_handlers() {
     handle_cycle_calendar_touch_cancel,
     { passive: true },
   );
-  dom_references.cycle_tracker_section?.addEventListener(
+  dom_references.app_root?.addEventListener(
     "pointerdown",
     handle_cycle_party_pointer_down,
+  );
+  window.addEventListener(
+    "scroll",
+    schedule_cycle_party_messages_exclusion_update,
+    { passive: true },
+  );
+  window.addEventListener(
+    "resize",
+    schedule_cycle_party_messages_exclusion_update,
+  );
+  window.visualViewport?.addEventListener(
+    "resize",
+    schedule_cycle_party_messages_exclusion_update,
   );
   dom_references.today_prank_card.addEventListener("click", (event) =>
     burst_reaction(event.currentTarget, "spark", 10),
@@ -6286,6 +6350,7 @@ function sync_fullscreen_panel_state() {
     "aria-label",
     translate("open_cycle_calendar"),
   );
+  schedule_cycle_party_messages_exclusion_update();
 }
 
 function apply_saved_cycle_panel_state() {
@@ -15131,34 +15196,63 @@ function save_cycle_feeling(event) {
 }
 
 function ensure_cycle_party_layer() {
-  if (!dom_references.cycle_shell) {
-    return null;
-  }
-
-  let layer = dom_references.cycle_shell.querySelector(".cycle_party_layer");
+  let layer = dom_references.cycle_party_layer;
 
   if (!layer) {
     layer = document.createElement("div");
+    layer.id = "cycle_party_layer";
     layer.className = "cycle_party_layer";
     layer.setAttribute("aria-hidden", "true");
-    dom_references.cycle_shell.prepend(layer);
+    document.body.appendChild(layer);
+    dom_references.cycle_party_layer = layer;
   }
 
   return layer;
+}
+
+function get_cycle_party_decoration_items(mood_key) {
+  const emoji_list =
+    cycle_party_mood_decorations[mood_key] ||
+    cycle_party_mood_decorations.default;
+  const items = [];
+
+  for (let index = 0; index < 28; index += 1) {
+    const emoji = emoji_list[index % emoji_list.length];
+    const class_name =
+      emoji === "🎈"
+        ? "cycle_party_balloon"
+        : emoji === "🎆"
+          ? "cycle_party_firework"
+          : emoji === "✨" || emoji === "💫" || emoji === "🌟"
+            ? "cycle_party_blink"
+            : emoji === "😘"
+              ? "cycle_party_kiss"
+              : emoji === "❤" || emoji === "💗" || emoji === "💛"
+                ? "cycle_party_heart"
+                : emoji === "💎" || emoji === "💙"
+                  ? "cycle_party_diamond"
+                  : "cycle_party_face";
+    items.push([class_name, emoji]);
+  }
+
+  items.push(["cycle_party_tape", ""]);
+  items.push(["cycle_party_tape", ""]);
+  return items;
 }
 
 function render_cycle_party_layer(
   is_active,
   runtime = get_cycle_runtime_state(),
 ) {
-  const layer = ensure_cycle_party_layer();
-
-  if (!layer) {
+  if (!is_active) {
+    dom_references.cycle_party_layer?.remove();
+    dom_references.cycle_party_layer = null;
     return;
   }
 
-  if (!is_active) {
-    layer.remove();
+  const layer = ensure_cycle_party_layer();
+
+  if (!layer) {
     return;
   }
 
@@ -15176,21 +15270,19 @@ function render_cycle_party_layer(
   cry_banner.className = "cycle_party_cry_banner";
   cry_banner.textContent =
     cycle_party_badge_messages[mood_key] || cycle_party_badge_messages.default;
+  cry_banner.style.setProperty(
+    "--party_badge_start_x",
+    `${18 + Math.random() * 64}vw`,
+  );
+  cry_banner.style.setProperty(
+    "--party_badge_start_y",
+    `${18 + Math.random() * 56}vh`,
+  );
   layer.appendChild(cry_banner);
 
-  const decoration_kinds = [
-    ["cycle_party_balloon", "🎈"],
-    ["cycle_party_balloon", "🎈"],
-    ["cycle_party_tape", ""],
-    ["cycle_party_firework", "🎆"],
-    ["cycle_party_face", "😂"],
-    ["cycle_party_face", "😄"],
-    ["cycle_party_blink", "✨"],
-    ["cycle_party_kiss", "😘"],
-    ["cycle_party_heart", "❤"],
-  ];
+  const decoration_kinds = get_cycle_party_decoration_items(mood_key);
 
-  for (let index = 0; index < 34; index += 1) {
+  for (let index = 0; index < decoration_kinds.length; index += 1) {
     const [class_name, label] =
       decoration_kinds[index % decoration_kinds.length];
     const decoration = document.createElement("span");
@@ -15217,6 +15309,92 @@ function render_cycle_party_layer(
   }
 }
 
+function get_cycle_party_messages_exclusion_rect(is_active) {
+  if (!is_active || !dom_references.messages_section) {
+    return null;
+  }
+
+  const viewport_height =
+    window.innerHeight || document.documentElement.clientHeight || 0;
+
+  if (!viewport_height) {
+    return null;
+  }
+
+  const rect = dom_references.messages_section.getBoundingClientRect();
+
+  if (rect.bottom <= 0 || rect.top >= viewport_height || rect.height <= 0) {
+    return null;
+  }
+
+  const top = Math.max(0, Math.min(viewport_height, rect.top));
+  const bottom = Math.max(top, Math.min(viewport_height, rect.bottom));
+  const visible_height = bottom - top;
+  const required_height = Math.min(
+    28,
+    Math.max(8, Math.min(rect.height, viewport_height) * 0.08),
+  );
+
+  if (visible_height < required_height) {
+    return null;
+  }
+
+  return { top, bottom };
+}
+
+function update_cycle_party_messages_exclusion(
+  is_active = is_cycle_party_window_active(),
+) {
+  const exclusion_rect = get_cycle_party_messages_exclusion_rect(is_active);
+  document.body.classList.toggle(
+    "cycle_party_messages_quiet",
+    Boolean(exclusion_rect),
+  );
+
+  if (!exclusion_rect) {
+    document.body.style.removeProperty("--cycle_party_messages_top");
+    document.body.style.removeProperty("--cycle_party_messages_bottom");
+    return;
+  }
+
+  document.body.style.setProperty(
+    "--cycle_party_messages_top",
+    `${exclusion_rect.top}px`,
+  );
+  document.body.style.setProperty(
+    "--cycle_party_messages_bottom",
+    `${exclusion_rect.bottom}px`,
+  );
+}
+
+function schedule_cycle_party_messages_exclusion_update() {
+  if (cycle_party_message_exclusion_frame_id) {
+    return;
+  }
+
+  cycle_party_message_exclusion_frame_id = window.requestAnimationFrame(() => {
+    cycle_party_message_exclusion_frame_id = 0;
+    update_cycle_party_messages_exclusion();
+  });
+}
+
+function is_point_inside_cycle_messages_exclusion(client_y) {
+  if (!document.body.classList.contains("cycle_party_messages_quiet")) {
+    return false;
+  }
+
+  const top = Number.parseFloat(
+    document.body.style.getPropertyValue("--cycle_party_messages_top"),
+  );
+  const bottom = Number.parseFloat(
+    document.body.style.getPropertyValue("--cycle_party_messages_bottom"),
+  );
+
+  return Number.isFinite(top) && Number.isFinite(bottom)
+    ? client_y >= top && client_y <= bottom
+    : false;
+}
+
 function sync_cycle_party_state(runtime = get_cycle_runtime_state()) {
   const is_active = is_cycle_party_window_active(runtime);
   const mood_class = get_cycle_party_mood_class(
@@ -15228,6 +15406,7 @@ function sync_cycle_party_state(runtime = get_cycle_runtime_state()) {
     "cycle_party_mood_excited",
   ];
   const targets = [
+    document.body,
     dom_references.cycle_tracker_section,
     dom_references.cycle_shell,
   ].filter(Boolean);
@@ -15242,24 +15421,37 @@ function sync_cycle_party_state(runtime = get_cycle_runtime_state()) {
   });
 
   render_cycle_party_layer(is_active, runtime);
+  update_cycle_party_messages_exclusion(is_active);
 }
 
 function create_cycle_touch_wave(client_x, client_y) {
-  if (!dom_references.cycle_shell) {
+  if (is_point_inside_cycle_messages_exclusion(client_y)) {
     return;
   }
 
-  const shell_bounds = dom_references.cycle_shell.getBoundingClientRect();
+  const layer = ensure_cycle_party_layer();
+
+  if (!layer) {
+    return;
+  }
+
   const wave = document.createElement("span");
   wave.className = "cycle_touch_wave";
-  wave.style.left = `${client_x - shell_bounds.left}px`;
-  wave.style.top = `${client_y - shell_bounds.top}px`;
-  dom_references.cycle_shell.appendChild(wave);
+  wave.style.left = `${client_x}px`;
+  wave.style.top = `${client_y}px`;
+  layer.appendChild(wave);
   window.setTimeout(() => wave.remove(), 1050);
 }
 
 function handle_cycle_party_pointer_down(event) {
   if (!is_cycle_party_window_active()) {
+    return;
+  }
+
+  if (
+    event.target instanceof Element &&
+    event.target.closest("#messages_section")
+  ) {
     return;
   }
 
@@ -15273,15 +15465,9 @@ function launch_cycle_party_burst() {
 
   for (let index = 0; index < 7; index += 1) {
     window.setTimeout(() => {
-      const shell_bounds = dom_references.cycle_shell?.getBoundingClientRect();
-
-      if (!shell_bounds) {
-        return;
-      }
-
       create_cycle_touch_wave(
-        shell_bounds.left + shell_bounds.width * (0.18 + Math.random() * 0.64),
-        shell_bounds.top + shell_bounds.height * (0.18 + Math.random() * 0.62),
+        window.innerWidth * (0.12 + Math.random() * 0.76),
+        window.innerHeight * (0.16 + Math.random() * 0.68),
       );
     }, index * 90);
   }
@@ -15933,7 +16119,9 @@ async function load_live_messages() {
       if (is_initial_history_load) {
         remember_live_notification_activities_from_history(merged_messages);
       }
-      render_live_messages(true);
+      render_live_messages(
+        is_initial_history_load || is_live_messages_near_bottom(),
+      );
       update_current_user_message_receipts({
         read: is_app_active_for_presence(),
         sync_remote: true,
@@ -15959,7 +16147,9 @@ async function load_live_messages() {
         if (is_initial_history_load) {
           remember_live_notification_activities_from_history(live_messages);
         }
-        render_live_messages(true);
+        render_live_messages(
+          is_initial_history_load || is_live_messages_near_bottom(),
+        );
         update_current_user_message_receipts({
           read: is_app_active_for_presence(),
           sync_remote: true,
@@ -15992,7 +16182,7 @@ function open_live_messages_stream() {
               (message_item) => message_item.id !== payload.old.id,
             );
             save_live_messages_cache();
-            render_live_messages(true);
+            render_live_messages(is_live_messages_near_bottom());
             return;
           }
 
@@ -16047,7 +16237,7 @@ function open_live_messages_stream() {
         (message_item) => message_item.id !== payload.id,
       );
       save_live_messages_cache();
-      render_live_messages(true);
+      render_live_messages(is_live_messages_near_bottom());
     } catch (error) {
       // Ignore malformed events.
     }
@@ -16144,7 +16334,11 @@ function upsert_live_message(message_item, scroll_to_bottom = false) {
       new Date(left_item.created_at) - new Date(right_item.created_at),
   );
   save_live_messages_cache();
-  render_live_messages(scroll_to_bottom);
+  const should_scroll_to_bottom =
+    scroll_to_bottom &&
+    (message_item.sender_key === current_user_profile?.user_key ||
+      is_live_messages_near_bottom());
+  render_live_messages(should_scroll_to_bottom);
 
   if (
     is_new_message &&
@@ -16430,10 +16624,16 @@ function apply_presence_state_from_message(message_item) {
   );
   const previous_render_signature =
     get_presence_message_render_signature(previous_state);
+  const next_attachment = { ...attachment };
+
+  if (!next_attachment.last_seen_at && previous_state.last_seen_at) {
+    next_attachment.last_seen_at = previous_state.last_seen_at;
+  }
+
   const state = set_presence_state(
     message_item.sender_key,
     {
-      ...attachment,
+      ...next_attachment,
       user_key: message_item.sender_key,
     },
     true,
@@ -16573,15 +16773,14 @@ function get_message_receipt_state(message_item) {
     presence_state_by_user[get_other_user_key()] ||
     read_local_presence_state(get_other_user_key());
   const message_activity_at = get_message_receipt_activity_timestamp(message_item);
-  const read_activity_at =
-    other_state.read_message_activity_at || other_state.last_seen_at || "";
+  const read_activity_at = other_state.read_message_activity_at || "";
   const delivered_activity_at = other_state.delivered_message_activity_at || "";
 
   if (compare_iso_timestamp(read_activity_at, message_activity_at) >= 0) {
     return {
       state: "read",
       symbol: "✓✓",
-      at: other_state.read_at || other_state.last_seen_at || read_activity_at,
+      at: other_state.read_at || read_activity_at,
     };
   }
 
@@ -17621,8 +17820,7 @@ function get_presence_status_text() {
     return translate("presence_typing");
   }
 
-  const last_seen_text =
-    other_state.last_seen_at || other_state.updated_at || other_state.read_at || "";
+  const last_seen_text = other_state.last_seen_at || "";
   const last_seen_date = last_seen_text ? new Date(last_seen_text) : null;
   const updated_text = other_state.updated_at || last_seen_text;
   const updated_date = updated_text ? new Date(updated_text) : last_seen_date;

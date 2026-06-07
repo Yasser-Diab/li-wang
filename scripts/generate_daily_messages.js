@@ -58,6 +58,39 @@ function sentence_case(text) {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+function lower_first(text) {
+  if (!text) {
+    return "";
+  }
+
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function strip_leading_connector(text) {
+  return String(text || "")
+    .replace(/^\s*(and then|then|und dann|ثم)\s+/i, "")
+    .trim();
+}
+
+function build_joy_story(opener, setup, twist, ending, variant_index) {
+  const clean_twist = strip_leading_connector(twist);
+
+  switch (variant_index % 6) {
+    case 1:
+      return `${opener}: ${setup}. ${sentence_case(clean_twist)}. ${ending}`;
+    case 2:
+      return `${opener}:\n${setup}; ${clean_twist}. ${ending}`;
+    case 3:
+      return `${setup}, ${twist}. ${opener}. ${ending}`;
+    case 4:
+      return `${opener}: ${setup}. ${ending} ${sentence_case(clean_twist)}.`;
+    case 5:
+      return `${opener}: ${setup}, ${twist}; ${lower_first(ending)}`;
+    default:
+      return `${opener}: ${setup}, ${twist}. ${ending}`;
+  }
+}
+
 const content = {
   en: {
     joy_seed: [
@@ -71,16 +104,16 @@ const content = {
       "The laundry looked at me today with the confidence of a task that knows it will win."
     ],
     joy_openers: [
-      "Small report from real life",
-      "Tiny scandal from today",
-      "Fresh nonsense from my day",
-      "Quiet drama bulletin",
-      "Daily update from the human circus",
-      "Public notice from my afternoon",
-      "Brief comedy report",
-      "A ridiculous scene just happened",
-      "Please enjoy this small disaster",
-      "Breaking news from my kitchen"
+      "A tiny scene from today",
+      "Today briefly became a comedy scene",
+      "A little plot twist from real life",
+      "The afternoon entered wearing dramatic shoes",
+      "A small episode from the day",
+      "The ordinary day forgot how to be ordinary",
+      "A pocket-sized story from today",
+      "The day handed me a ridiculous scene",
+      "A soft comedy scene for today",
+      "Today's tiny movie moment"
     ],
     joy_setups: [
       "I tried to behave like a serious adult",
@@ -975,29 +1008,12 @@ const content = {
 function build_daily_joy(locale_key, count) {
   const locale = content[locale_key];
   const messages = [...locale.joy_seed];
-
-  for (const opener of locale.joy_openers) {
-    for (const setup of locale.joy_setups) {
-      for (const twist of locale.joy_twists) {
-        for (const ending of locale.joy_endings) {
-          messages.push(`${opener}: ${setup}, ${twist}. ${ending}`);
-
-          if (unique_messages(messages).length >= count) {
-            return finalize(messages, count, `${locale_key}_joy`);
-          }
-        }
-      }
-    }
-  }
+  let variant_index = 0;
 
   for (const lead of locale.joy_prank_leads) {
     for (const message of locale.joy_prank_messages) {
       for (const reveal of locale.joy_prank_reveals) {
         messages.push(`${lead}: ${message} ${reveal}`);
-
-        if (unique_messages(messages).length >= count) {
-          return finalize(messages, count, `${locale_key}_joy`);
-        }
       }
     }
   }
@@ -1006,9 +1022,22 @@ function build_daily_joy(locale_key, count) {
     for (const line of locale.joy_dialogue_b) {
       for (const ending of locale.joy_dialogue_c) {
         messages.push(`${speaker}: ${line}.\n${ending}`);
+      }
+    }
+  }
 
-        if (unique_messages(messages).length >= count) {
-          return finalize(messages, count, `${locale_key}_joy`);
+  for (const opener of locale.joy_openers) {
+    for (const setup of locale.joy_setups) {
+      for (const twist of locale.joy_twists) {
+        for (const ending of locale.joy_endings) {
+          messages.push(
+            build_joy_story(opener, setup, twist, ending, variant_index),
+          );
+          variant_index += 1;
+
+          if (unique_messages(messages).length >= count) {
+            return finalize(messages, count, `${locale_key}_joy`);
+          }
         }
       }
     }

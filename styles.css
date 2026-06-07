@@ -71,11 +71,75 @@ body {
   background-size: 100% 100%;
 }
 
+body.cycle_party_window {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 214, 110, 0.32), transparent 19rem),
+    radial-gradient(circle at 82% 16%, rgba(84, 171, 255, 0.22), transparent 18rem),
+    radial-gradient(circle at 74% 78%, rgba(255, 132, 177, 0.22), transparent 20rem),
+    linear-gradient(135deg, #fff4fb, #fff2dc 34%, #e2f7ff 68%, #f2e9ff);
+}
+
+body.cycle_party_window.cycle_party_mood_bad {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(255, 215, 96, 0.28), transparent 18rem),
+    radial-gradient(circle at 86% 18%, rgba(95, 176, 255, 0.18), transparent 18rem),
+    linear-gradient(135deg, #c33858, #8f2144 38%, #f0d58f 72%, #dfeaff);
+}
+
+body.cycle_party_window.cycle_party_mood_balanced {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 255, 255, 0.48), transparent 18rem),
+    radial-gradient(circle at 82% 18%, rgba(64, 150, 255, 0.18), transparent 18rem),
+    linear-gradient(135deg, #fff5cf, #ffd967 36%, #f2d58d 70%, #e8f1ff);
+}
+
+body.cycle_party_window.cycle_party_mood_excited {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 189, 96, 0.34), transparent 18rem),
+    radial-gradient(circle at 76% 18%, rgba(230, 237, 248, 0.5), transparent 18rem),
+    radial-gradient(circle at 88% 74%, rgba(55, 157, 255, 0.32), transparent 20rem),
+    linear-gradient(135deg, #c98b55, #e6edf8 38%, #2e86d3 78%, #ecf7ff);
+}
+
 html[data-theme="dark"] body,
 body[data-theme="dark"] {
   background:
     radial-gradient(circle at 15% 20%, rgba(236, 203, 122, 0.12), transparent 23rem),
     linear-gradient(135deg, var(--rose_mist), var(--peach_light) 33%, var(--sky_glass) 68%, var(--lilac_air));
+}
+
+html[data-theme="dark"] body.cycle_party_window,
+body[data-theme="dark"].cycle_party_window {
+  background:
+    radial-gradient(circle at 14% 18%, rgba(236, 203, 122, 0.22), transparent 18rem),
+    radial-gradient(circle at 82% 16%, rgba(84, 171, 255, 0.18), transparent 18rem),
+    radial-gradient(circle at 74% 78%, rgba(255, 132, 177, 0.15), transparent 20rem),
+    linear-gradient(135deg, #241827, #2a2131 36%, #112a3b 72%, #1a1830);
+}
+
+html[data-theme="dark"] body.cycle_party_window.cycle_party_mood_bad,
+body[data-theme="dark"].cycle_party_window.cycle_party_mood_bad {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(236, 203, 122, 0.18), transparent 18rem),
+    radial-gradient(circle at 86% 18%, rgba(84, 171, 255, 0.14), transparent 18rem),
+    linear-gradient(135deg, #551a2b, #32101d 42%, #5b431f 74%, #18243a);
+}
+
+html[data-theme="dark"] body.cycle_party_window.cycle_party_mood_balanced,
+body[data-theme="dark"].cycle_party_window.cycle_party_mood_balanced {
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 236, 164, 0.2), transparent 18rem),
+    radial-gradient(circle at 82% 18%, rgba(84, 171, 255, 0.15), transparent 18rem),
+    linear-gradient(135deg, #3a2c18, #6a541c 42%, #2a2f3e 78%, #141725);
+}
+
+html[data-theme="dark"] body.cycle_party_window.cycle_party_mood_excited,
+body[data-theme="dark"].cycle_party_window.cycle_party_mood_excited {
+  background:
+    radial-gradient(circle at 18% 16%, rgba(202, 139, 85, 0.26), transparent 18rem),
+    radial-gradient(circle at 78% 18%, rgba(224, 232, 246, 0.15), transparent 18rem),
+    radial-gradient(circle at 88% 74%, rgba(55, 157, 255, 0.2), transparent 20rem),
+    linear-gradient(135deg, #4a2819, #263045 40%, #123a66 78%, #151a2b);
 }
 
 button,
@@ -2050,11 +2114,35 @@ body.panel_fullscreen_open .language_toggle_button .flag_icon {
 }
 
 .cycle_party_layer {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 24;
   pointer-events: none;
   overflow: hidden;
+  contain: layout paint style;
+}
+
+body.cycle_party_messages_quiet .cycle_party_layer {
+  -webkit-mask-image:
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0);
+  -webkit-mask-position:
+    0 0,
+    0 var(--cycle_party_messages_bottom, 100vh);
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size:
+    100% var(--cycle_party_messages_top, 0px),
+    100% calc(100vh - var(--cycle_party_messages_bottom, 100vh));
+  mask-image:
+    linear-gradient(#000 0 0),
+    linear-gradient(#000 0 0);
+  mask-position:
+    0 0,
+    0 var(--cycle_party_messages_bottom, 100vh);
+  mask-repeat: no-repeat;
+  mask-size:
+    100% var(--cycle_party_messages_top, 0px),
+    100% calc(100vh - var(--cycle_party_messages_bottom, 100vh));
 }
 
 .cycle_party_decoration {
@@ -2108,19 +2196,23 @@ body.panel_fullscreen_open .language_toggle_button .flag_icon {
 
 .cycle_party_cry_banner {
   position: absolute;
-  left: 50%;
-  top: 10%;
+  left: var(--party_badge_start_x, 50vw);
+  top: var(--party_badge_start_y, 18vh);
+  z-index: 2;
+  max-width: min(78vw, 540px);
   padding: 8px 14px;
   border: 1px solid rgba(244, 215, 142, 0.72);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   color: #9e3154;
   font-family: var(--serif_font);
-  font-size: clamp(1.05rem, 4vw, 1.8rem);
+  font-size: 1.32rem;
   font-weight: 700;
-  white-space: nowrap;
+  line-height: 1.16;
+  text-align: center;
+  white-space: normal;
   box-shadow: 0 16px 30px rgba(91, 71, 90, 0.14);
-  animation: cycle_cry_shake 7s ease-in-out infinite;
+  animation: cycle_cry_shake 24s ease-in-out infinite;
 }
 
 .cycle_touch_wave {
@@ -5190,23 +5282,23 @@ body[data-theme="dark"] .dialog_button_row .ghost_button.is_primary {
 
   0%,
   100% {
-    transform: translate3d(-52%, 0, 0) rotate(-2deg);
+    transform: translate3d(-50%, -50%, 0) rotate(-2deg);
   }
 
   18% {
-    transform: translate3d(-20%, 8px, 0) rotate(2deg);
+    transform: translate3d(calc(-50% + 26vw), calc(-50% + 9vh), 0) rotate(2deg);
   }
 
   36% {
-    transform: translate3d(-70%, -4px, 0) rotate(-3deg);
+    transform: translate3d(calc(-50% - 21vw), calc(-50% + 18vh), 0) rotate(-3deg);
   }
 
   54% {
-    transform: translate3d(-36%, 10px, 0) rotate(2deg);
+    transform: translate3d(calc(-50% + 18vw), calc(-50% - 16vh), 0) rotate(2deg);
   }
 
   72% {
-    transform: translate3d(-62%, -8px, 0) rotate(-1deg);
+    transform: translate3d(calc(-50% - 26vw), calc(-50% - 6vh), 0) rotate(-1deg);
   }
 }
 

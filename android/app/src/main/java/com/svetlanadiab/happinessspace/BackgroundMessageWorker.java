@@ -896,17 +896,41 @@ public class BackgroundMessageWorker extends Worker {
         try {
             String now = isoNow();
             String safeRoom = roomSlug.replaceAll("[^A-Za-z0-9_-]+", "_").toLowerCase(Locale.US);
+            JSONObject previousAttachment = fetchPresenceAttachment(
+                    supabaseUrl,
+                    anonKey,
+                    accessToken,
+                    roomSlug,
+                    userKey
+            );
+            String lastSeenAt = previousAttachment == null
+                    ? ""
+                    : previousAttachment.optString("last_seen_at", "");
+            String readMessageActivityAt = previousAttachment == null
+                    ? ""
+                    : previousAttachment.optString("read_message_activity_at", "");
+            String readAt = previousAttachment == null
+                    ? ""
+                    : previousAttachment.optString("read_at", "");
+            JSONArray hiddenDeletedMessageIds = previousAttachment == null
+                    ? new JSONArray()
+                    : previousAttachment.optJSONArray("hidden_deleted_message_ids");
+            if (hiddenDeletedMessageIds == null) {
+                hiddenDeletedMessageIds = new JSONArray();
+            }
             JSONObject attachment = new JSONObject()
                     .put("kind", "presence_state")
                     .put("user_key", userKey)
-                    .put("visible", true)
+                    .put("visible", previousAttachment == null || previousAttachment.optBoolean("visible", true))
                     .put("active", false)
-                    .put("last_seen_at", "")
+                    .put("last_seen_at", lastSeenAt)
                     .put("updated_at", now)
                     .put("typing_until", "")
                     .put("delivered_message_activity_at", deliveredActivityAt)
                     .put("delivered_at", now)
-                    .put("hidden_deleted_message_ids", new JSONArray());
+                    .put("read_message_activity_at", readMessageActivityAt)
+                    .put("read_at", readAt)
+                    .put("hidden_deleted_message_ids", hiddenDeletedMessageIds);
             JSONArray attachments = new JSONArray().put(attachment);
             JSONObject body = new JSONObject()
                     .put("id", "presence_" + safeRoom + "_" + userKey)
@@ -945,6 +969,65 @@ public class BackgroundMessageWorker extends Worker {
             // Delivery receipts should not block background notifications.
             return false;
         }
+    }
+
+    private static JSONObject fetchPresenceAttachment(
+            String supabaseUrl,
+            String anonKey,
+            String accessToken,
+            String roomSlug,
+            String userKey
+    ) {
+        try {
+            String safeRoom = roomSlug.replaceAll("[^A-Za-z0-9_-]+", "_").toLowerCase(Locale.US);
+            String endpoint = supabaseUrl.replaceAll("/+$", "") +
+                    "/rest/v1/app_live_messages?select=attachments" +
+                    "&room_slug=" + urlEncode("eq." + roomSlug) +
+                    "&id=" + urlEncode("eq.presence_" + safeRoom + "_" + userKey) +
+                    "&limit=1";
+            HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("apikey", anonKey);
+            connection.setRequestProperty(
+                    "Authorization",
+                    "Bearer " + (accessToken.isEmpty() ? anonKey : accessToken)
+            );
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setConnectTimeout(3000);
+            connection.setReadTimeout(3000);
+
+            int responseCode = connection.getResponseCode();
+            InputStream stream = responseCode >= 200 && responseCode < 300
+                    ? connection.getInputStream()
+                    : connection.getErrorStream();
+            String body = readStream(stream);
+            connection.disconnect();
+
+            if (responseCode < 200 || responseCode >= 300 || body.isEmpty()) {
+                return null;
+            }
+
+            JSONArray rows = new JSONArray(body);
+            if (rows.length() == 0) {
+                return null;
+            }
+
+            JSONArray attachments = rows.getJSONObject(0).optJSONArray("attachments");
+            if (attachments == null) {
+                return null;
+            }
+
+            for (int index = 0; index < attachments.length(); index++) {
+                JSONObject attachment = attachments.optJSONObject(index);
+                if (attachment != null && "presence_state".equals(attachment.optString("kind", ""))) {
+                    return attachment;
+                }
+            }
+        } catch (Exception error) {
+            // Preserving old presence is best-effort; delivery receipts should still work.
+        }
+
+        return null;
     }
 
     private static boolean rememberNotificationActivity(SharedPreferences prefs, String activityKey) {

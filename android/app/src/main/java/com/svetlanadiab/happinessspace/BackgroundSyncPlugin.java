@@ -164,8 +164,24 @@ public class BackgroundSyncPlugin extends Plugin {
                 .putLong("web_app_active_at", active ? System.currentTimeMillis() : 0L)
                 .apply();
 
+        if (!active && prefs.getBoolean("enabled", false)) {
+            BackgroundSyncService.start(context);
+            Context appContext = context.getApplicationContext();
+            new Thread(() -> BackgroundMessageWorker.syncOnce(appContext)).start();
+        }
+
         JSObject result = new JSObject();
         result.put("active", active);
+        call.resolve(result);
+    }
+
+    @PluginMethod
+    public void syncNow(PluginCall call) {
+        Context context = getContext().getApplicationContext();
+        BackgroundSyncService.start(context);
+        new Thread(() -> BackgroundMessageWorker.syncOnce(context)).start();
+        JSObject result = new JSObject();
+        result.put("queued", true);
         call.resolve(result);
     }
 

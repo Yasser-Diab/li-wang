@@ -8,15 +8,15 @@
       "sender_key": "svetlana",
       "sender_name": "Svetlana",
       "text": "__SVETA_APP_PRESENCE__",
-      "created_at": "2026-05-23T02:06:21.126Z",
-      "edited_at": "2026-05-23T02:06:21.126Z",
+      "created_at": "2026-05-23T11:41:22.819Z",
+      "edited_at": "2026-05-23T11:41:22.819Z",
       "attachments": [
         {
           "kind": "presence_state",
           "user_key": "svetlana",
-          "last_seen_at": "2026-05-23T02:06:21.126Z",
+          "last_seen_at": "2026-05-23T11:41:22.819Z",
           "typing_until": "",
-          "updated_at": "2026-05-23T02:06:21.126Z",
+          "updated_at": "2026-05-23T11:41:22.819Z",
           "visible": false,
           "active": false,
           "hidden_deleted_message_ids": [

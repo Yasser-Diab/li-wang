@@ -18,7 +18,8 @@ import java.util.concurrent.TimeUnit;
 public class BackgroundSyncService extends Service {
     public static final String CHANNEL_ID = "background-sync";
     private static final int NOTIFICATION_ID = 700001;
-    private static final long POLL_INTERVAL_MS = TimeUnit.SECONDS.toMillis(3);
+    private static final long BACKGROUND_POLL_INTERVAL_MS = TimeUnit.SECONDS.toMillis(2);
+    private static final long ACTIVE_POLL_INTERVAL_MS = TimeUnit.SECONDS.toMillis(10);
     private ExecutorService executor;
     private volatile boolean running = false;
 
@@ -89,13 +90,24 @@ public class BackgroundSyncService extends Service {
             while (running) {
                 BackgroundMessageWorker.syncOnce(getApplicationContext());
                 try {
-                    Thread.sleep(POLL_INTERVAL_MS);
+                    Thread.sleep(nextPollIntervalMs());
                 } catch (InterruptedException error) {
                     Thread.currentThread().interrupt();
                     running = false;
                 }
             }
         });
+    }
+
+    private long nextPollIntervalMs() {
+        SharedPreferences prefs =
+                getSharedPreferences(BackgroundSyncPlugin.PREFS_NAME, Context.MODE_PRIVATE);
+        long activeAt = prefs.getLong("web_app_active_at", 0L);
+        boolean webAppActive =
+                prefs.getBoolean("web_app_active", false) &&
+                        activeAt > 0L &&
+                        System.currentTimeMillis() - activeAt < TimeUnit.SECONDS.toMillis(45);
+        return webAppActive ? ACTIVE_POLL_INTERVAL_MS : BACKGROUND_POLL_INTERVAL_MS;
     }
 
     private Notification buildServiceNotification() {
